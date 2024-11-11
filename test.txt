@@ -1,0 +1,25 @@
+
+test file
+{}
+end 
+🦋
+🦋
+🦋
+🦋
+
+
+(test (+ 1 1))
+
+(def test_value (+ 32 32))
+(def hello_str "Hello World")
+(def emoji_str "String with Cute Emoji 🦋")
+🦋
+
+'(1 2 3 4)
+(def hello_to [name] 
+    (print "hello " name)
+    )
+
+
+def?
+def32
