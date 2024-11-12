@@ -22,6 +22,22 @@ impl Lexer {
         matches!(c, '+' | '-' | '/' | '*' | '_' | '?')
     }
 
+    pub fn to_string(&self) -> String {
+        let mut out = String::new();
+        let mut line = 0;
+
+        for token in self.tokens.iter() {
+            if token.start.line > line {
+                line = token.start.line;
+                out.push_str("\n");
+            }
+            out.push_str(" ");
+            out.push_str(&token.value);
+        }
+
+        out
+    }
+
     pub fn parse(&mut self) -> anyhow::Result<()> {
         let mut iter = self
             .internal
@@ -64,7 +80,7 @@ impl Lexer {
                     iter.next()
                         .and_then(|f| {
                             col += 1;
-                            // string.push(f);
+                            string.push(f);
                             Some(f)
                         })
                         .ok_or_else(|| {

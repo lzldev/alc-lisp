@@ -15,6 +15,7 @@ fn main() {
         lexer.parse().expect("lexer::parse");
     }
     let tokens = lexer.tokens();
+    println!("LEXER\n----{}\n----", lexer.to_string());
     // dbg!(&tokens);
 
     let mut ast = AST::with_tokens(tokens);
@@ -28,7 +29,7 @@ fn main() {
             ast.print_errors(&program.root);
         }
 
-        dbg!(&program);
+        // dbg!(&program);
     }
 }
 
