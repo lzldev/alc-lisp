@@ -1,17 +1,31 @@
 use std::time;
 
-use alc_lisp::lexer::Lexer;
+use alc_lisp::{
+    ast::{Program, AST},
+    lexer::Lexer,
+};
 
 fn main() {
-    let test_file = std::fs::read_to_string("./test.txt").expect("to open file");
+    let test_file = std::fs::read_to_string("./test_2.txt").expect("to open file");
     let mut lexer = Lexer::from_string(test_file);
 
     let _t = Timer::new("Total");
     {
         let _t = Timer::new("Lexer");
         lexer.parse().unwrap();
-        // dbg!(lexer.tokens());
     }
+    let tokens = lexer.tokens();
+    dbg!(&tokens);
+
+    let ast = AST::with_tokens(tokens);
+
+    let program: Program;
+    {
+        let _t = Timer::new("AST");
+        program = ast.parse().unwrap();
+    }
+
+    dbg!(&program);
 }
 
 struct Timer {

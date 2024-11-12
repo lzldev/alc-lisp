@@ -45,13 +45,10 @@ impl Lexer {
                     value: value.to_string(),
                     token_type: TokenType::from_char(value),
                     start: TokenPosition {
-                        line: line,
+                        line,
                         col: col - token_len,
                     },
-                    end: TokenPosition {
-                        line: line,
-                        col: col,
-                    },
+                    end: TokenPosition { line, col },
                 }),
                 '"' => {
                     let mut string = value.to_string();
@@ -72,13 +69,10 @@ impl Lexer {
                         value: string,
                         token_type: TokenType::StringLiteral,
                         start: TokenPosition {
-                            line: line,
+                            line,
                             col: col_start,
                         },
-                        end: TokenPosition {
-                            line: line,
-                            col: col,
-                        },
+                        end: TokenPosition { line, col },
                     })
                 }
                 c => {
@@ -98,13 +92,10 @@ impl Lexer {
                             value: word,
                             token_type: TokenType::Word,
                             start: TokenPosition {
-                                line: line,
+                                line,
                                 col: col_start,
                             },
-                            end: TokenPosition {
-                                line: line,
-                                col: col,
-                            },
+                            end: TokenPosition { line, col },
                         })
                     } else if c.is_numeric() {
                         let mut number = c.to_string();
@@ -118,26 +109,20 @@ impl Lexer {
                             value: number,
                             token_type: TokenType::NumericLiteral,
                             start: TokenPosition {
-                                line: line,
+                                line,
                                 col: col_start,
                             },
-                            end: TokenPosition {
-                                line: line,
-                                col: col,
-                            },
+                            end: TokenPosition { line, col },
                         })
                     } else {
                         self.tokens.push(Token {
                             value: value.to_string(),
                             token_type: TokenType::Unknown,
                             start: TokenPosition {
-                                line: line,
+                                line,
                                 col: col - token_len,
                             },
-                            end: TokenPosition {
-                                line: line,
-                                col: col,
-                            },
+                            end: TokenPosition { line, col },
                         })
                     }
                 }
@@ -150,16 +135,22 @@ impl Lexer {
 
 #[derive(Clone, Debug)]
 pub struct TokenPosition {
-    line: usize,
-    col: usize,
+    pub line: usize,
+    pub col: usize,
 }
 
 #[derive(Clone, Debug)]
 pub struct Token {
     value: String,
     token_type: TokenType,
-    start: TokenPosition,
-    end: TokenPosition,
+    pub start: TokenPosition,
+    pub end: TokenPosition,
+}
+
+impl Token {
+    pub fn token_type(&self) -> &TokenType {
+        return &self.token_type;
+    }
 }
 
 #[derive(Clone, Debug)]
