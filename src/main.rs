@@ -15,7 +15,7 @@ fn main() {
         lexer.parse().unwrap();
     }
     let tokens = lexer.tokens();
-    dbg!(&tokens);
+    // dbg!(&tokens);
 
     let ast = AST::with_tokens(tokens);
 
@@ -23,9 +23,8 @@ fn main() {
     {
         let _t = Timer::new("AST");
         program = ast.parse().unwrap();
+        dbg!(&program);
     }
-
-    dbg!(&program);
 }
 
 struct Timer {

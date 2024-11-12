@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::anyhow;
 
-use crate::lexer::Token;
+use crate::lexer::{self, Token};
 
 #[derive(Clone, Debug)]
 pub struct AST {
@@ -26,40 +26,20 @@ impl AST {
     }
 
     pub fn parse(mut self) -> anyhow::Result<Program> {
-        while let Some(token) = self.tokens.pop() {
-            let node = match token.token_type() {
-                crate::lexer::TokenType::LParen => self.parse_expression()?,
-                crate::lexer::TokenType::Unknown => {
+        let root = if let Some(token) = self.tokens.last() {
+            match token.token_type() {
+                lexer::TokenType::LParen => self.parse_expression()?,
+                lexer::TokenType::Unknown | _ => {
                     return Err(anyhow!(
                         "found unknown token line:{}:{}", //TODO:Maybe make this return a invalid statement
                         token.start.line,
                         token.start.col,
                     ));
                 }
-                token_type => {
-                    return Err(anyhow!(
-                        "found unknown token at: {} line:{}:{} {:?}",
-                        self.tokens.len(),
-                        token.start.line,
-                        token.start.col,
-                        token_type
-                    ))
-                } // crate::lexer::TokenType::RParen => todo!(),
-                  // crate::lexer::TokenType::LSquare => todo!(),
-                  // crate::lexer::TokenType::RSquare => todo!(),
-                  // crate::lexer::TokenType::Plus => todo!(),
-                  // crate::lexer::TokenType::Minus => todo!(),
-                  // crate::lexer::TokenType::Slash => todo!(),
-                  // crate::lexer::TokenType::Asterisk => todo!(),
-                  // crate::lexer::TokenType::SingleQuote => todo!(),
-                  // crate::lexer::TokenType::StringLiteral => todo!(),
-                  // crate::lexer::TokenType::Word => todo!(),
-                  // crate::lexer::TokenType::NumericLiteral => todo!(),
-                  // crate::lexer::TokenType::Unknown => todo!(),
-            };
-
-            self.statements.push(node);
-        }
+            }
+        } else {
+            return Err(anyhow!("not tokens to parse",));
+        };
 
         if self.tokens.len() > 0 {
             return Err(anyhow!(
@@ -70,7 +50,7 @@ impl AST {
 
         Ok(Program {
             env: HashMap::new(),
-            statements: self.statements,
+            root,
         })
     }
 
@@ -79,23 +59,22 @@ impl AST {
 
         while let Some(token) = self.tokens.pop() {
             let node = match token.token_type() {
-                crate::lexer::TokenType::LParen => self.parse_expression()?,
-                crate::lexer::TokenType::RParen => break,
-                crate::lexer::TokenType::LSquare => todo!(), //TODO:List
-                crate::lexer::TokenType::RSquare => todo!(), // TOOD:Error
-                // crate::lexer::TokenType::Plus => todo!(), //TODO: Remove
-                // crate::lexer::TokenType::Minus => todo!(), //TODO: Remove
-                // crate::lexer::TokenType::Slash => todo!(), //TODO: Remove
-                // crate::lexer::TokenType::Asterisk => todo!(), //TODO: Remove
-                crate::lexer::TokenType::SingleQuote => todo!(),
-                crate::lexer::TokenType::StringLiteral => Node::StringLiteral(token),
-                crate::lexer::TokenType::NumericLiteral => Node::NumberLiteral(token),
-                crate::lexer::TokenType::Word => Node::Word(token),
-                crate::lexer::TokenType::Unknown => todo!(), //TODO:Error
-                _ => todo!(),
+                lexer::TokenType::LParen => self.parse_expression()?,
+                lexer::TokenType::RParen => break,
+                lexer::TokenType::LSquare => todo!(), //TODO:List
+                lexer::TokenType::RSquare => todo!(), // TOOD:Error
+                lexer::TokenType::SingleQuote => todo!(),
+                lexer::TokenType::StringLiteral => Node::StringLiteral(token),
+                lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
+                lexer::TokenType::Word => Node::Word(token),
+                lexer::TokenType::Unknown => Node::Invalid(token), //TODO:Error ?
             };
 
             nodes.push(node);
+        }
+
+        if nodes.len() == 1 {
+            return Ok(nodes.pop().unwrap());
         }
 
         Ok(Node::Expression(nodes))
@@ -105,7 +84,7 @@ impl AST {
 #[derive(Clone, Debug)]
 pub struct Program {
     env: HashMap<String, Object>,
-    statements: Vec<Node>,
+    root: Node,
 }
 
 #[derive(Clone, Debug)]
@@ -116,6 +95,7 @@ pub enum Object {
 
 #[derive(Clone, Debug)]
 pub enum Node {
+    Invalid(Token),
     Expression(Vec<Node>),
     StringLiteral(Token),
     NumberLiteral(Token),

@@ -107,7 +107,7 @@ impl Lexer {
 
                         self.tokens.push(Token {
                             value: number,
-                            token_type: TokenType::NumericLiteral,
+                            token_type: TokenType::NumberLiteral,
                             start: TokenPosition {
                                 line,
                                 col: col_start,
@@ -159,14 +159,10 @@ pub enum TokenType {
     RParen,
     LSquare,
     RSquare,
-    Plus,
-    Minus,
-    Slash,
-    Asterisk,
     SingleQuote,
     StringLiteral,
     Word,
-    NumericLiteral,
+    NumberLiteral,
     Unknown,
 }
 
@@ -178,10 +174,6 @@ impl TokenType {
             '[' => TokenType::LSquare,
             ']' => TokenType::RSquare,
             '\'' => TokenType::SingleQuote,
-            '+' => TokenType::Plus,
-            '-' => TokenType::Minus,
-            '*' => TokenType::Asterisk,
-            '/' => TokenType::Slash,
             _ => panic!("calling TokenType::from_char with unknown char"), //TODO: Return result instead
         }
     }
