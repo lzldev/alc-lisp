@@ -1,3 +1,5 @@
+use anyhow::anyhow;
+
 #[derive(Clone, Debug)]
 pub struct Lexer {
     internal: String,
@@ -43,7 +45,7 @@ impl Lexer {
                 }
                 '(' | ')' | '[' | ']' | '\'' => self.tokens.push(Token {
                     value: value.to_string(),
-                    token_type: TokenType::from_char(value),
+                    token_type: TokenType::from_char(value)?,
                     start: TokenPosition {
                         line,
                         col: col - token_len,
@@ -59,11 +61,15 @@ impl Lexer {
                         string.push(letter);
                     }
 
-                    iter.next().and_then(|f| {
-                        col += 1;
-                        string.push(f);
-                        Option::<char>::None
-                    }); // Push Last quote
+                    iter.next()
+                        .and_then(|f| {
+                            col += 1;
+                            // string.push(f);
+                            Some(f)
+                        })
+                        .ok_or_else(|| {
+                            anyhow!("unterminated string literal at {}:{}", line, col)
+                        })?; // Push Last quote
 
                     self.tokens.push(Token {
                         value: string,
@@ -167,14 +173,17 @@ pub enum TokenType {
 }
 
 impl TokenType {
-    pub fn from_char(c: char) -> TokenType {
+    pub fn from_char(c: char) -> anyhow::Result<TokenType> {
         match c {
-            '(' => TokenType::LParen,
-            ')' => TokenType::RParen,
-            '[' => TokenType::LSquare,
-            ']' => TokenType::RSquare,
-            '\'' => TokenType::SingleQuote,
-            _ => panic!("calling TokenType::from_char with unknown char"), //TODO: Return result instead
+            '(' => Ok(TokenType::LParen),
+            ')' => Ok(TokenType::RParen),
+            '[' => Ok(TokenType::LSquare),
+            ']' => Ok(TokenType::RSquare),
+            '\'' => Ok(TokenType::SingleQuote),
+            _ => Err(anyhow!(
+                "calling TokenType::from_char with unknown char ['{}']",
+                c
+            )), //TODO: Return result instead
         }
     }
 }

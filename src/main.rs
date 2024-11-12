@@ -12,7 +12,7 @@ fn main() {
     let _t = Timer::new("Total");
     {
         let _t = Timer::new("Lexer");
-        lexer.parse().unwrap();
+        lexer.parse().expect("lexer::parse");
     }
     let tokens = lexer.tokens();
     // dbg!(&tokens);
@@ -22,13 +22,13 @@ fn main() {
     let program: Program;
     {
         let _t = Timer::new("AST");
-        program = ast.parse().unwrap();
+        program = ast.parse().expect("ast::parse");
 
         if ast.has_errors() {
             ast.print_errors(&program.root);
         }
 
-        // dbg!(&program);
+        dbg!(&program);
     }
 }
 
