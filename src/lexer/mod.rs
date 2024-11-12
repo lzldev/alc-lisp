@@ -12,7 +12,15 @@ impl Lexer {
         }
     }
 
-    pub fn parse(&mut self) {
+    pub fn tokens(&self) -> Vec<Token> {
+        self.tokens.clone()
+    }
+
+    fn is_word_symbol(c: char) -> bool {
+        matches!(c, '+' | '-' | '/' | '*' | '_' | '?')
+    }
+
+    pub fn parse(&mut self) -> anyhow::Result<()> {
         let mut iter = self
             .internal
             .chars()
@@ -33,7 +41,7 @@ impl Lexer {
                     col = 0;
                     line += 1
                 }
-                '+' | '-' | '/' | '*' | '(' | ')' | '[' | ']' | '\'' => self.tokens.push(Token {
+                '(' | ')' | '[' | ']' | '\'' => self.tokens.push(Token {
                     value: value.to_string(),
                     token_type: TokenType::from_char(value),
                     start: TokenPosition {
@@ -74,11 +82,12 @@ impl Lexer {
                     })
                 }
                 c => {
-                    if c.is_alphabetic() {
+                    if c.is_alphabetic() || Lexer::is_word_symbol(c) {
                         let mut word = c.to_string();
+
                         while iter
                             .peek()
-                            .is_some_and(|v| v == &'_' || v == &'?' || v.is_alphanumeric())
+                            .is_some_and(|v| Lexer::is_word_symbol(*v) || v.is_alphanumeric())
                         {
                             let letter = iter.next().unwrap();
                             col += 1;
@@ -134,10 +143,8 @@ impl Lexer {
                 }
             }
         }
-    }
 
-    pub fn tokens(&self) -> Vec<Token> {
-        self.tokens.clone()
+        return Ok(());
     }
 }
 

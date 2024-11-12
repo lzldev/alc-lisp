@@ -9,7 +9,8 @@ fn main() {
     let _t = Timer::new("Total");
     {
         let _t = Timer::new("Lexer");
-        lexer.parse();
+        lexer.parse().unwrap();
+        // dbg!(lexer.tokens());
     }
 }
 
