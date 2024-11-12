@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt};
+use std::collections::HashMap;
 
 use anyhow::anyhow;
 
@@ -77,13 +77,15 @@ impl AST {
             let node = match token.token_type() {
                 lexer::TokenType::LParen => self.parse_expression()?,
                 lexer::TokenType::RParen => break,
-                lexer::TokenType::LSquare => todo!(), //TODO:List
-                lexer::TokenType::RSquare => todo!(), // TOOD:Error
-                lexer::TokenType::SingleQuote => todo!(),
+                // lexer::TokenType::LSquare => todo!(), //TODO:List
+                // lexer::TokenType::RSquare => todo!(), // TOOD:Error
+                // lexer::TokenType::SingleQuote => todo!(),
                 lexer::TokenType::StringLiteral => Node::StringLiteral(token),
                 lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
                 lexer::TokenType::Word => Node::Word(token),
                 lexer::TokenType::Unknown => Node::Invalid(token), //TODO:Error ?
+                lexer::TokenType::Comment => continue,
+                _ => todo!(),
             };
 
             if let Node::Invalid(_) = node {

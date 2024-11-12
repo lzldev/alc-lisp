@@ -97,6 +97,26 @@ impl Lexer {
                         end: TokenPosition { line, col },
                     })
                 }
+                ';' => {
+                    let mut comment = value.to_string();
+
+                    while iter.peek().is_some_and(|v| v != &'\n') {
+                        let letter = iter.next().unwrap();
+                        col += 1;
+                        comment.push(letter);
+                    }
+
+                    //TODO: Add ignore comments flag to the lexer; to skip adding it into the final result
+                    self.tokens.push(Token {
+                        value: comment,
+                        token_type: TokenType::Comment,
+                        start: TokenPosition {
+                            line,
+                            col: col_start,
+                        },
+                        end: TokenPosition { line, col },
+                    })
+                }
                 c => {
                     if c.is_alphabetic() || Lexer::is_word_symbol(c) {
                         let mut word = c.to_string();
@@ -186,6 +206,7 @@ pub enum TokenType {
     Word,
     NumberLiteral,
     Unknown,
+    Comment,
 }
 
 impl TokenType {

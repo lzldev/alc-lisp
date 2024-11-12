@@ -16,7 +16,7 @@ fn main() {
     }
     let tokens = lexer.tokens();
     println!("LEXER\n----{}\n----", lexer.to_string());
-    // dbg!(&tokens);
+    dbg!(&tokens);
 
     let mut ast = AST::with_tokens(tokens);
 
