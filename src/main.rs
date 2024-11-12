@@ -17,13 +17,18 @@ fn main() {
     let tokens = lexer.tokens();
     // dbg!(&tokens);
 
-    let ast = AST::with_tokens(tokens);
+    let mut ast = AST::with_tokens(tokens);
 
     let program: Program;
     {
         let _t = Timer::new("AST");
         program = ast.parse().unwrap();
-        dbg!(&program);
+
+        if ast.has_errors() {
+            ast.print_errors(&program.root);
+        }
+
+        // dbg!(&program);
     }
 }
 
