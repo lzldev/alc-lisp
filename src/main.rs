@@ -6,7 +6,7 @@ use alc_lisp::{
 };
 
 fn main() {
-    let test_file = std::fs::read_to_string("./test_2.txt").expect("to open file");
+    let test_file = std::fs::read_to_string("./test_3.txt").expect("to open file");
     let mut lexer = Lexer::from_string(test_file);
 
     let _t = Timer::new("Total");
@@ -14,9 +14,10 @@ fn main() {
         let _t = Timer::new("Lexer");
         lexer.parse().expect("lexer::parse");
     }
+
     let tokens = lexer.tokens();
     println!("LEXER\n----{}\n----", lexer.to_string());
-    dbg!(&tokens);
+    // dbg!(&tokens);
 
     let mut ast = AST::with_tokens(tokens);
 
@@ -29,7 +30,7 @@ fn main() {
             ast.print_errors(&program.root);
         }
 
-        // dbg!(&program);
+        dbg!(&program);
     }
 }
 

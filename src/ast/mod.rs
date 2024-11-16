@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::anyhow;
 
-use crate::lexer::{self, Token};
+use crate::lexer::{self, Token, TokenPosition, TokenType};
 
 #[derive(Clone, Debug)]
 pub struct AST {
@@ -41,20 +41,25 @@ impl AST {
     }
 
     pub fn parse(&mut self) -> anyhow::Result<Program> {
-        let root = if let Some(token) = self.tokens.last() {
-            match token.token_type() {
-                lexer::TokenType::Unknown => {
-                    return Err(anyhow!(
-                        "found unknown token line:{}:{}", //TODO:Maybe make this return a invalid statement
-                        token.start.line,
-                        token.start.col,
-                    ));
-                }
-                _ => self.parse_expression()?,
-            }
-        } else {
-            return Err(anyhow!("not tokens to parse",));
-        };
+        let mut nodes = Vec::<Node>::new();
+        while !self.tokens.is_empty() {
+            nodes.push(self.parse_expression()?);
+        }
+
+        // let root = if let Some(token) = self.tokens.last() {
+        //     match token.token_type() {
+        //         lexer::TokenType::Unknown => {
+        //             return Err(anyhow!(
+        //                 "found unknown token line:{}:{}", //TODO:Maybe make this return a invalid statement
+        //                 token.start.line,
+        //                 token.start.col,
+        //             ));
+        //         }
+        //         _ => self.parse_expression()?,
+        //     }
+        // } else {
+        //     return Err(anyhow!("not tokens to parse",));
+        // };
 
         if self.tokens.len() > 0 {
             return Err(anyhow!(
@@ -65,42 +70,97 @@ impl AST {
 
         Ok(Program {
             env: HashMap::new(),
-            root,
+            root: Node::Expression(nodes),
         })
     }
 
     fn parse_expression(&mut self) -> anyhow::Result<Node> {
         self.current_position.push(0);
-        let mut nodes = Vec::<Node>::new();
 
-        while let Some(token) = self.tokens.pop() {
-            let node = match token.token_type() {
-                lexer::TokenType::LParen => self.parse_expression()?,
-                lexer::TokenType::RParen => break,
-                // lexer::TokenType::LSquare => todo!(), //TODO:List
-                // lexer::TokenType::RSquare => todo!(), // TOOD:Error
-                // lexer::TokenType::SingleQuote => todo!(),
-                lexer::TokenType::StringLiteral => Node::StringLiteral(token),
-                lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
-                lexer::TokenType::Word => Node::Word(token),
-                lexer::TokenType::Unknown => Node::Invalid(token), //TODO:Error ?
-                lexer::TokenType::Comment => continue,
-                _ => todo!(),
-            };
+        let token = self.tokens.pop().unwrap();
 
-            if let Node::Invalid(_) = node {
-                self.errors.push(self.current_position.clone());
+        let node = match token.token_type() {
+            lexer::TokenType::LParen => {
+                let mut nodes = Vec::<Node>::new();
+
+                while self
+                    .tokens
+                    .last()
+                    .is_some_and(|token| !matches!(token.token_type(), TokenType::RParen))
+                {
+                    nodes.push(self.parse_expression()?)
+                }
+
+                if let None = self.tokens.pop() {
+                    let last_position = nodes
+                        .last()
+                        .and_then(|node| Some(node.last_char()))
+                        .unwrap_or_else(|| &TokenPosition { line: 0, col: 0 });
+
+                    return Err(anyhow!(
+                        "unterminated expression at {}:{}",
+                        last_position.line,
+                        last_position.col
+                    ));
+                }
+
+                return Ok(Node::Expression(nodes));
             }
+            lexer::TokenType::RParen => return Err(anyhow!("trying to parse a RParen")),
+            lexer::TokenType::LSquare => {
+                let mut nodes = Vec::<Node>::new();
 
-            nodes.push(node);
-            *(self.current_position.last_mut().unwrap()) += 1;
+                while self
+                    .tokens
+                    .last()
+                    .is_some_and(|token| !matches!(token.token_type(), TokenType::RSquare))
+                {
+                    nodes.push(self.parse_expression()?)
+                }
+
+                if let None = self.tokens.pop() {
+                    let last_position = nodes
+                        .last()
+                        .and_then(|node| Some(node.last_char()))
+                        .unwrap_or_else(|| &TokenPosition { line: 0, col: 0 });
+
+                    return Err(anyhow!(
+                        "unterminated list at {}:{}",
+                        last_position.line,
+                        last_position.col
+                    ));
+                }
+
+                return Ok(Node::List(nodes));
+            } //TODO:List
+            lexer::TokenType::RSquare => return Err(anyhow!("trying to parse a RSquare")),
+            // lexer::TokenType::SingleQuote => todo!(),
+            lexer::TokenType::StringLiteral => Node::StringLiteral(token),
+            lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
+            lexer::TokenType::Word => match token.value.as_str() {
+                "fn" => self.parse_function(Node::Word(token))?,
+                _ => Node::Word(token),
+            },
+            lexer::TokenType::Unknown => Node::Invalid(token), //TODO:Error ?
+            lexer::TokenType::Comment => return self.parse_expression(),
+            _ => todo!(),
+        };
+
+        if let Node::Invalid(_) = node {
+            self.errors.push(self.current_position.clone());
         }
+
+        *(self.current_position.last_mut().unwrap()) += 1;
 
         if let None = self.current_position.pop() {
             return Err(anyhow!("popping too much of the current position"));
         };
 
-        Ok(Node::Expression(nodes))
+        return Ok(node);
+    }
+
+    fn parse_function(&mut self, fn_word: Node) -> anyhow::Result<Node> {
+        todo!()
     }
 }
 
@@ -119,7 +179,8 @@ pub enum Object {
 #[derive(Clone, Debug)]
 pub enum Node {
     Invalid(Token),
-    Expression(Vec<Node>),
+    Expression(Vec<Node>), //TODO: Those lists should have a Token for the starting and ending
+    List(Vec<Node>),
     StringLiteral(Token),
     NumberLiteral(Token),
     Word(Token),
@@ -149,5 +210,18 @@ impl Node {
         }
 
         return Ok(node);
+    }
+
+    fn last_char(&self) -> &TokenPosition {
+        match self {
+            Node::Invalid(token)
+            | Node::StringLiteral(token)
+            | Node::Word(token)
+            | Node::NumberLiteral(token) => return &token.end,
+            Node::Expression(vec) | Node::List(vec) => vec
+                .last()
+                .and_then(|node| Some(node.last_char()))
+                .unwrap_or_else(|| &TokenPosition { line: 10, col: 0 }),
+        }
     }
 }

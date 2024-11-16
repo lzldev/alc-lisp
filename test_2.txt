@@ -1,2 +1,9 @@
-(define asdf (+ 1 1))
-(define asdf (+ 1 1))
+; Hello Chat
+; Hello Chat
+()
+"hello"
+
+(def test_value (+ 32 32))
+(def hello_str "Hello World")
+
+(def emoji_str "String with Cute Emoji 🦋")

@@ -183,7 +183,7 @@ pub struct TokenPosition {
 
 #[derive(Clone, Debug)]
 pub struct Token {
-    value: String,
+    pub value: String,
     token_type: TokenType,
     pub start: TokenPosition,
     pub end: TokenPosition,
