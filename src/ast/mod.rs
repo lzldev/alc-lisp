@@ -20,7 +20,7 @@ impl AST {
 
         AST {
             tokens,
-            current_position: vec![],
+            current_position: vec![0],
             errors: vec![],
         }
     }
@@ -75,21 +75,27 @@ impl AST {
     }
 
     fn parse_expression(&mut self) -> anyhow::Result<Node> {
-        self.current_position.push(0);
-
         let token = self.tokens.pop().unwrap();
+
+        if let TokenType::Comment = token.token_type() {
+            return self.parse_expression();
+        }
 
         let node = match token.token_type() {
             lexer::TokenType::LParen => {
                 let mut nodes = Vec::<Node>::new();
+
+                self.current_position.push(0);
 
                 while self
                     .tokens
                     .last()
                     .is_some_and(|token| !matches!(token.token_type(), TokenType::RParen))
                 {
-                    nodes.push(self.parse_expression()?)
+                    nodes.push(self.parse_expression()?);
                 }
+
+                self.current_position.pop();
 
                 if let None = self.tokens.pop() {
                     let last_position = nodes
@@ -104,11 +110,13 @@ impl AST {
                     ));
                 }
 
-                return Ok(Node::Expression(nodes));
+                Node::Expression(nodes)
             }
             lexer::TokenType::RParen => return Err(anyhow!("trying to parse a RParen")),
             lexer::TokenType::LSquare => {
                 let mut nodes = Vec::<Node>::new();
+
+                self.current_position.push(0);
 
                 while self
                     .tokens
@@ -117,6 +125,8 @@ impl AST {
                 {
                     nodes.push(self.parse_expression()?)
                 }
+
+                self.current_position.pop();
 
                 if let None = self.tokens.pop() {
                     let last_position = nodes
@@ -131,10 +141,9 @@ impl AST {
                     ));
                 }
 
-                return Ok(Node::List(nodes));
-            } //TODO:List
+                Node::List(nodes)
+            }
             lexer::TokenType::RSquare => return Err(anyhow!("trying to parse a RSquare")),
-            // lexer::TokenType::SingleQuote => todo!(),
             lexer::TokenType::StringLiteral => Node::StringLiteral(token),
             lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
             lexer::TokenType::Word => match token.value.as_str() {
@@ -142,7 +151,7 @@ impl AST {
                 _ => Node::Word(token),
             },
             lexer::TokenType::Unknown => Node::Invalid(token), //TODO:Error ?
-            lexer::TokenType::Comment => return self.parse_expression(),
+            lexer::TokenType::Comment => self.parse_expression()?, // Skip
             _ => todo!(),
         };
 
@@ -151,10 +160,6 @@ impl AST {
         }
 
         *(self.current_position.last_mut().unwrap()) += 1;
-
-        if let None = self.current_position.pop() {
-            return Err(anyhow!("popping too much of the current position"));
-        };
 
         return Ok(node);
     }
@@ -198,10 +203,11 @@ impl Node {
             node = match node {
                 Node::Expression(vec) => vec
                     .get(position[i])
-                    .ok_or_else(|| anyhow!("invalid index of node"))?,
+                    .ok_or_else(|| anyhow!("invalid index of node {:?}", position))?,
                 node_type => {
                     return Err(anyhow!(
-                        "trying to get node position from node of type {:?}",
+                        "trying to get node position {:?} from node of type {:?}",
+                        position,
                         node_type
                     ))
                 }

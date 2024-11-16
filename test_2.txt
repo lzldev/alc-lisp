@@ -3,6 +3,8 @@
 ()
 "hello"
 
+(+ (🦋 +))
+
 (def test_value (+ 32 32))
 (def hello_str "Hello World")
 
