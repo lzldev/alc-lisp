@@ -1,0 +1,5 @@
+(str "Hello" "World")
+
+(define (fn [hello] (
+    (+ 1 hello)
+)))

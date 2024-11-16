@@ -147,7 +147,7 @@ impl AST {
             lexer::TokenType::StringLiteral => Node::StringLiteral(token),
             lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
             lexer::TokenType::Word => match token.value.as_str() {
-                "fn" => self.parse_function(Node::Word(token))?,
+                "fn" => self.parse_function(token)?,
                 _ => Node::Word(token),
             },
             lexer::TokenType::Unknown => Node::Invalid(token), //TODO:Error ?
@@ -164,8 +164,26 @@ impl AST {
         return Ok(node);
     }
 
-    fn parse_function(&mut self, fn_word: Node) -> anyhow::Result<Node> {
-        todo!()
+    fn parse_function(&mut self, fn_word: Token) -> anyhow::Result<Node> {
+        let arguments = self.parse_expression()?;
+
+        let Node::List(words) = arguments else {
+            return Err(anyhow!("invalid function declaration: invalid arguments"));
+        };
+
+        if words.iter().any(|node| !matches!(node, Node::Word(_))) {
+            return Err(anyhow!(
+                "invalid function arguments: arguments should only be identifiers"
+            ));
+        }
+
+        let body = self.parse_expression()?;
+
+        return Ok(Node::FunctionLiteral {
+            token: fn_word,
+            arguments: words,
+            body: Box::new(body),
+        });
     }
 }
 
@@ -188,6 +206,11 @@ pub enum Node {
     List(Vec<Node>),
     StringLiteral(Token),
     NumberLiteral(Token),
+    FunctionLiteral {
+        token: Token,
+        arguments: Vec<Node>,
+        body: Box<Node>,
+    },
     Word(Token),
 }
 
@@ -228,6 +251,7 @@ impl Node {
                 .last()
                 .and_then(|node| Some(node.last_char()))
                 .unwrap_or_else(|| &TokenPosition { line: 10, col: 0 }),
+            Node::FunctionLiteral { body, .. } => body.last_char(),
         }
     }
 }
