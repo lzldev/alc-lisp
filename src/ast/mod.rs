@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 
 use crate::lexer::{self, Token, TokenPosition, TokenType};
 
@@ -112,7 +112,13 @@ impl AST {
 
                 Node::Expression(nodes)
             }
-            lexer::TokenType::RParen => return Err(anyhow!("trying to parse a RParen")),
+            lexer::TokenType::RParen => {
+                return Err(anyhow!(
+                    "trying to parse a RParen {}:{}",
+                    token.end.line,
+                    token.end.col
+                ))
+            }
             lexer::TokenType::LSquare => {
                 let mut nodes = Vec::<Node>::new();
 
@@ -143,7 +149,13 @@ impl AST {
 
                 Node::List(nodes)
             }
-            lexer::TokenType::RSquare => return Err(anyhow!("trying to parse a RSquare")),
+            lexer::TokenType::RSquare => {
+                return Err(anyhow!(
+                    "trying to parse a RSquare {}:{}",
+                    token.end.line,
+                    token.end.col
+                ))
+            }
             lexer::TokenType::StringLiteral => Node::StringLiteral(token),
             lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
             lexer::TokenType::Word => match token.value.as_str() {
@@ -165,7 +177,9 @@ impl AST {
     }
 
     fn parse_function(&mut self, fn_word: Token) -> anyhow::Result<Node> {
-        let arguments = self.parse_expression()?;
+        let arguments = self
+            .parse_expression()
+            .context("invalid function arguments:")?;
 
         let Node::List(words) = arguments else {
             return Err(anyhow!("invalid function declaration: invalid arguments"));
@@ -177,7 +191,7 @@ impl AST {
             ));
         }
 
-        let body = self.parse_expression()?;
+        let body = self.parse_expression().context("invalid function body:")?;
 
         return Ok(Node::FunctionLiteral {
             token: fn_word,
