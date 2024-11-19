@@ -2,7 +2,7 @@ use std::{collections::HashMap, time};
 
 use alc_lisp::{
     ast::{Node, AST},
-    interpreter::{builtins::add_builtins, objects::Object, Env, Program, Reference},
+    interpreter::{builtins::add_builtins, Env, Program, Reference},
     lexer::Lexer,
 };
 

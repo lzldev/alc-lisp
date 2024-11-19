@@ -7,3 +7,4 @@ default-run = "alc-lisp"
 [dependencies]
 anyhow = "1.0.93"
 bytes = "1.8.0"
+defer = "0.2.1"

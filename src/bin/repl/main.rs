@@ -53,7 +53,7 @@ fn main() -> anyhow::Result<()> {
 
         println!("{:?}", result);
 
-        globals = Some(program.env)
+        globals = Some(program.env[0].take())
     }
 
     // let result: Object;

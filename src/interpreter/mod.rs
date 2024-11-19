@@ -1,4 +1,9 @@
-use std::{cell::LazyCell, collections::HashMap, rc::Rc};
+use std::{
+    borrow::BorrowMut,
+    cell::{Cell, LazyCell},
+    collections::HashMap,
+    rc::Rc,
+};
 
 use anyhow::{anyhow, Context};
 use objects::Object;
@@ -12,7 +17,7 @@ pub type Reference = Rc<Object>;
 pub type Env = HashMap<String, Reference>;
 
 pub struct Program {
-    pub env: Vec<Env>,
+    pub env: Vec<Cell<Env>>,
 }
 
 pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(true)));
@@ -30,7 +35,7 @@ fn bool_from_native(value: bool) -> Reference {
 impl Program {
     pub fn new(global_env: Env) -> Self {
         return Self {
-            env: vec![global_env],
+            env: vec![Cell::new(global_env)],
         };
     }
 
@@ -48,9 +53,10 @@ impl Program {
         }
     }
 
-    fn get_value(&self, name: &str) -> Rc<Object> {
-        for env in self.env.iter().rev() {
-            if let Some(value) = env.get(name) {
+    fn get_value(&mut self, name: &str) -> Rc<Object> {
+        for env in self.env.iter_mut().rev() {
+            let map = env.borrow_mut().get_mut();
+            if let Some(value) = map.get(name) {
                 return value.clone();
             }
         }
@@ -59,7 +65,8 @@ impl Program {
     }
 
     fn set_value(&mut self, name: String, value: Rc<Object>) {
-        self.env.last_mut().unwrap().insert(name, value);
+        let env = self.env.last_mut().unwrap().borrow_mut().get_mut();
+        env.insert(name, value);
     }
 
     fn parse_expression(&mut self, node: &Node) -> anyhow::Result<Reference> {
@@ -128,7 +135,7 @@ impl Program {
                             return Ok(Rc::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
                         }
 
-                        self.env.push(HashMap::new());
+                        self.env.push(Cell::new(HashMap::new()));
                         for (idx, arg) in parameters.iter().enumerate() {
                             self.set_value(arg.clone(), args[idx].clone());
                         }
