@@ -87,11 +87,19 @@ impl Program {
 
                 match first {
                     Object::Builtin(f) => return Ok(f(args)),
-                    Object::Function { .. } => {}
+                    Object::Function { parameters, body } => {
+                        if args.len() != parameters.len() {
+                            return Ok(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len())));
+                        }
+
+                        for (idx, arg) in parameters.iter().enumerate() {
+                            self.env.insert(arg.clone(), Rc::new(args[idx].clone()));
+                        }
+
+                        return Ok(self.parse_expression(&body)?);
+                    }
                     obj => return Err(anyhow!("Invalid type starting expression {:?}", obj)),
                 }
-
-                return Ok(first);
             }
             Node::List(vec) => {
                 let mut items: Vec<Object> = Vec::with_capacity(vec.len());
@@ -131,7 +139,7 @@ impl Program {
                     .collect();
 
                 return Ok(Object::Function {
-                    arguments,
+                    parameters: arguments,
                     body: (**body).clone(),
                 });
             }

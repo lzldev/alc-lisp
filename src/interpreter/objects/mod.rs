@@ -7,7 +7,7 @@ pub enum Object {
     String(String),
     Bool(bool),
     Builtin(fn(Vec<Object>) -> Object),
-    Function { arguments: Vec<String>, body: Node },
+    Function { parameters: Vec<String>, body: Node },
     Null,
     Error(String),
 }

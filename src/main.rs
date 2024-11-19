@@ -43,8 +43,8 @@ fn main() {
     {
         let _t = Timer::new("Interpreter");
         result = program.eval(&root).expect("error running program:");
-        dbg!(result);
     }
+    dbg!(result);
 }
 struct Timer {
     name: String,
