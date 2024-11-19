@@ -39,11 +39,7 @@ impl Lexer {
     }
 
     pub fn parse(&mut self) -> anyhow::Result<()> {
-        let mut iter = self
-            .internal
-            .chars()
-            // .filter(|v| v != &'\n')
-            .peekable();
+        let mut iter = self.internal.chars().peekable();
 
         let mut col = 0;
         let mut line = 1;

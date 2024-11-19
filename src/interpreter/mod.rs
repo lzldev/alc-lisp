@@ -12,7 +12,7 @@ pub type Reference = Rc<Object>;
 pub type Env = HashMap<String, Reference>;
 
 pub struct Program {
-    pub env: Env,
+    pub env: Vec<Env>,
 }
 
 pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(true)));
@@ -28,8 +28,10 @@ fn bool_from_native(value: bool) -> Reference {
 }
 
 impl Program {
-    pub fn new(env: Env) -> Self {
-        return Self { env };
+    pub fn new(global_env: Env) -> Self {
+        return Self {
+            env: vec![global_env],
+        };
     }
 
     pub fn eval(&mut self, root: &Node) -> anyhow::Result<Reference> {
@@ -44,6 +46,20 @@ impl Program {
             }
             _ => Err(anyhow!("Root node is not a expression")),
         }
+    }
+
+    fn get_value(&self, name: &str) -> Rc<Object> {
+        for env in self.env.iter().rev() {
+            if let Some(value) = env.get(name) {
+                return value.clone();
+            }
+        }
+
+        return NULL.clone();
+    }
+
+    fn set_value(&mut self, name: String, value: Rc<Object>) {
+        self.env.last_mut().unwrap().insert(name, value);
     }
 
     fn parse_expression(&mut self, node: &Node) -> anyhow::Result<Reference> {
@@ -85,7 +101,7 @@ impl Program {
 
                             let value = self.parse_expression(&vec[2])?;
 
-                            self.env.insert(name.value.clone(), value);
+                            self.set_value(name.value.clone(), value);
 
                             return Ok(NULL.clone());
                         }
@@ -112,11 +128,14 @@ impl Program {
                             return Ok(Rc::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
                         }
 
+                        self.env.push(HashMap::new());
                         for (idx, arg) in parameters.iter().enumerate() {
-                            self.env.insert(arg.clone(), args[idx].clone());
+                            self.set_value(arg.clone(), args[idx].clone());
                         }
+                        let ret = self.parse_expression(&body)?;
+                        self.env.pop();
 
-                        return Ok(self.parse_expression(&body)?);
+                        return Ok(ret);
                     }
                     obj => return Err(anyhow!("Invalid type starting expression {:?}", obj)),
                 }
@@ -165,14 +184,7 @@ impl Program {
                     body: (**body).clone(),
                 }));
             }
-            Node::Word(token) => {
-                let object = self.env.get(token.value.as_str());
-
-                return match object {
-                    Some(v) => Ok(v.clone()),
-                    None => Ok(NULL.clone()),
-                };
-            }
+            Node::Word(token) => Ok(self.get_value(token.value.as_str())),
         }
     }
 }
