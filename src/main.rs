@@ -1,7 +1,8 @@
-use std::time;
+use std::{collections::HashMap, rc::Rc, time};
 
 use alc_lisp::{
-    ast::{Program, AST},
+    ast::{Node, AST},
+    interpreter::{objects::Object, Env, Program},
     lexer::Lexer,
 };
 
@@ -21,18 +22,41 @@ fn main() {
 
     let mut ast = AST::with_tokens(tokens);
 
-    let program: Program;
+    let root: Node;
     {
         let _t = Timer::new("AST");
-        program = ast.parse().expect("ast::parse");
+        root = ast.parse().expect("ast::parse");
 
-        dbg!(&program);
+        dbg!(&root);
         if ast.has_errors() {
-            ast.print_errors(&program.root);
+            ast.print_errors(&root);
         }
     }
-}
 
+    let mut globals: Env = HashMap::new();
+
+    globals.insert(
+        "+".to_string(),
+        Rc::new(Object::Builtin(|args| {
+            let [f, s] = &args[..2] else {
+                return Object::Error(format!("Invalid args len {} expected:2", args.len()));
+            };
+
+            match (f, s) {
+                (Object::Integer(l), Object::Integer(r)) => return Object::Integer(l + r),
+                _ => Object::Error(format!(
+                    "Invalid args type to function should be both integers",
+                )),
+            }
+        })),
+    );
+
+    let mut program = Program::new(globals);
+
+    let result = program.eval(&root).expect("error running program:");
+
+    dbg!(result);
+}
 struct Timer {
     name: String,
     start: time::Instant,

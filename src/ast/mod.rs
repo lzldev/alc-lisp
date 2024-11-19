@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Context};
 
-use crate::lexer::{self, Token, TokenPosition, TokenType};
+use crate::{
+    interpreter::Program,
+    lexer::{self, Token, TokenPosition, TokenType},
+};
 
 #[derive(Clone, Debug)]
 pub struct AST {
@@ -40,26 +43,11 @@ impl AST {
         }
     }
 
-    pub fn parse(&mut self) -> anyhow::Result<Program> {
+    pub fn parse(&mut self) -> anyhow::Result<Node> {
         let mut nodes = Vec::<Node>::new();
         while !self.tokens.is_empty() {
             nodes.push(self.parse_expression()?);
         }
-
-        // let root = if let Some(token) = self.tokens.last() {
-        //     match token.token_type() {
-        //         lexer::TokenType::Unknown => {
-        //             return Err(anyhow!(
-        //                 "found unknown token line:{}:{}", //TODO:Maybe make this return a invalid statement
-        //                 token.start.line,
-        //                 token.start.col,
-        //             ));
-        //         }
-        //         _ => self.parse_expression()?,
-        //     }
-        // } else {
-        //     return Err(anyhow!("not tokens to parse",));
-        // };
 
         if self.tokens.len() > 0 {
             return Err(anyhow!(
@@ -68,10 +56,7 @@ impl AST {
             ));
         }
 
-        Ok(Program {
-            env: HashMap::new(),
-            root: Node::Expression(nodes),
-        })
+        return Ok(Node::Expression(nodes));
     }
 
     fn parse_expression(&mut self) -> anyhow::Result<Node> {
@@ -199,18 +184,6 @@ impl AST {
             body: Box::new(body),
         });
     }
-}
-
-#[derive(Clone, Debug)]
-pub struct Program {
-    env: HashMap<String, Object>,
-    pub root: Node,
-}
-
-#[derive(Clone, Debug)]
-pub enum Object {
-    Number(usize),
-    String(String),
 }
 
 #[derive(Clone, Debug)]
