@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{cell::LazyCell, collections::HashMap, rc::Rc};
 
 use anyhow::{anyhow, Context};
 use objects::Object;
@@ -15,13 +15,25 @@ pub struct Program {
     pub env: Env,
 }
 
+pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(true)));
+pub const FALSE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(false)));
+pub const NULL: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Null));
+
+fn bool_from_native(value: bool) -> Reference {
+    if value {
+        TRUE.clone()
+    } else {
+        FALSE.clone()
+    }
+}
+
 impl Program {
     pub fn new(env: Env) -> Self {
         return Self { env };
     }
 
     pub fn eval(&mut self, root: &Node) -> anyhow::Result<Reference> {
-        let mut last_result: Reference = Rc::new(Object::Null);
+        let mut last_result: Reference = NULL.clone();
 
         match root {
             Node::Expression(expressions) => {
@@ -36,12 +48,17 @@ impl Program {
 
     fn parse_expression(&mut self, node: &Node) -> anyhow::Result<Reference> {
         match node {
+            Node::BooleanLiteral(token) => match token.value.as_str() {
+                "true" => Ok(TRUE.clone()),
+                "false" => Ok(FALSE.clone()),
+                _ => panic!("AAAAA"),
+            },
             Node::Invalid(_) => {
                 return Ok(Rc::new(Object::Error("Evaluating Invalid Node".to_owned())))
             }
             Node::Expression(vec) => {
                 if vec.is_empty() {
-                    return Ok(Rc::new(Object::Null));
+                    return Ok(NULL.clone());
                 }
 
                 let len = vec.len();
@@ -70,7 +87,7 @@ impl Program {
 
                             self.env.insert(name.value.clone(), value);
 
-                            return Ok(Rc::new(Object::Null));
+                            return Ok(NULL.clone());
                         }
                         _ => {}
                     }
@@ -153,7 +170,7 @@ impl Program {
 
                 return match object {
                     Some(v) => Ok(v.clone()),
-                    None => Ok(Rc::new(Object::Null)),
+                    None => Ok(NULL.clone()),
                 };
             }
         }

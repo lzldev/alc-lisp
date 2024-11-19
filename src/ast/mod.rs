@@ -140,6 +140,7 @@ impl AST {
             lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
             lexer::TokenType::Word => match token.value.as_str() {
                 "fn" => self.parse_function(token)?,
+                "true" | "false" => Node::BooleanLiteral(token),
                 _ => Node::Word(token),
             },
             lexer::TokenType::Unknown => Node::Invalid(token), //TODO:Error ?
@@ -188,6 +189,7 @@ pub enum Node {
     List(Vec<Node>),
     StringLiteral(Token),
     NumberLiteral(Token),
+    BooleanLiteral(Token),
     FunctionLiteral {
         token: Token,
         arguments: Vec<Node>,
@@ -229,7 +231,8 @@ impl Node {
             Node::Invalid(token)
             | Node::StringLiteral(token)
             | Node::Word(token)
-            | Node::NumberLiteral(token) => return &token.end,
+            | Node::NumberLiteral(token)
+            | Node::BooleanLiteral(token) => return &token.end,
             Node::Expression(vec) | Node::List(vec) => vec
                 .last()
                 .and_then(|node| Some(node.last_char()))

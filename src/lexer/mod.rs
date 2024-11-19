@@ -19,7 +19,7 @@ impl Lexer {
     }
 
     fn is_word_symbol(c: char) -> bool {
-        matches!(c, '+' | '-' | '/' | '*' | '_' | '?')
+        matches!(c, '+' | '-' | '/' | '*' | '_' | '=' | '?' | '!')
     }
 
     pub fn to_string(&self) -> String {
