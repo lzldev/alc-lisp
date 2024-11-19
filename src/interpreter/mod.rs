@@ -9,7 +9,7 @@ pub mod builtins;
 pub mod objects;
 
 pub type Reference = Rc<Object>;
-pub type Env = HashMap<String, Reference>;
+pub type Env = HashMap<&'static str, Reference>;
 
 pub struct Program {
     pub env: Env,
@@ -91,7 +91,7 @@ impl Program {
                 body,
             } => todo!(),
             Node::Word(token) => {
-                let object = self.env.get(&token.value);
+                let object = self.env.get(token.value.as_str());
 
                 return match object {
                     Some(v) => {

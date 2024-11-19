@@ -1,12 +1,8 @@
-use std::{collections::HashMap, rc::Rc, time};
+use std::{collections::HashMap, time};
 
 use alc_lisp::{
     ast::{Node, AST},
-    interpreter::{
-        builtins::add_builtins,
-        objects::{self, Object},
-        Env, Program,
-    },
+    interpreter::{builtins::add_builtins, objects::Object, Env, Program},
     lexer::Lexer,
 };
 

@@ -21,11 +21,10 @@ fn main() -> anyhow::Result<()> {
     loop {
         print!(">> ");
         stdout.flush()?;
-
         let mut line = String::new();
-        stdin.read_line(&mut line)?;
+        let read = stdin.read_line(&mut line)?;
 
-        if line == ".q" {
+        if read == 0 || line == ".q\n" {
             break;
         }
 
