@@ -1,2 +1,2 @@
-(+ 1 (+ 1 1))
-(+ 1 1)
+(define plus_two (fn [n] (+ n 2)))
+plus_two

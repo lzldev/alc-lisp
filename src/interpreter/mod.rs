@@ -87,7 +87,7 @@ impl Program {
 
                 match first {
                     Object::Builtin(f) => return Ok(f(args)),
-                    Object::Function => {}
+                    Object::Function { .. } => {}
                     obj => return Err(anyhow!("Invalid type starting expression {:?}", obj)),
                 }
 
@@ -116,10 +116,25 @@ impl Program {
                 return Ok(Object::Integer(value));
             }
             Node::FunctionLiteral {
-                token,
+                token: _,
                 arguments,
                 body,
-            } => todo!(),
+            } => {
+                let arguments = arguments
+                    .into_iter()
+                    .map(|arg| {
+                        let Node::Word(token) = arg else {
+                            panic!("argument is not a word")
+                        };
+                        return token.value.clone();
+                    })
+                    .collect();
+
+                return Ok(Object::Function {
+                    arguments,
+                    body: (**body).clone(),
+                });
+            }
             Node::Word(token) => {
                 let object = self.env.get(token.value.as_str());
 

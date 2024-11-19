@@ -1,3 +1,5 @@
+use crate::ast::Node;
+
 #[derive(Debug, Clone)]
 pub enum Object {
     List(Vec<Object>),
@@ -5,7 +7,7 @@ pub enum Object {
     String(String),
     Bool(bool),
     Builtin(fn(Vec<Object>) -> Object),
-    Function,
+    Function { arguments: Vec<String>, body: Node },
     Null,
     Error(String),
 }
