@@ -9,7 +9,7 @@ pub mod builtins;
 pub mod objects;
 
 pub type Reference = Rc<Object>;
-pub type Env = HashMap<&'static str, Reference>;
+pub type Env = HashMap<String, Reference>;
 
 pub struct Program {
     pub env: Env,
@@ -41,9 +41,39 @@ impl Program {
                     return Ok(Object::Null);
                 }
 
-                let first = self.parse_expression(&vec[0])?;
-
                 let len = vec.len();
+
+                if let Node::Word(word) = &vec[0] {
+                    match word.value.as_str() {
+                        "define" => {
+                            if len == 1 || len != 3 {
+                                return Ok(Object::Error(format!(
+                                    "Invalid amount of arguments to define got:{} expected: 3",
+                                    len
+                                )));
+                            }
+
+                            let name = match &vec[1] {
+                                Node::Word(token) => token,
+                                n => {
+                                    return Ok(Object::Error(format!(
+                                        "Invalid token for define: {:?} should be a word",
+                                        n
+                                    )))
+                                }
+                            };
+
+                            let value = self.parse_expression(&vec[2])?;
+
+                            self.env.insert(name.value.clone(), Rc::new(value));
+
+                            return Ok(Object::Null);
+                        }
+                        _ => {}
+                    }
+                }
+
+                let first = self.parse_expression(&vec[0])?;
 
                 if len == 1 {
                     return Ok(first);
@@ -75,12 +105,12 @@ impl Program {
             Node::StringLiteral(token) => {
                 let len = token.value.len();
 
-                return Ok(Object::String(token.value[1..(len - 2)].to_owned()));
+                return Ok(Object::String(token.value[1..(len - 1)].to_owned()));
             }
             Node::NumberLiteral(token) => {
                 let value = token
                     .value
-                    .parse::<usize>()
+                    .parse::<isize>()
                     .context("error parsing numberliteral:")?;
 
                 return Ok(Object::Integer(value));

@@ -1,11 +1,6 @@
-use std::collections::HashMap;
-
 use anyhow::{anyhow, Context};
 
-use crate::{
-    interpreter::Program,
-    lexer::{self, Token, TokenPosition, TokenType},
-};
+use crate::lexer::{self, Token, TokenPosition, TokenType};
 
 #[derive(Clone, Debug)]
 pub struct AST {
@@ -211,9 +206,10 @@ impl Node {
 
         while i < len {
             node = match node {
-                Node::Expression(vec) => vec
+                Node::Expression(vec) | Node::List(vec) => vec
                     .get(position[i])
                     .ok_or_else(|| anyhow!("invalid index of node {:?}", position))?,
+
                 node_type => {
                     return Err(anyhow!(
                         "trying to get node position {:?} from node of type {:?}",
