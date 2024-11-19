@@ -22,10 +22,6 @@ impl Lexer {
         matches!(c, '+' | '-' | '/' | '*' | '_' | '?')
     }
 
-    fn is_word_start(c: char) -> bool {
-        matches!(c, '+' | '-' | '/' | '*' | '_' | '?')
-    }
-
     pub fn to_string(&self) -> String {
         let mut out = String::new();
         let mut line = 0;
