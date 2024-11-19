@@ -2,7 +2,7 @@ use std::{collections::HashMap, time};
 
 use alc_lisp::{
     ast::{Node, AST},
-    interpreter::{builtins::add_builtins, objects::Object, Env, Program},
+    interpreter::{builtins::add_builtins, objects::Object, Env, Program, Reference},
     lexer::Lexer,
 };
 
@@ -39,7 +39,7 @@ fn main() {
 
     let mut program = Program::new(globals);
 
-    let result: Object;
+    let result: Reference;
     {
         let _t = Timer::new("Interpreter");
         result = program.eval(&root).expect("error running program:");
