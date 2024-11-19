@@ -49,7 +49,3 @@ pub fn add_builtins(env: &mut Env) {
         })),
     );
 }
-
-fn arg_len_error(size: usize, expected: usize) -> Object {
-    return Object::Error(format!("Invalid args len {} expected:{}", size, expected));
-}

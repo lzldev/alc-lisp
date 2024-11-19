@@ -22,6 +22,10 @@ impl Lexer {
         matches!(c, '+' | '-' | '/' | '*' | '_' | '?')
     }
 
+    fn is_word_start(c: char) -> bool {
+        matches!(c, '+' | '-' | '/' | '*' | '_' | '?')
+    }
+
     pub fn to_string(&self) -> String {
         let mut out = String::new();
         let mut line = 0;
@@ -118,7 +122,26 @@ impl Lexer {
                     })
                 }
                 c => {
-                    if c.is_alphabetic() || Lexer::is_word_symbol(c) {
+                    if c.is_numeric()
+                        || ((c == '-' || c == '+') && iter.peek().is_some_and(|c| c.is_numeric()))
+                    {
+                        let mut number = c.to_string();
+                        while iter.peek().is_some_and(|v| v.is_alphanumeric()) {
+                            let letter = iter.next().unwrap();
+                            col += 1;
+                            number.push(letter);
+                        }
+
+                        self.tokens.push(Token {
+                            value: number,
+                            token_type: TokenType::NumberLiteral,
+                            start: TokenPosition {
+                                line,
+                                col: col_start,
+                            },
+                            end: TokenPosition { line, col },
+                        })
+                    } else if c.is_alphabetic() || Lexer::is_word_symbol(c) {
                         let mut word = c.to_string();
 
                         while iter
@@ -133,23 +156,6 @@ impl Lexer {
                         self.tokens.push(Token {
                             value: word,
                             token_type: TokenType::Word,
-                            start: TokenPosition {
-                                line,
-                                col: col_start,
-                            },
-                            end: TokenPosition { line, col },
-                        })
-                    } else if c.is_numeric() {
-                        let mut number = c.to_string();
-                        while iter.peek().is_some_and(|v| v.is_alphanumeric()) {
-                            let letter = iter.next().unwrap();
-                            col += 1;
-                            number.push(letter);
-                        }
-
-                        self.tokens.push(Token {
-                            value: number,
-                            token_type: TokenType::NumberLiteral,
                             start: TokenPosition {
                                 line,
                                 col: col_start,
