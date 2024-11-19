@@ -5,27 +5,30 @@ use objects::Object;
 
 use crate::ast::Node;
 
+pub mod builtins;
 pub mod objects;
 
 pub type Reference = Rc<Object>;
 pub type Env = HashMap<String, Reference>;
 
 pub struct Program {
-    pub globals: Env,
     pub env: Env,
 }
 
 impl Program {
     pub fn new(env: Env) -> Self {
-        return Self {
-            globals: HashMap::new(),
-            env,
-        };
+        return Self { env };
     }
 
     pub fn eval(&mut self, root: &Node) -> anyhow::Result<Object> {
+        let mut last_result: Object = Object::Null;
         match root {
-            Node::Expression(_) => self.parse_expression(root),
+            Node::Expression(expressions) => {
+                for exp in expressions.iter() {
+                    last_result = self.parse_expression(exp)?;
+                }
+                Ok(last_result)
+            }
             _ => Err(anyhow!("Root node is not a expression")),
         }
     }
@@ -55,7 +58,7 @@ impl Program {
                 match first {
                     Object::Builtin(f) => return Ok(f(args)),
                     Object::Function => {}
-                    _ => return Err(anyhow!("Invalid type starting expression")),
+                    obj => return Err(anyhow!("Invalid type starting expression {:?}", obj)),
                 }
 
                 return Ok(first);
