@@ -1,6 +1,6 @@
 use std::{
     borrow::BorrowMut,
-    cell::{Cell, LazyCell},
+    cell::{LazyCell, RefCell},
     collections::HashMap,
     rc::Rc,
 };
@@ -17,7 +17,7 @@ pub type Reference = Rc<Object>;
 pub type Env = HashMap<String, Reference>;
 
 pub struct Program {
-    pub env: Vec<Cell<Env>>,
+    pub env: Vec<RefCell<Env>>,
 }
 
 pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(true)));
@@ -35,7 +35,7 @@ fn bool_from_native(value: bool) -> Reference {
 impl Program {
     pub fn new(global_env: Env) -> Self {
         return Self {
-            env: vec![Cell::new(global_env)],
+            env: vec![RefCell::new(global_env)],
         };
     }
 
@@ -130,12 +130,16 @@ impl Program {
 
                 match first.as_ref() {
                     Object::Builtin(f) => return Ok(f(args)),
-                    Object::Function { parameters, body } => {
+                    Object::Function {
+                        env,
+                        parameters,
+                        body,
+                    } => {
                         if args.len() != parameters.len() {
                             return Ok(Rc::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
                         }
 
-                        self.env.push(Cell::new(HashMap::new()));
+                        self.env.push(env.clone());
                         for (idx, arg) in parameters.iter().enumerate() {
                             self.set_value(arg.clone(), args[idx].clone());
                         }
@@ -186,7 +190,10 @@ impl Program {
                     })
                     .collect();
 
+                let env = self.env.last().expect("to get last env").clone();
+
                 return Ok(Rc::new(Object::Function {
+                    env,
                     parameters: arguments,
                     body: (**body).clone(),
                 }));

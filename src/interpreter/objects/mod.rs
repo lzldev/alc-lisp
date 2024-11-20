@@ -1,6 +1,8 @@
+use std::cell::RefCell;
+
 use crate::ast::Node;
 
-use super::Reference;
+use super::{Env, Reference};
 
 #[derive(Debug, Clone)]
 pub enum Object {
@@ -9,7 +11,11 @@ pub enum Object {
     String(String),
     Bool(bool),
     Builtin(fn(Vec<Reference>) -> Reference),
-    Function { parameters: Vec<String>, body: Node },
+    Function {
+        env: RefCell<Env>,
+        parameters: Vec<String>,
+        body: Node,
+    },
     Null,
     Error(String),
 }
