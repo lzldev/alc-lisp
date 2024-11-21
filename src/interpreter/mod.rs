@@ -32,6 +32,32 @@ fn bool_from_native(value: bool) -> Reference {
     }
 }
 
+fn is_truthy(value: Reference) -> bool {
+    match value.as_ref() {
+        Object::Integer(v) => {
+            if v != &0 {
+                return true;
+            }
+        }
+        Object::String(v) => {
+            if !v.is_empty() {
+                return true;
+            }
+        }
+        Object::Bool(v) => {
+            return *v;
+        }
+        Object::List(vec) => {
+            if !vec.is_empty() {
+                return true;
+            }
+        }
+        _ => {}
+    }
+
+    return false;
+}
+
 impl Program {
     pub fn new(global_env: Env) -> Self {
         return Self {
@@ -71,11 +97,41 @@ impl Program {
 
     fn parse_expression(&mut self, node: &Node) -> anyhow::Result<Reference> {
         match node {
+            Node::IfExpression {
+                condition,
+                truthy,
+                falsy,
+                ..
+            } => {
+                let condition = self.parse_expression(condition)?;
+
+                if is_truthy(condition) {
+                    return self.parse_expression(truthy);
+                } else {
+                    return self.parse_expression(falsy);
+                }
+            }
+            Node::Word(token) => Ok(self.get_value(token.value.as_str())),
             Node::BooleanLiteral(token) => match token.value.as_str() {
                 "true" => Ok(TRUE.clone()),
                 "false" => Ok(FALSE.clone()),
                 _ => panic!("AAAAA"),
             },
+            Node::StringLiteral(token) => {
+                let len = token.value.len();
+
+                return Ok(Rc::new(Object::String(
+                    token.value[1..(len - 1)].to_owned(),
+                )));
+            }
+            Node::NumberLiteral(token) => {
+                let value = token
+                    .value
+                    .parse::<isize>()
+                    .context("error parsing numberliteral:")?;
+
+                return Ok(Rc::new(Object::Integer(value)));
+            }
             Node::Invalid(_) => {
                 return Ok(Rc::new(Object::Error("Evaluating Invalid Node".to_owned())))
             }
@@ -160,21 +216,6 @@ impl Program {
 
                 return Ok(Rc::new(Object::List(items)));
             }
-            Node::StringLiteral(token) => {
-                let len = token.value.len();
-
-                return Ok(Rc::new(Object::String(
-                    token.value[1..(len - 1)].to_owned(),
-                )));
-            }
-            Node::NumberLiteral(token) => {
-                let value = token
-                    .value
-                    .parse::<isize>()
-                    .context("error parsing numberliteral:")?;
-
-                return Ok(Rc::new(Object::Integer(value)));
-            }
             Node::FunctionLiteral {
                 token: _,
                 arguments,
@@ -198,7 +239,6 @@ impl Program {
                     body: (**body).clone(),
                 }));
             }
-            Node::Word(token) => Ok(self.get_value(token.value.as_str())),
         }
     }
 }

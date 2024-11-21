@@ -144,6 +144,7 @@ impl AST {
             lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
             lexer::TokenType::Word => match token.value.as_str() {
                 "fn" => self.parse_function(token)?,
+                "if" => self.parse_if(token)?,
                 "true" | "false" => Node::BooleanLiteral(token),
                 _ => Node::Word(token),
             },
@@ -182,6 +183,21 @@ impl AST {
             token: fn_word,
             arguments: words,
             body: Box::new(body),
+        });
+    }
+
+    fn parse_if(&mut self, if_word: Token) -> anyhow::Result<Node> {
+        let condition = self.parse_expression().context("invalid if condition:")?;
+
+        let truthy = self.parse_expression().context("invalid if body:")?;
+
+        let falsy = self.parse_expression().context("invalid if body:")?;
+
+        return Ok(Node::IfExpression {
+            token: if_word,
+            condition: Box::new(condition),
+            truthy: Box::new(truthy),
+            falsy: Box::new(falsy),
         });
     }
 }

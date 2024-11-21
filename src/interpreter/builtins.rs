@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use super::{bool_from_native, objects::Object, Env, TRUE};
+use super::{bool_from_native, objects::Object, Env, Reference, TRUE};
 
 pub fn add_builtins(env: &mut Env) {
     env.insert(
