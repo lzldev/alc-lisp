@@ -153,4 +153,38 @@ pub fn add_builtins(env: &mut Env) {
             return bool_from_native(true);
         })),
     );
+
+    env.insert(
+        "<".into(),
+        Rc::new(Object::Builtin(|args| {
+            let len = args.len();
+            if len < 1 || len == 0 {
+                return Rc::new(Object::Error(format!(
+                    "Invalid argument type for function '<': got: {}",
+                    args.len()
+                )));
+            }
+
+            if len == 1 {
+                return TRUE.clone();
+            }
+
+            let mut first = &args[0];
+
+            for last in args.iter().skip(1) {
+                let value = match (first.as_ref(), last.as_ref()) {
+                    (Object::Integer(l), Object::Integer(r)) => l < r,
+                    _ => false,
+                };
+
+                if !value {
+                    return bool_from_native(false);
+                }
+
+                first = last;
+            }
+
+            return bool_from_native(true);
+        })),
+    );
 }
