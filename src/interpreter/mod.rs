@@ -75,7 +75,7 @@ impl Program {
                 }
                 Ok(last_result)
             }
-            _ => Err(anyhow!("Root node is not a expression")),
+            node => Err(anyhow!("trying to eval node of type{}", node.type_of())),
         }
     }
 
@@ -174,9 +174,9 @@ impl Program {
 
                 let first = self.parse_expression(&vec[0])?;
 
-                if len == 1 {
-                    return Ok(first);
-                }
+                // if len == 1 {
+                //     return Ok(first);
+                // }
 
                 let mut args: Vec<Reference> = Vec::with_capacity(len - 1);
 
@@ -204,7 +204,7 @@ impl Program {
 
                         return Ok(ret);
                     }
-                    obj => return Err(anyhow!("Invalid type starting expression {:?}", obj)),
+                    obj => return Err(anyhow!("Cannot call value of type {}", obj.type_of())),
                 }
             }
             Node::List(vec) => {

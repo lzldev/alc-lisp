@@ -20,6 +20,21 @@ pub enum Object {
     Error(String),
 }
 
+impl Object {
+    pub fn type_of(&self) -> &'static str {
+        match self {
+            Object::Null => "null",
+            Object::Integer(_) => "int",
+            Object::String(_) => "string",
+            Object::Bool(_) => "bool",
+            Object::List(_) => "list",
+            Object::Builtin(_) => "builtin",
+            Object::Function { .. } => "function",
+            Object::Error(_) => "error",
+        }
+    }
+}
+
 impl Display for Object {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -29,18 +44,21 @@ impl Display for Object {
             Object::Bool(v) => write!(f, "{}", v),
             Object::List(vec) => {
                 f.write_str("[")?;
-                for v in vec.iter() {
+                let len = vec.len();
+                for (i, v) in vec.iter().enumerate() {
                     v.fmt(f)?;
-                    f.write_str(" ")?;
+                    if i != (len - 1) {
+                        f.write_str(" ")?;
+                    }
                 }
                 f.write_str("]")?;
                 Ok(())
             }
             Object::Builtin(v) => {
-                write!(f, "{:?}", v)
+                write!(f, "BUILTIN[{:?}]", v)
             }
             Object::Function { .. } => {
-                write!(f, "{:p}", self)
+                write!(f, "FUNCTION[{:p}]", self)
             }
             Object::Error(msg) => {
                 write!(f, "Error:{}", msg)

@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::interpreter::NULL;
 
-use super::{bool_from_native, objects::Object, Env, TRUE};
+use super::{bool_from_native, objects::Object, Env, Reference, TRUE};
 
 pub fn add_builtins(env: &mut Env) {
     env.insert(
@@ -225,6 +225,37 @@ pub fn add_builtins(env: &mut Env) {
     );
 
     env.insert(
+        "str".into(),
+        Rc::new(Object::Builtin(|args| {
+            if args
+                .iter()
+                .any(|obj| !matches!(obj.as_ref(), Object::String(_)))
+            {
+                return Rc::new(Object::Error(format!(
+                    "Invalid argument type for function 'str': args should be numbers",
+                )));
+            };
+
+            let mut result = {
+                let Object::String(inner) = args[0].as_ref() else {
+                    panic!("This should never happen");
+                };
+                inner.clone()
+            };
+
+            for obj in args.iter().skip(1) {
+                let Object::String(s) = obj.as_ref() else {
+                    panic!("This should never happen")
+                };
+
+                result.push_str(s.as_str());
+            }
+
+            Reference::new(Object::String(result))
+        })),
+    );
+
+    env.insert(
         "print".into(),
         Rc::new(Object::Builtin(|args| {
             for v in args.iter() {
@@ -235,7 +266,7 @@ pub fn add_builtins(env: &mut Env) {
     );
 
     env.insert(
-        "inspect".into(),
+        "debug".into(),
         Rc::new(Object::Builtin(|args| {
             println!("{:?}", args);
             return NULL.clone();
