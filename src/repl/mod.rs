@@ -46,7 +46,6 @@ impl Default for ReplArgs {
 }
 
 pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
-    dbg!(&repl_args);
     println!("ALC_LISP [{}] REPL - INTERPRETER", VERSION);
     let mut globals: Env = HashMap::new();
     add_builtins(&mut globals);

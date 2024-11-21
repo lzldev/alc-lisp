@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use alc_lisp::{
     ast::{Node, AST},
-    interpreter::{builtins::add_builtins, Env, Program, Reference},
+    interpreter::{builtins::add_builtins, Env, Program},
     lexer::Lexer,
     repl::{start_repl, ReplArgs},
     utils::timer::Timer,
@@ -102,15 +102,14 @@ fn run_file(args: Args) -> anyhow::Result<()> {
 
     let mut program = Program::new(globals);
 
-    let result: Reference;
-    {
+    let result = {
         let _t: Timer;
         if args.time {
             _t = Timer::new("Interpreter");
         }
-        result = program.eval(&root)?;
-    }
+        program.eval(&root)?
+    };
 
-    dbg!(result);
+    println!("{:?}", result);
     Ok(())
 }
