@@ -51,15 +51,14 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn run_file(args: Args) -> anyhow::Result<()> {
-    let test_file = std::fs::read_to_string(args.file_name.unwrap()).context("to open file:")?;
-
-    let mut lexer = Lexer::from_string(test_file);
+    let file = std::fs::read_to_string(args.file_name.unwrap()).context("to open file:")?;
 
     let _t: Timer;
-
     if args.debug {
         _t = Timer::new("Total");
     }
+
+    let mut lexer = Lexer::from_string(file);
 
     {
         let _t: Timer;
@@ -78,26 +77,24 @@ fn run_file(args: Args) -> anyhow::Result<()> {
 
     let mut ast = AST::with_tokens(tokens);
 
-    let root: Node;
-    {
+    let root: Node = {
         let _t: Timer;
         if args.time {
             _t = Timer::new("AST");
         }
 
-        root = ast.parse()?;
+        ast.parse()?
+    };
 
-        if args.debug_ast || args.debug {
-            dbg!(&root);
-        }
+    if args.debug_ast || args.debug {
+        dbg!(&root);
+    }
 
-        if ast.has_errors() {
-            ast.print_errors(&root);
-        }
+    if ast.has_errors() {
+        ast.print_errors(&root);
     }
 
     let mut globals: Env = HashMap::new();
-
     add_builtins(&mut globals);
 
     let mut program = Program::new(globals);
