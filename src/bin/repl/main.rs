@@ -56,11 +56,5 @@ fn main() -> anyhow::Result<()> {
         globals = Some(program.env[0].take())
     }
 
-    // let result: Object;
-    // {
-    //     result = program.eval(&root).expect("error running program:");
-    //     dbg!(result);
-    // }
-
     Ok(())
 }

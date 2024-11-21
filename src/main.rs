@@ -7,7 +7,7 @@ use alc_lisp::{
 };
 
 fn main() {
-    let test_file = std::fs::read_to_string("./test_5.txt").expect("to open file");
+    let test_file = std::fs::read_to_string("./test_4.txt").expect("to open file");
     let mut lexer = Lexer::from_string(test_file);
 
     let _t = Timer::new("Total");

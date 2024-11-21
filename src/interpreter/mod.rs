@@ -88,7 +88,7 @@ impl Program {
 
                 if let Node::Word(word) = &vec[0] {
                     match word.value.as_str() {
-                        "define" => {
+                        "define" | "def" => {
                             if len == 1 || len != 3 {
                                 return Ok(Rc::new(Object::Error(format!(
                                     "Invalid amount of arguments to define got:{} expected: 3",
