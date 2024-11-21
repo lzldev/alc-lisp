@@ -4,6 +4,8 @@ use alc_lisp::{
     ast::{Node, AST},
     interpreter::{builtins::add_builtins, Env, Program, Reference},
     lexer::Lexer,
+    repl::{start_repl, ReplArgs},
+    utils::timer::Timer,
 };
 use anyhow::Context;
 use clap::{arg, Parser, Subcommand};
@@ -35,23 +37,17 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Commands {
     ///Start the repl
-    Repl {
-        ///Time the execution
-        #[arg(short, long, default_value_t = false)]
-        time: bool,
-    },
+    Repl(ReplArgs),
 }
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     match (&args.command, &args.file_name) {
-        (_, None) => {}
-        (Some(_), _) => {}
-        _ => run_file(args)?,
+        (Some(Commands::Repl(args)), _) => start_repl(args),
+        (_, None) => start_repl(&ReplArgs::default()),
+        _ => run_file(args),
     }
-
-    Ok(())
 }
 
 fn run_file(args: Args) -> anyhow::Result<()> {
@@ -114,28 +110,7 @@ fn run_file(args: Args) -> anyhow::Result<()> {
         }
         result = program.eval(&root)?;
     }
+
     dbg!(result);
     Ok(())
-}
-
-struct Timer {
-    name: String,
-    start: time::Instant,
-}
-
-impl Timer {
-    fn new(name: &str) -> Self {
-        Timer {
-            name: name.to_string(),
-            start: time::Instant::now(),
-        }
-    }
-}
-
-impl Drop for Timer {
-    fn drop(&mut self) {
-        let took = time::Instant::now().duration_since(self.start);
-
-        println!("{}: {:?}", self.name, took);
-    }
 }
