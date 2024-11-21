@@ -3,7 +3,9 @@ use std::{
     io::{stdin, stdout, Write},
 };
 
+use anyhow::Context;
 use clap::{arg, Parser};
+use colored::Colorize;
 
 use crate::utils::timer::Timer;
 
@@ -55,7 +57,7 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
     let stdin = stdin();
     let mut stdout = stdout();
 
-    loop {
+    let mut run_repl = || -> anyhow::Result<()> {
         print!(">> ");
         stdout.flush()?;
 
@@ -63,11 +65,11 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
         let read = stdin.read_line(&mut line)?;
 
         if read == 0 || line == ".q\n" {
-            break;
+            return Ok(());
         }
 
         let mut lexer = Lexer::from_string(line);
-        lexer.parse()?;
+        lexer.parse().context("lexer::parse")?;
 
         let tokens = lexer.tokens();
         if repl_args.debug_lexer || repl_args.debug {
@@ -78,7 +80,7 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
 
         let root: Node;
         {
-            root = ast.parse().expect("ast::parse");
+            root = ast.parse().context("ast::parse")?;
 
             if repl_args.debug_ast || repl_args.debug {
                 dbg!(&root);
@@ -97,13 +99,23 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
             if repl_args.time {
                 _t = Timer::new("EVAL:");
             }
-            program.eval(&root)?
+            let result = program.eval(&root).context("program::eval");
+            globals = Some(program.env[0].take());
+
+            result?
         };
 
         println!("{}", result);
 
-        globals = Some(program.env[0].take())
-    }
+        Ok(())
+    };
 
-    Ok(())
+    loop {
+        match run_repl() {
+            Err(err) => {
+                println!("{} {:?}", "error:".red(), err)
+            }
+            _ => {}
+        }
+    }
 }

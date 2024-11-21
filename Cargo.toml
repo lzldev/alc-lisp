@@ -8,4 +8,5 @@ default-run = "alc-lisp"
 anyhow = "1.0.93"
 bytes = "1.8.0"
 clap = { version = "4.5.21", features = ["derive"] }
+colored = "2.1.0"
 defer = "0.2.1"

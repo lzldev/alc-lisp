@@ -54,7 +54,7 @@ fn run_file(args: Args) -> anyhow::Result<()> {
     let file = std::fs::read_to_string(args.file_name.unwrap()).context("to open file:")?;
 
     let _t: Timer;
-    if args.debug {
+    if args.time {
         _t = Timer::new("Total");
     }
 
