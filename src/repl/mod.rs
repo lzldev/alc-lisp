@@ -100,7 +100,7 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
             program.eval(&root)?
         };
 
-        println!("{:?}", result);
+        println!("{}", result);
 
         globals = Some(program.env[0].take())
     }

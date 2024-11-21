@@ -107,6 +107,6 @@ fn run_file(args: Args) -> anyhow::Result<()> {
         program.eval(&root)?
     };
 
-    println!("{:?}", result);
+    println!("{}", result);
     Ok(())
 }

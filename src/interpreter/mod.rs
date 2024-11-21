@@ -199,7 +199,7 @@ impl Program {
                         for (idx, arg) in parameters.iter().enumerate() {
                             self.set_value(arg.clone(), args[idx].clone());
                         }
-                        let ret = self.parse_expression(&body)?;
+                        let ret = self.eval(&body)?;
                         self.env.pop();
 
                         return Ok(ret);

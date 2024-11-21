@@ -1,5 +1,7 @@
 use std::rc::Rc;
 
+use crate::interpreter::NULL;
+
 use super::{bool_from_native, objects::Object, Env, TRUE};
 
 pub fn add_builtins(env: &mut Env) {
@@ -219,6 +221,24 @@ pub fn add_builtins(env: &mut Env) {
             }
 
             return bool_from_native(true);
+        })),
+    );
+
+    env.insert(
+        "print".into(),
+        Rc::new(Object::Builtin(|args| {
+            for v in args.iter() {
+                println!("{}", v);
+            }
+            return NULL.clone();
+        })),
+    );
+
+    env.insert(
+        "inspect".into(),
+        Rc::new(Object::Builtin(|args| {
+            println!("{:?}", args);
+            return NULL.clone();
         })),
     );
 }
