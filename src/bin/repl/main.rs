@@ -1,5 +1,8 @@
-use alc_lisp::repl::start_repl;
+use alc_lisp::repl::{start_repl, ReplArgs};
+use clap::Parser;
 
 fn main() -> anyhow::Result<()> {
-    start_repl()
+    let args = ReplArgs::parse();
+
+    start_repl(&args)
 }

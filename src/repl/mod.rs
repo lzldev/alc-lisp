@@ -5,7 +5,7 @@ use std::{
 
 use clap::{arg, Parser};
 
-use crate::{interpreter::Reference, utils::timer::Timer};
+use crate::utils::timer::Timer;
 
 use super::{
     ast::{Node, AST},

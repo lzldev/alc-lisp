@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time};
+use std::collections::HashMap;
 
 use alc_lisp::{
     ast::{Node, AST},
