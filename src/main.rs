@@ -5,29 +5,96 @@ use alc_lisp::{
     interpreter::{builtins::add_builtins, Env, Program, Reference},
     lexer::Lexer,
 };
+use anyhow::Context;
+use clap::{arg, Parser, Subcommand};
 
-fn main() {
-    let test_file = std::fs::read_to_string("./test_4.txt").expect("to open file");
+#[derive(Parser, Debug)]
+#[command(version)]
+struct Args {
+    file_name: Option<String>,
+    ///Time the execution of the program
+    #[arg(short, long, default_value_t = false)]
+    time: bool,
+
+    ///Debug information
+    #[arg(short, long, default_value_t = false)]
+    debug: bool,
+
+    ///Show Lexer Debug information
+    #[arg(long, default_value_t = false)]
+    debug_lexer: bool,
+
+    ///Show AST Debug information
+    #[arg(long, default_value_t = false)]
+    debug_ast: bool,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    ///Start the repl
+    Repl {
+        ///Time the execution
+        #[arg(short, long, default_value_t = false)]
+        time: bool,
+    },
+}
+
+fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
+    match (&args.command, &args.file_name) {
+        (_, None) => {}
+        (Some(_), _) => {}
+        _ => run_file(args)?,
+    }
+
+    Ok(())
+}
+
+fn run_file(args: Args) -> anyhow::Result<()> {
+    let test_file = std::fs::read_to_string(args.file_name.unwrap()).context("to open file:")?;
+
     let mut lexer = Lexer::from_string(test_file);
 
-    let _t = Timer::new("Total");
+    let _t: Timer;
+
+    if args.debug {
+        _t = Timer::new("Total");
+    }
+
     {
-        let _t = Timer::new("Lexer");
-        lexer.parse().expect("lexer::parse");
+        let _t: Timer;
+        if args.time {
+            _t = Timer::new("Lexer");
+        }
+        lexer.parse()?;
     }
 
     let tokens = lexer.tokens();
-    println!("LEXER\n----{}\n----", lexer.to_string());
-    // dbg!(&tokens);
+
+    if args.debug_lexer || args.debug {
+        println!("LEXER\n----{}\n----", lexer.to_string());
+        dbg!(&tokens);
+    }
 
     let mut ast = AST::with_tokens(tokens);
 
     let root: Node;
     {
-        let _t = Timer::new("AST");
-        root = ast.parse().expect("ast::parse");
+        let _t: Timer;
+        if args.time {
+            _t = Timer::new("AST");
+        }
 
-        // dbg!(&root);
+        root = ast.parse()?;
+
+        if args.debug_ast || args.debug {
+            dbg!(&root);
+        }
+
         if ast.has_errors() {
             ast.print_errors(&root);
         }
@@ -41,11 +108,16 @@ fn main() {
 
     let result: Reference;
     {
-        let _t = Timer::new("Interpreter");
-        result = program.eval(&root).expect("error running program:");
+        let _t: Timer;
+        if args.time {
+            _t = Timer::new("Interpreter");
+        }
+        result = program.eval(&root)?;
     }
     dbg!(result);
+    Ok(())
 }
+
 struct Timer {
     name: String,
     start: time::Instant,
