@@ -59,7 +59,10 @@ impl AST {
     }
 
     fn parse_expression(&mut self) -> anyhow::Result<Node> {
-        let token = self.tokens.pop().unwrap();
+        let token = self
+            .tokens
+            .pop()
+            .ok_or_else(|| return anyhow!("no expression"))?;
 
         if let TokenType::Comment = token.token_type() {
             return self.parse_expression();
@@ -92,6 +95,10 @@ impl AST {
                         last_position.line,
                         last_position.col
                     ));
+                }
+
+                if nodes.len() == 1 && matches!(nodes[0], Node::IfExpression { .. }) {
+                    return Ok(nodes[0].to_owned());
                 }
 
                 Node::Expression(nodes)

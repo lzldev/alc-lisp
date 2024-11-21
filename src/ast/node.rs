@@ -27,6 +27,20 @@ pub enum Node {
 }
 
 impl Node {
+    pub fn type_of(&self) -> &str {
+        match self {
+            Node::Word(_) => "word",
+            Node::Invalid(_) => "invalid",
+            Node::Expression(_) => "expression",
+            Node::List(_) => "list",
+            Node::StringLiteral(_) => "string",
+            Node::NumberLiteral(_) => "number",
+            Node::BooleanLiteral(_) => "boolean",
+            Node::FunctionLiteral { .. } => "function",
+            Node::IfExpression { .. } => "if",
+        }
+    }
+
     pub fn node_at(&self, position: &ASTPosition) -> anyhow::Result<&Node> {
         let mut node = self;
 
