@@ -1,14 +1,13 @@
-import { reactRouter } from "@react-router/dev/vite";
-import autoprefixer from "autoprefixer";
-import tailwindcss from "tailwindcss";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
+import react from "@vitejs/plugin-react";
+import topLevelAwait from "vite-plugin-top-level-await";
 
+// https://vite.dev/config/
 export default defineConfig({
-  css: {
-    postcss: {
-      plugins: [tailwindcss, autoprefixer],
+  plugins: [react(), topLevelAwait()],
+  server: {
+    fs: {
+      allow: [".", "../alc-lisp-wasm"],
     },
   },
-  plugins: [reactRouter(), tsconfigPaths()],
 });
