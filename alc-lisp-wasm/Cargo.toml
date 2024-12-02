@@ -9,3 +9,6 @@ crate-type = ["cdylib"]
 [dependencies]
 alc-lisp = { path = ".." }
 wasm-bindgen = "0.2.97"
+
+[profile.release]
+lto = true
