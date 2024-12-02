@@ -258,9 +258,10 @@ pub fn add_builtins(env: &mut Env) {
     env.insert(
         "print".into(),
         Rc::new(Object::Builtin(|args| {
-            for v in args.iter() {
-                println!("{}", v);
-            }
+            println!(
+                "{}",
+                args.iter().map(|v| format!("{}", v)).collect::<String>()
+            );
             return NULL.clone();
         })),
     );

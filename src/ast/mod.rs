@@ -97,10 +97,6 @@ impl AST {
                     ));
                 }
 
-                if nodes.len() == 1 && matches!(nodes[0], Node::IfExpression { .. }) {
-                    return Ok(nodes[0].to_owned());
-                }
-
                 Node::Expression(nodes)
             }
             lexer::TokenType::RParen => {
@@ -151,7 +147,6 @@ impl AST {
             lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
             lexer::TokenType::Word => match token.value.as_str() {
                 "fn" => self.parse_function(token)?,
-                "if" => self.parse_if(token)?,
                 "true" | "false" => Node::BooleanLiteral(token),
                 _ => Node::Word(token),
             },
@@ -184,27 +179,16 @@ impl AST {
             ));
         }
 
-        let body = self.parse_expression().context("invalid function body:")?;
+        let mut body = self.parse_expression().context("invalid function body:")?;
+
+        if !matches!(body, Node::Expression(_)) {
+            body = Node::Expression(vec![body])
+        }
 
         return Ok(Node::FunctionLiteral {
             token: fn_word,
             arguments: words,
             body: Box::new(body),
-        });
-    }
-
-    fn parse_if(&mut self, if_word: Token) -> anyhow::Result<Node> {
-        let condition = self.parse_expression().context("invalid if condition:")?;
-
-        let truthy = self.parse_expression().context("invalid if body:")?;
-
-        let falsy = self.parse_expression().context("invalid if body:")?;
-
-        return Ok(Node::IfExpression {
-            token: if_word,
-            condition: Box::new(condition),
-            truthy: Box::new(truthy),
-            falsy: Box::new(falsy),
         });
     }
 }

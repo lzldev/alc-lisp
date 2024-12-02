@@ -75,7 +75,7 @@ impl Program {
                 }
                 Ok(last_result)
             }
-            node => Err(anyhow!("trying to eval node of type{}", node.type_of())),
+            node => Ok(self.parse_expression(node)?),
         }
     }
 
@@ -97,20 +97,6 @@ impl Program {
 
     fn parse_expression(&mut self, node: &Node) -> anyhow::Result<Reference> {
         match node {
-            Node::IfExpression {
-                condition,
-                truthy,
-                falsy,
-                ..
-            } => {
-                let condition = self.parse_expression(condition)?;
-
-                if is_truthy(condition) {
-                    return self.parse_expression(truthy);
-                } else {
-                    return self.parse_expression(falsy);
-                }
-            }
             Node::Word(token) => Ok(self.get_value(token.value.as_str())),
             Node::BooleanLiteral(token) => match token.value.as_str() {
                 "true" => Ok(TRUE.clone()),
@@ -168,15 +154,45 @@ impl Program {
 
                             return Ok(NULL.clone());
                         }
+                        "if" => {
+                            if len != 4 && len != 3 {
+                                return Ok(Rc::new(Object::Error(format!(
+                                    "Invalid amount of arguments to if got: {}",
+                                    len
+                                ))));
+                            }
+
+                            let condition = self.parse_expression(&vec[1])?;
+
+                            let truthy = is_truthy(condition);
+
+                            if truthy {
+                                return self.parse_expression(&vec[2]);
+                            } else if len == 4 {
+                                return self.parse_expression(&vec[3]);
+                            } else {
+                                return Ok(NULL.clone());
+                            }
+                        }
+                        "do" => {
+                            if len != 2 {
+                                return Ok(Rc::new(Object::Error(format!(
+                                    "Invalid amount of arguments to do got: {}",
+                                    len
+                                ))));
+                            }
+
+                            return self.eval(&vec[1]);
+                        }
                         _ => {}
                     }
                 }
 
                 let first = self.parse_expression(&vec[0])?;
 
-                // if len == 1 {
-                //     return Ok(first);
-                // }
+                if len == 1 {
+                    return Ok(first);
+                }
 
                 let mut args: Vec<Reference> = Vec::with_capacity(len - 1);
 

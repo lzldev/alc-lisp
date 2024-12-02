@@ -18,12 +18,6 @@ pub enum Node {
         arguments: Vec<Node>,
         body: Box<Node>,
     },
-    IfExpression {
-        token: Token,
-        condition: Box<Node>,
-        truthy: Box<Node>,
-        falsy: Box<Node>,
-    },
 }
 
 impl Node {
@@ -37,7 +31,6 @@ impl Node {
             Node::NumberLiteral(_) => "number",
             Node::BooleanLiteral(_) => "boolean",
             Node::FunctionLiteral { .. } => "function",
-            Node::IfExpression { .. } => "if",
         }
     }
 
@@ -75,7 +68,6 @@ impl Node {
             | Node::Word(token)
             | Node::NumberLiteral(token)
             | Node::BooleanLiteral(token) => return &token.end,
-            Node::IfExpression { falsy, .. } => falsy.last_char(),
             Node::Expression(vec) | Node::List(vec) => vec
                 .last()
                 .and_then(|node| Some(node.last_char()))
