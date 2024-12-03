@@ -11,7 +11,7 @@ use crate::utils::timer::Timer;
 
 use super::{
     ast::{Node, AST},
-    interpreter::{builtins::add_builtins, Env, Program},
+    interpreter::{builtins::add_generic_builtins, Env, Program},
     lexer::Lexer,
 };
 
@@ -50,7 +50,7 @@ impl Default for ReplArgs {
 pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
     println!("ALC_LISP [{}] REPL - INTERPRETER", VERSION);
     let mut globals: Env = HashMap::new();
-    add_builtins(&mut globals);
+    add_generic_builtins(&mut globals);
 
     let mut globals = Option::Some(globals);
 

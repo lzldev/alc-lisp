@@ -32,6 +32,10 @@ fn bool_from_native(value: bool) -> Reference {
     }
 }
 
+fn is_error(value: &Reference) -> bool {
+    return matches!(value.as_ref(), Object::Error(_));
+}
+
 fn is_truthy(value: Reference) -> bool {
     match value.as_ref() {
         Object::Integer(v) => {
@@ -72,6 +76,15 @@ impl Program {
             Node::Expression(expressions) => {
                 for exp in expressions.iter() {
                     last_result = self.parse_expression(exp)?;
+
+                    if is_error(&last_result) {
+                        return Err(anyhow!(
+                            "error in expression at {}:{} : {:?}",
+                            exp.last_char().line,
+                            exp.last_char().line,
+                            last_result
+                        ));
+                    }
                 }
                 Ok(last_result)
             }
@@ -150,6 +163,10 @@ impl Program {
 
                             let value = self.parse_expression(&vec[2])?;
 
+                            if is_error(&value) {
+                                return Err(anyhow!("define value error: {:?}", value));
+                            }
+
                             self.set_value(name.value.clone(), value);
 
                             return Ok(NULL.clone());
@@ -164,15 +181,25 @@ impl Program {
 
                             let condition = self.parse_expression(&vec[1])?;
 
+                            if is_error(&condition) {
+                                return Err(anyhow!("if condition error: {:?}", condition));
+                            }
+
                             let truthy = is_truthy(condition);
 
-                            if truthy {
-                                return self.parse_expression(&vec[2]);
+                            let result = if truthy {
+                                self.parse_expression(&vec[2])?
                             } else if len == 4 {
-                                return self.parse_expression(&vec[3]);
+                                self.parse_expression(&vec[3])?
                             } else {
-                                return Ok(NULL.clone());
+                                NULL.clone()
+                            };
+
+                            if is_error(&result) {
+                                return Err(anyhow!("if result error: {:?}", result));
                             }
+
+                            return Ok(result);
                         }
                         "do" => {
                             if len != 2 {
@@ -190,6 +217,10 @@ impl Program {
 
                 let first = self.parse_expression(&vec[0])?;
 
+                if is_error(&first) {
+                    return Err(anyhow!("error in call to: {:?}", first));
+                }
+
                 if len == 1 {
                     return Ok(first);
                 }
@@ -197,7 +228,13 @@ impl Program {
                 let mut args: Vec<Reference> = Vec::with_capacity(len - 1);
 
                 for exp in &vec[1..] {
-                    args.push(self.parse_expression(exp)?);
+                    let value = self.parse_expression(exp)?;
+
+                    if is_error(&value) {
+                        return Err(anyhow!("error in function argument: {:?}", value));
+                    }
+
+                    args.push(value);
                 }
 
                 match first.as_ref() {
@@ -227,7 +264,13 @@ impl Program {
                 let mut items: Vec<Reference> = Vec::with_capacity(vec.len());
 
                 for item in vec.iter() {
-                    items.push(self.parse_expression(item)?);
+                    let value = self.parse_expression(item)?;
+
+                    if is_error(&value) {
+                        return Err(anyhow!("error in list item: {:?}", value));
+                    }
+
+                    items.push(value);
                 }
 
                 return Ok(Rc::new(Object::List(items)));

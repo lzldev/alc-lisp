@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use alc_lisp::{
     ast::{Node, AST},
-    interpreter::{builtins::add_builtins, Env, Program},
+    interpreter::{
+        builtins::{add_generic_builtins, add_native_builtins},
+        Env, Program,
+    },
     lexer::Lexer,
     repl::{start_repl, ReplArgs},
     utils::timer::Timer,
@@ -95,7 +98,8 @@ fn run_file(args: Args) -> anyhow::Result<()> {
     }
 
     let mut globals: Env = HashMap::new();
-    add_builtins(&mut globals);
+    add_generic_builtins(&mut globals);
+    add_native_builtins(&mut globals);
 
     let mut program = Program::new(globals);
 

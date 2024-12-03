@@ -4,17 +4,35 @@ use crate::interpreter::NULL;
 
 use super::{bool_from_native, objects::Object, Env, Reference, TRUE};
 
-pub fn add_builtins(env: &mut Env) {
+fn typecheck_args<F>(
+    name: &str,
+    typename: &str,
+    condition: F,
+    args: &Vec<Reference>,
+) -> Option<Reference>
+where
+    F: Fn(&Reference) -> bool,
+{
+    if args.iter().any(condition) {
+        return Some(Rc::new(Object::Error(format!(
+            "Invalid argument type for function '{}': args should be {}",
+            name, typename
+        ))));
+    };
+    None
+}
+
+pub fn add_generic_builtins(env: &mut Env) {
     env.insert(
         "+".into(),
         Rc::new(Object::Builtin(|args| {
-            if args
-                .iter()
-                .any(|obj| !matches!(obj.as_ref(), Object::Integer(_)))
-            {
-                return Rc::new(Object::Error(format!(
-                    "Invalid argument type for function '+': args should be numbers",
-                )));
+            if let Some(err) = typecheck_args(
+                "+",
+                "integer",
+                |obj| !matches!(obj.as_ref(), Object::Integer(_)),
+                &args,
+            ) {
+                return err;
             };
 
             let mut sum = 0;
@@ -34,13 +52,13 @@ pub fn add_builtins(env: &mut Env) {
     env.insert(
         "-".into(),
         Rc::new(Object::Builtin(|args| {
-            if args
-                .iter()
-                .any(|obj| !matches!(obj.as_ref(), Object::Integer(_)))
-            {
-                return Rc::new(Object::Error(format!(
-                    "Invalid argument type for function '-': args should be numbers",
-                )));
+            if let Some(err) = typecheck_args(
+                "-",
+                "integer",
+                |obj| !matches!(obj.as_ref(), Object::Integer(_)),
+                &args,
+            ) {
+                return err;
             };
 
             let Object::Integer(mut total) = args[0].as_ref() else {
@@ -62,14 +80,14 @@ pub fn add_builtins(env: &mut Env) {
     env.insert(
         "*".into(),
         Rc::new(Object::Builtin(|args| {
-            if args
-                .iter()
-                .any(|obj| !matches!(obj.as_ref(), Object::Integer(_)))
-            {
-                return Rc::new(Object::Error(format!(
-                    "Invalid argument type for function '*': args should be numbers",
-                )));
-            };
+            if let Some(err) = typecheck_args(
+                "*",
+                "integer",
+                |obj| !matches!(obj.as_ref(), Object::Integer(_)),
+                &args,
+            ) {
+                return err;
+            }
 
             let Object::Integer(mut total) = args[0].as_ref() else {
                 panic!("This should never happen");
@@ -90,14 +108,14 @@ pub fn add_builtins(env: &mut Env) {
     env.insert(
         "/".into(),
         Rc::new(Object::Builtin(|args| {
-            if args
-                .iter()
-                .any(|obj| !matches!(obj.as_ref(), Object::Integer(_)))
-            {
-                return Rc::new(Object::Error(format!(
-                    "Invalid argument type for function '/': args should be numbers",
-                )));
-            };
+            if let Some(err) = typecheck_args(
+                "/",
+                "integer",
+                |obj| !matches!(obj.as_ref(), Object::Integer(_)),
+                &args,
+            ) {
+                return err;
+            }
 
             let Object::Integer(mut total) = args[0].as_ref() else {
                 panic!("This should never happen");
@@ -227,14 +245,14 @@ pub fn add_builtins(env: &mut Env) {
     env.insert(
         "str".into(),
         Rc::new(Object::Builtin(|args| {
-            if args
-                .iter()
-                .any(|obj| !matches!(obj.as_ref(), Object::String(_)))
-            {
-                return Rc::new(Object::Error(format!(
-                    "Invalid argument type for function 'str': args should be numbers",
-                )));
-            };
+            if let Some(err) = typecheck_args(
+                "str",
+                "string",
+                |obj| !matches!(obj.as_ref(), Object::String(_)),
+                &args,
+            ) {
+                return err;
+            }
 
             let mut result = {
                 let Object::String(inner) = args[0].as_ref() else {
@@ -254,7 +272,9 @@ pub fn add_builtins(env: &mut Env) {
             Reference::new(Object::String(result))
         })),
     );
+}
 
+pub fn add_native_builtins(env: &mut Env) {
     env.insert(
         "print".into(),
         Rc::new(Object::Builtin(|args| {
