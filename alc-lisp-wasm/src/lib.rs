@@ -1,7 +1,7 @@
 use std::{cell::LazyCell, collections::HashMap, panic, rc::Rc};
 
 use alc_lisp::{
-    ast::AST,
+    ast::{Node, AST},
     interpreter::{builtins::add_generic_builtins, objects::Object, Env, Program, NULL},
     lexer::Lexer,
 };
@@ -53,6 +53,40 @@ pub fn add_wasm_builtins(env: &mut Env) {
             return NULL.clone();
         })),
     );
+}
+
+#[wasm_bindgen]
+#[derive(Debug)]
+pub struct ExportedNode {
+    pub val: u32,
+    node: Node,
+}
+
+#[wasm_bindgen]
+pub fn show_ast(code: String, callback: js_sys::Function) {
+    let mut lexer = Lexer::from_string(code);
+
+    lexer.parse().expect("lexer::parse");
+
+    let tokens = lexer.tokens();
+
+    let mut ast = AST::with_tokens(tokens);
+
+    let root = ast.parse().expect("ast::parse");
+
+    if ast.has_errors() {
+        ast.print_errors(&root);
+        panic!("ast::has_errors");
+    }
+
+    let node = ExportedNode {
+        val: 32,
+        node: root,
+    };
+
+    callback
+        .call1(&JsValue::NULL, &JsValue::from(node))
+        .expect("callback");
 }
 
 #[wasm_bindgen]

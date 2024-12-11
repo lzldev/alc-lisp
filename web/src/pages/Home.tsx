@@ -3,7 +3,7 @@ import { Counter } from "../components/counter";
 import { Header } from "../components/Header";
 import { App } from "./App";
 import { useRef } from "react";
-import { run } from "alc-lisp-wasm";
+import { run, ExportedNode, show_ast } from "alc-lisp-wasm";
 
 export function Home() {
   const editorRef = useRef<any>(null);
@@ -21,7 +21,12 @@ export function Home() {
                   const code = editorRef.current?.getValue();
 
                   console.log("code", code);
-                  run(code);
+
+                  show_ast(code, (node: ExportedNode) => {
+                    console.log("running", node);
+                    console.log("node", node);
+                  });
+                  // run(code);
                 }}
               >
                 Run
