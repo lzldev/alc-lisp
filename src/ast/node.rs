@@ -5,6 +5,8 @@ use crate::lexer::{Token, TokenPosition};
 use super::ASTPosition;
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "ts-rs", derive(ts_rs::TS), ts(export))]
 pub enum Node {
     Word(Token),
     Invalid(Token),

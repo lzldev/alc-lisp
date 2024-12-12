@@ -1,23 +1,21 @@
 use std::{cell::LazyCell, collections::HashMap, panic, rc::Rc};
 
 use alc_lisp::{
-    ast::{Node, AST},
     interpreter::{builtins::add_generic_builtins, objects::Object, Env, Program, NULL},
     lexer::Lexer,
 };
+
 use log::info;
 use wasm_bindgen::prelude::*;
 use web_sys::{Performance, Window};
 
-#[wasm_bindgen]
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+pub use alc_lisp::ast::{ASTPosition, Node, AST};
+pub use alc_lisp::lexer::Token;
 
-#[wasm_bindgen]
-pub fn add2(left: usize, right: usize) -> usize {
-    left + right
-}
+#[wasm_bindgen(typescript_custom_section)]
+const APPEND_TS_RS_TYPES: &str = r#"
+export type {Node} from './types/Node';
+"#;
 
 #[wasm_bindgen(start)]
 pub fn init() {
@@ -56,13 +54,6 @@ pub fn add_wasm_builtins(env: &mut Env) {
 }
 
 #[wasm_bindgen]
-#[derive(Debug)]
-pub struct ExportedNode {
-    pub val: u32,
-    node: Node,
-}
-
-#[wasm_bindgen]
 pub fn show_ast(code: String, callback: js_sys::Function) {
     let mut lexer = Lexer::from_string(code);
 
@@ -79,14 +70,11 @@ pub fn show_ast(code: String, callback: js_sys::Function) {
         panic!("ast::has_errors");
     }
 
-    let node = ExportedNode {
-        val: 32,
-        node: root,
-    };
+    let node = serde_wasm_bindgen::to_value(&root).expect("serde_wasm_bindgen::from_value");
 
     callback
-        .call1(&JsValue::NULL, &JsValue::from(node))
-        .expect("callback");
+        .call1(&JsValue::NULL, &node)
+        .expect("error running callback");
 }
 
 #[wasm_bindgen]
@@ -119,15 +107,4 @@ pub fn run(code: String) {
     info!("took:{:.4}ms", end);
 
     info!("result:{}", result);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
 }

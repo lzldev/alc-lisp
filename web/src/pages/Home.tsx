@@ -1,9 +1,8 @@
 import { Editor } from "@monaco-editor/react";
-import { Counter } from "../components/counter";
 import { Header } from "../components/Header";
 import { App } from "./App";
 import { useRef } from "react";
-import { run, ExportedNode, show_ast } from "alc-lisp-wasm";
+import { run, show_ast, type Node } from "alc-lisp-wasm";
 
 export function Home() {
   const editorRef = useRef<any>(null);
@@ -22,11 +21,12 @@ export function Home() {
 
                   console.log("code", code);
 
-                  show_ast(code, (node: ExportedNode) => {
-                    console.log("running", node);
+                  console.time("ast");
+                  show_ast(code, (node: Node) => {
+                    console.timeEnd("ast");
                     console.log("node", node);
                   });
-                  // run(code);
+                  run(code);
                 }}
               >
                 Run
@@ -64,7 +64,6 @@ export function Home() {
                 AST
               </button>
             </div>
-            <Counter />
           </div>
         </div>
       </App>
