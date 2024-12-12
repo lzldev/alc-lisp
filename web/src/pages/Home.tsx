@@ -1,20 +1,24 @@
 import { Editor } from "@monaco-editor/react";
 import {
   add_print_callback,
-  get_ast_gloo,
+  parse_and_run,
   print_callbacks,
   remove_print_callback,
-  run,
   type Node,
   type Object,
+  type Token,
 } from "alc-lisp-wasm";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "../components/Header";
 import { App } from "./App";
+import { usePlaygroundStore } from "../stores/playground.store";
+import { ObjectInspector, TableInspector } from "react-inspector";
 
 export function Home() {
   const editorRef = useRef<any>(null);
+
+  const { setAST, setTokens } = usePlaygroundStore();
 
   return (
     <div className="flex h-full w-full flex-1 flex-grow flex-col">
@@ -28,14 +32,14 @@ export function Home() {
                 onClick={() => {
                   const code = editorRef.current?.getValue();
 
-                  const gloo_message = "gloo";
-                  console.time(gloo_message);
-                  get_ast_gloo(code, (node: Node) => {
-                    console.timeEnd(gloo_message);
-                    console.log("[gloo] node:", node);
-                  });
-
-                  run(code);
+                  parse_and_run(
+                    code,
+                    (result: any, tokens: Token[], ast: Node) => {
+                      console.log(result, "[tokens]", tokens, "[AST]", ast);
+                      setTokens(tokens);
+                      setAST(ast);
+                    },
+                  );
                 }}
               >
                 Run
@@ -44,12 +48,6 @@ export function Home() {
             <Editor
               onMount={(editor, monaco) => {
                 editorRef.current = editor;
-              }}
-              onChange={(v) => {
-                console.log("change", v);
-              }}
-              onValidate={() => {
-                console.log("validate");
               }}
               className="flex h-full flex-1"
               defaultLanguage="clojure"
@@ -87,29 +85,36 @@ const components: Record<(typeof tabs)[number], React.FC<TabProps & any>> = {
 };
 
 export function Tokens({ show }: TabProps) {
+  const { tokens } = usePlaygroundStore();
+
   return (
     <div className={clsx("flex flex-1 flex-col", !show && "hidden")}>
-      Tokens
+      <div>Tokens</div>
+      <TableInspector data={tokens} />
     </div>
   );
 }
 
 export function AST({ show }: TabProps) {
+  const { AST } = usePlaygroundStore();
   return (
-    <div className={clsx("flex flex-1 flex-col", !show && "hidden")}>AST</div>
+    <div className={clsx("flex flex-1 flex-col", !show && "hidden")}>
+      <div>AST</div>
+      <ObjectInspector expandLevel={999} data={AST} />
+    </div>
   );
 }
 
 export function Output({ show }: TabProps) {
-  const [messages, setMessages] = useState<string[]>(["Hello World"]);
+  const [messages, setMessages] = useState<string[]>([]);
   const callback = (...objects: Object[]) => {
-    console.log("add_print_callback", objects);
+    setMessages((messages) => {
+      for (const obj of objects) {
+        messages.push(JSON.stringify(obj));
+      }
 
-    for (const obj of objects) {
-      messages.push(JSON.stringify(obj));
-    }
-
-    setMessages([...messages]);
+      return Array.from(messages);
+    });
   };
 
   useEffect(() => {
@@ -125,14 +130,24 @@ export function Output({ show }: TabProps) {
 
   return (
     <div className={clsx("flex h-full flex-grow flex-col", !show && "hidden")}>
-      <button
-        className={clsx(
-          "flex-shrink bg-violet-400 px-4 py-1 text-white outline-none active:bg-violet-300",
-        )}
-        onClick={() => print_callbacks()}
-      >
-        print callbacks
-      </button>
+      <div className="flex flex-row">
+        <button
+          className={clsx(
+            "flex-shrink bg-violet-400 px-4 py-1 text-white outline-none active:bg-violet-300",
+          )}
+          onClick={() => setMessages([])}
+        >
+          clear
+        </button>
+        <button
+          className={clsx(
+            "flex-shrink bg-violet-400 px-4 py-1 text-white outline-none active:bg-violet-300",
+          )}
+          onClick={() => print_callbacks()}
+        >
+          print callbacks
+        </button>
+      </div>
       <div className="flex flex-col overflow-y-scroll">
         {messages.map((message, idx) => {
           return (
@@ -147,7 +162,7 @@ export function Output({ show }: TabProps) {
 }
 
 export function Details() {
-  const [selected, setSelected] = useState<(typeof tabs)[number]>(tabs[1]);
+  const [selected, setSelected] = useState<(typeof tabs)[number]>(tabs[0]);
 
   return (
     <div className="flex flex-1 flex-col">

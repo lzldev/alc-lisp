@@ -42,8 +42,6 @@ pub fn remove_print_callback(callback: Function) {
         .then(|| callbacks.remove(contained));
 }
 
-use gloo_utils::format::JsValueSerdeExt;
-
 pub fn add_wasm_builtins(env: &mut Env) {
     env.insert(
         "print".into(),

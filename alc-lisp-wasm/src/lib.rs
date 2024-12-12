@@ -71,6 +71,55 @@ pub fn get_ast_gloo(code: String, callback: js_sys::Function) {
         .expect("error running callback");
 }
 
+const WASM_ENV: LazyCell<Env> = LazyCell::new(|| {
+    let mut globals: Env = HashMap::new();
+
+    add_generic_builtins(&mut globals);
+    add_wasm_builtins(&mut globals);
+
+    globals
+});
+
+#[wasm_bindgen]
+pub fn parse_and_run(code: String, callback: js_sys::Function) {
+    let mut lexer = Lexer::from_string(code);
+
+    lexer.parse().expect("lexer::parse");
+
+    let tokens = lexer.tokens();
+
+    let mut ast = AST::with_tokens(tokens);
+
+    let root = ast.parse().expect("ast::parse");
+
+    if ast.has_errors() {
+        ast.print_errors(&root);
+        panic!("ast::has_errors");
+    }
+
+    let globals: Env = WASM_ENV.clone();
+
+    let mut program = Program::new(globals);
+
+    let result = program.eval(&root).expect("program::eval");
+
+    let js_tokens = JsValue::from_serde(&lexer.tokens())
+        .expect("gloo_utils::format::JsValueSerdeExt::from_serde");
+    let js_ast =
+        JsValue::from_serde(&root).expect("gloo_utils::format::JsValueSerdeExt::from_serde");
+    let js_result =
+        JsValue::from_serde(&result).expect("gloo_utils::format::JsValueSerdeExt::from_serde");
+
+    callback
+        .call3(
+            &wasm_bindgen::JsValue::NULL,
+            &js_result,
+            &js_tokens,
+            &js_ast,
+        )
+        .expect("to call callback");
+}
+
 #[wasm_bindgen]
 pub fn run(code: String) {
     let mut lexer = Lexer::from_string(code);
