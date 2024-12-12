@@ -1,17 +1,24 @@
-use std::{cell::LazyCell, collections::HashMap, panic, rc::Rc};
+use std::{cell::LazyCell, collections::HashMap, panic};
 
 use alc_lisp::{
     ast::AST,
-    interpreter::{builtins::add_generic_builtins, objects::Object, Env, Program, NULL},
+    interpreter::{builtins::add_generic_builtins, Env, Program},
     lexer::Lexer,
 };
 
+use builtins::add_wasm_builtins;
 use log::info;
 use wasm_bindgen::prelude::*;
 use web_sys::{Performance, Window};
 
+mod builtins;
+
 #[wasm_bindgen(typescript_custom_section)]
 const TYPES_EXTENSION: &str = include_str!("../target/types.ts"); //Generated from `build.rs`
+
+const WINDOW: LazyCell<Window> = LazyCell::new(|| web_sys::window().expect("window not found"));
+const PERFORMANCE: LazyCell<Performance> =
+    LazyCell::new(|| WINDOW.performance().expect("performance not found"));
 
 #[wasm_bindgen(start)]
 pub fn init() {
@@ -19,34 +26,21 @@ pub fn init() {
     console_log::init().expect("console_log::init");
 }
 
-pub const WINDOW: LazyCell<Window> = LazyCell::new(|| web_sys::window().expect("window not found"));
-pub const PERFORMANCE: LazyCell<Performance> =
-    LazyCell::new(|| WINDOW.performance().expect("performance not found"));
+#[wasm_bindgen]
+pub struct Wrapper {}
 
-pub fn add_wasm_builtins(env: &mut Env) {
-    env.insert(
-        "print".into(),
-        Rc::new(Object::Builtin(|args| {
-            info!(
-                "{}",
-                args.iter().map(|v| format!("{}", v)).collect::<String>()
-            );
+#[wasm_bindgen]
+pub fn do_s() -> Wrapper {
+    let n = Wrapper {};
 
-            return NULL.clone();
-        })),
-    );
+    info!("ptr: {:p}", &n);
 
-    env.insert(
-        "debug".into(),
-        Rc::new(Object::Builtin(|args| {
-            info!(
-                "{:?}",
-                args.iter().map(|v| format!("{}", v)).collect::<String>()
-            );
+    n
+}
 
-            return NULL.clone();
-        })),
-    );
+#[wasm_bindgen]
+pub fn do_s_mut(wrapper: &mut Wrapper) {
+    info!("ptr: {:p}", wrapper);
 }
 
 #[wasm_bindgen]

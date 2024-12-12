@@ -16,8 +16,7 @@ pub struct AST {
 pub type ASTPosition = Vec<usize>;
 
 impl AST {
-    pub fn with_tokens(tokens: Vec<Token>) -> Self {
-        let mut tokens = tokens;
+    pub fn with_tokens(mut tokens: Vec<Token>) -> Self {
         tokens.reverse(); //TODO:Fix this ?
 
         AST {
