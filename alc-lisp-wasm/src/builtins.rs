@@ -63,10 +63,7 @@ pub fn add_wasm_builtins(env: &mut Env) {
                 let array = Array::new_with_length(args.len() as u32);
 
                 for (idx, arg) in args.iter().enumerate() {
-                    array.set(
-                        idx as u32,
-                        JsValue::from_serde(arg).expect("to convert type to JsValue"),
-                    );
+                    array.set(idx as u32, JsValue::from(arg.as_ref().clone()));
                 }
 
                 callbacks.iter().for_each(|function| {
