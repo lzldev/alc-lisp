@@ -17,11 +17,11 @@ export function Home() {
   const editorRef = useRef<any>(null);
 
   return (
-    <div className="flex flex-1 h-full flex-col">
+    <div className="flex flex-grow h-full w-full flex-1 flex-col">
       <Header />
       <App>
-        <div className="flex flex-1 flex-grow flex-row justify-stretch w-full h-full">
-          <div className="flex flex-col flex-1 border-r-violet-400 border-r-2 border-opacity-60">
+        <div className="flex flex-1 flex-grow flex-row w-full h-full justify-stretch items-stretch">
+          <div className="flex w-[50%] flex-col border-r-violet-400 border-r-2 border-opacity-60">
             <div className="flex flex-row border-y-violet-400 border-y-2 border-opacity-60">
               <button
                 className="bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none"
@@ -67,9 +67,7 @@ export function Home() {
               defaultValue={`; Hello World program in alc-lisp\n\n(print "Hello World")`}
             />
           </div>
-          <div className="flex flex-col flex-1">
-            <Details />
-          </div>
+          <Details />
         </div>
       </App>
     </div>
@@ -78,22 +76,32 @@ export function Home() {
 
 const tabs = ["Output", "Tokens", "AST"] as const;
 
-const components: Record<(typeof tabs)[number], React.FC> = {
+type TabProps = {
+  show?: boolean;
+};
+
+const components: Record<(typeof tabs)[number], React.FC<TabProps & any>> = {
   AST,
   Tokens,
   Output,
 };
 
-export function Tokens() {
-  return <div>Tokens</div>;
+export function Tokens({ show }: TabProps) {
+  return (
+    <div className={clsx("flex flex-1 flex-col", !show && "hidden")}>
+      Tokens
+    </div>
+  );
 }
 
-export function AST() {
-  return <div>AST</div>;
+export function AST({ show }: TabProps) {
+  return (
+    <div className={clsx("flex flex-1 flex-col", !show && "hidden")}>AST</div>
+  );
 }
 
-export function Output() {
-  const [messages, setMessages] = useState<string[]>([]);
+export function Output({ show }: TabProps) {
+  const [messages, setMessages] = useState<string[]>(["Hello World"]);
   const callback = (...objects: Object[]) => {
     console.log("add_print_callback", objects);
 
@@ -105,25 +113,33 @@ export function Output() {
   };
 
   useEffect(() => {
-    add_print_callback(callback);
-    return () => {
-      remove_print_callback(callback);
-    };
+    try {
+      add_print_callback(callback);
+      return () => {
+        remove_print_callback(callback);
+      };
+    } catch (err) {
+      console.error(err);
+    }
   }, []);
+
   return (
-    <div>
-      <div>Output</div>
+    <div className={clsx("flex flex-grow flex-col h-full", !show && "hidden")}>
       <button
         className={clsx(
-          "bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none"
+          "bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none flex-shrink"
         )}
         onClick={() => print_callbacks()}
       >
         print callbacks
       </button>
-      <div className="flex flex-col flex-grow">
-        {messages.map((message) => {
-          return <div className="border-y-2">{message}</div>;
+      <div className="flex flex-col overflow-y-scroll">
+        {messages.map((message, idx) => {
+          return (
+            <div key={idx} className="border-b-2">
+              {message}
+            </div>
+          );
         })}
       </div>
     </div>
@@ -131,12 +147,10 @@ export function Output() {
 }
 
 export function Details() {
-  const [selected, setSelected] = useState<(typeof tabs)[number]>(tabs[0]);
-
-  const Component = components[selected];
+  const [selected, setSelected] = useState<(typeof tabs)[number]>(tabs[1]);
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-1 flex-col">
       <div className="flex flex-row border-y-violet-400 border-y-2 border-opacity-60">
         {tabs.map((tab) => (
           <button
@@ -151,9 +165,10 @@ export function Details() {
           </button>
         ))}
       </div>
-      <div className="flex flex-grow">
-        <Component />
-      </div>
+      {tabs.map((tab) => {
+        const Component = components[tab];
+        return <Component key={tab} show={tab === selected} />;
+      })}
     </div>
   );
 }
