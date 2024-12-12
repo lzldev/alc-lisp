@@ -42,9 +42,29 @@ impl AST {
         }
     }
 
+    fn skip_comments(&mut self) -> Option<usize> {
+        let mut count = 0;
+        while self
+            .tokens
+            .last()
+            .is_some_and(|token| matches!(token.token_type(), TokenType::Comment))
+        {
+            count += 1;
+            self.tokens.pop();
+        }
+        if count > 0 {
+            return Some(count);
+        } else {
+            return None;
+        }
+    }
+
     pub fn parse(&mut self) -> anyhow::Result<Node> {
         let mut nodes = Vec::<Node>::new();
         while !self.tokens.is_empty() {
+            if self.skip_comments().is_some() {
+                continue;
+            }
             nodes.push(self.parse_expression()?);
         }
 
@@ -79,6 +99,9 @@ impl AST {
                     .last()
                     .is_some_and(|token| !matches!(token.token_type(), TokenType::RParen))
                 {
+                    if self.skip_comments().is_some() {
+                        continue;
+                    }
                     nodes.push(self.parse_expression()?);
                 }
 
@@ -116,6 +139,9 @@ impl AST {
                     .last()
                     .is_some_and(|token| !matches!(token.token_type(), TokenType::RSquare))
                 {
+                    if self.skip_comments().is_some() {
+                        continue;
+                    }
                     nodes.push(self.parse_expression()?)
                 }
 
