@@ -18,7 +18,7 @@ mod builtins;
 mod function_container;
 
 #[wasm_bindgen(typescript_custom_section)]
-const TYPES_EXTENSION: &str = include_str!("../target/types.ts"); //Generated from `build.rs`
+const TYPES_EXTENSION: &str = include_str!(concat!(env!("OUT_DIR"), "/types.ts")); //Generated in `build.rs`
 
 const WINDOW: LazyCell<Window> = LazyCell::new(|| web_sys::window().expect("window not found"));
 const PERFORMANCE: LazyCell<Performance> =

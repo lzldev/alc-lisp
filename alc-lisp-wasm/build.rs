@@ -1,4 +1,5 @@
 use std::{
+    env::{self},
     fs::{self, read_dir},
     io::Write,
     sync::LazyLock,
@@ -15,14 +16,14 @@ fn main() {
     };
 
     let types_dir = "./pkg/types/";
-    let file_ext_dir = "./target/types.ts"; //TODO: use cargo CARGO_TARGET_DIR
+    let file_ext_dir = env::var("OUT_DIR").unwrap() + "/types.ts"; //TODO: use cargo CARGO_TARGET_DIR
 
     println!("Building alc-lisp-wasm");
     <alc_lisp::ast::Node as ts_rs::TS>::export_all_to(types_dir).expect("ts_rs::TS::export_all_to");
     <alc_lisp::interpreter::objects::Object as ts_rs::TS>::export_all_to(types_dir)
         .expect("ts_rs::TS::export_all_to");
 
-    let mut out = fs::File::create(file_ext_dir).expect("to open output file");
+    let mut out = fs::File::create(&file_ext_dir).expect("to open output file");
 
     let types_dir = read_dir(types_dir).expect("to open types dir");
 
@@ -48,6 +49,8 @@ fn main() {
         out.write(export.as_bytes()).expect("to write to file");
         out.write(b"\n").expect("to write to file");
     }
+
+    println!("types written to : [{}]", &file_ext_dir);
 }
 
 pub struct DropMessage<'m> {

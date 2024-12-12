@@ -14,26 +14,26 @@ type PrintCallbackFn = (...objs:Object[]) => void;
 type AddPrintCallBackFn = (callback:PrintCallbackFn) => void;
 "#;
 
-static SCALLBACKS: Lazy<Mutex<HashSet<FunctionContainer>>> =
+static CALLBACKS: Lazy<Mutex<HashSet<FunctionContainer>>> =
     Lazy::new(|| Mutex::new(HashSet::new()));
 
 #[wasm_bindgen]
 pub fn print_callbacks() {
-    let callbacks = SCALLBACKS.lock().unwrap();
+    let callbacks = CALLBACKS.lock().unwrap();
 
     info!("l:{}\n{:?}", callbacks.len(), callbacks);
 }
 
 #[wasm_bindgen]
 pub fn add_print_callback(callback: Function) {
-    let mut callbacks = SCALLBACKS.lock().unwrap();
+    let mut callbacks = CALLBACKS.lock().unwrap();
 
     callbacks.insert(FunctionContainer { function: callback });
 }
 
 #[wasm_bindgen]
 pub fn remove_print_callback(callback: Function) {
-    let mut callbacks = SCALLBACKS.lock().unwrap();
+    let mut callbacks = CALLBACKS.lock().unwrap();
 
     let contained = &FunctionContainer { function: callback };
 
@@ -54,7 +54,7 @@ pub fn add_wasm_builtins(env: &mut Env) {
                     args.iter().map(|v| format!("{}", v)).collect::<String>()
                 );
 
-                let callbacks = SCALLBACKS.lock().unwrap();
+                let callbacks = CALLBACKS.lock().unwrap();
 
                 if callbacks.is_empty() {
                     return NULL.clone();
