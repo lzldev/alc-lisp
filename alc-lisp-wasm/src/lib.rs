@@ -1,6 +1,7 @@
 use std::{cell::LazyCell, collections::HashMap, panic, rc::Rc};
 
 use alc_lisp::{
+    ast::AST,
     interpreter::{builtins::add_generic_builtins, objects::Object, Env, Program, NULL},
     lexer::Lexer,
 };
@@ -9,13 +10,8 @@ use log::info;
 use wasm_bindgen::prelude::*;
 use web_sys::{Performance, Window};
 
-pub use alc_lisp::ast::{ASTPosition, Node, AST};
-pub use alc_lisp::lexer::Token;
-
 #[wasm_bindgen(typescript_custom_section)]
-const APPEND_TS_RS_TYPES: &str = r#"
-export type {Node} from './types/Node';
-"#;
+const TYPES_EXTENSION: &str = include_str!("../target/types.ts"); //Generated from `build.rs`
 
 #[wasm_bindgen(start)]
 pub fn init() {
@@ -54,7 +50,7 @@ pub fn add_wasm_builtins(env: &mut Env) {
 }
 
 #[wasm_bindgen]
-pub fn show_ast(code: String, callback: js_sys::Function) {
+pub fn get_ast(code: String, callback: js_sys::Function) {
     let mut lexer = Lexer::from_string(code);
 
     lexer.parse().expect("lexer::parse");
@@ -71,6 +67,32 @@ pub fn show_ast(code: String, callback: js_sys::Function) {
     }
 
     let node = serde_wasm_bindgen::to_value(&root).expect("serde_wasm_bindgen::from_value");
+
+    callback
+        .call1(&JsValue::NULL, &node)
+        .expect("error running callback");
+}
+
+use gloo_utils::format::JsValueSerdeExt;
+
+#[wasm_bindgen]
+pub fn get_ast_gloo(code: String, callback: js_sys::Function) {
+    let mut lexer = Lexer::from_string(code);
+
+    lexer.parse().expect("lexer::parse");
+
+    let tokens = lexer.tokens();
+
+    let mut ast = AST::with_tokens(tokens);
+
+    let root = ast.parse().expect("ast::parse");
+
+    if ast.has_errors() {
+        ast.print_errors(&root);
+        panic!("ast::has_errors");
+    }
+
+    let node = JsValue::from_serde(&root).expect("gloo_utils::format::JsValueSerdeExt::from_serde");
 
     callback
         .call1(&JsValue::NULL, &node)

@@ -2,7 +2,7 @@ import { Editor } from "@monaco-editor/react";
 import { Header } from "../components/Header";
 import { App } from "./App";
 import { useRef } from "react";
-import { run, show_ast, type Node } from "alc-lisp-wasm";
+import { run, get_ast, type Node, get_ast_gloo } from "alc-lisp-wasm";
 
 export function Home() {
   const editorRef = useRef<any>(null);
@@ -19,14 +19,20 @@ export function Home() {
                 onClick={() => {
                   const code = editorRef.current?.getValue();
 
-                  console.log("code", code);
-
-                  console.time("ast");
-                  show_ast(code, (node: Node) => {
-                    console.timeEnd("ast");
-                    console.log("node", node);
+                  const ast_message = "ast";
+                  console.time(ast_message);
+                  get_ast(code, (node: Node) => {
+                    console.timeEnd(ast_message);
+                    console.log("[serde] node:", node);
                   });
-                  run(code);
+
+                  const gloo_message = "gloo";
+                  console.time(gloo_message);
+                  get_ast_gloo(code, (node: Node) => {
+                    console.timeEnd(gloo_message);
+                    console.log("[gloo] node:", node);
+                  });
+                  // run(code);
                 }}
               >
                 Run
