@@ -24,6 +24,7 @@ dependencies = [
  "gloo-utils",
  "js-sys",
  "log",
+ "once_cell",
  "serde-wasm-bindgen",
  "ts-rs",
  "wasm-bindgen",

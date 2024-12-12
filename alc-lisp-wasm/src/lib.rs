@@ -1,3 +1,5 @@
+#![feature(once_cell_get_mut)]
+
 use std::{cell::LazyCell, collections::HashMap, panic};
 
 use alc_lisp::{
@@ -7,11 +9,13 @@ use alc_lisp::{
 };
 
 use builtins::add_wasm_builtins;
+use gloo_utils::format::JsValueSerdeExt;
 use log::info;
 use wasm_bindgen::prelude::*;
 use web_sys::{Performance, Window};
 
 mod builtins;
+mod function_container;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TYPES_EXTENSION: &str = include_str!("../target/types.ts"); //Generated from `build.rs`
@@ -42,32 +46,6 @@ pub fn do_s() -> Wrapper {
 pub fn do_s_mut(wrapper: &mut Wrapper) {
     info!("ptr: {:p}", wrapper);
 }
-
-#[wasm_bindgen]
-pub fn get_ast(code: String, callback: js_sys::Function) {
-    let mut lexer = Lexer::from_string(code);
-
-    lexer.parse().expect("lexer::parse");
-
-    let tokens = lexer.tokens();
-
-    let mut ast = AST::with_tokens(tokens);
-
-    let root = ast.parse().expect("ast::parse");
-
-    if ast.has_errors() {
-        ast.print_errors(&root);
-        panic!("ast::has_errors");
-    }
-
-    let node = serde_wasm_bindgen::to_value(&root).expect("serde_wasm_bindgen::from_value");
-
-    callback
-        .call1(&JsValue::NULL, &node)
-        .expect("error running callback");
-}
-
-use gloo_utils::format::JsValueSerdeExt;
 
 #[wasm_bindgen]
 pub fn get_ast_gloo(code: String, callback: js_sys::Function) {

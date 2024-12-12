@@ -1,7 +1,15 @@
 import { Editor } from "@monaco-editor/react";
-import { get_ast_gloo, run, type Node } from "alc-lisp-wasm";
+import {
+  add_print_callback,
+  get_ast_gloo,
+  print_callbacks,
+  remove_print_callback,
+  run,
+  type Node,
+  type Object,
+} from "alc-lisp-wasm";
 import clsx from "clsx";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Header } from "../components/Header";
 import { App } from "./App";
 
@@ -85,11 +93,47 @@ export function AST() {
 }
 
 export function Output() {
-  return <div>Output</div>;
+  const [messages, setMessages] = useState<string[]>([]);
+  const callback = (...objects: Object[]) => {
+    console.log("add_print_callback", objects);
+
+    for (const obj of objects) {
+      messages.push(JSON.stringify(obj));
+    }
+
+    setMessages([...messages]);
+  };
+
+  useEffect(() => {
+    add_print_callback(callback);
+    return () => {
+      remove_print_callback(callback);
+    };
+  }, []);
+  return (
+    <div>
+      <div>Output</div>
+      <button
+        className={clsx(
+          "bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none"
+        )}
+        onClick={() => print_callbacks()}
+      >
+        print callbacks
+      </button>
+      <div className="flex flex-col flex-grow">
+        {messages.map((message) => {
+          return <div className="border-y-2">{message}</div>;
+        })}
+      </div>
+    </div>
+  );
 }
 
 export function Details() {
   const [selected, setSelected] = useState<(typeof tabs)[number]>(tabs[0]);
+
+  const Component = components[selected];
 
   return (
     <div className="flex flex-col flex-1">
@@ -107,7 +151,9 @@ export function Details() {
           </button>
         ))}
       </div>
-      <div className="flex flex-grow">{components[selected]({})}</div>
+      <div className="flex flex-grow">
+        <Component />
+      </div>
     </div>
   );
 }
