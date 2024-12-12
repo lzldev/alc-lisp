@@ -1,8 +1,9 @@
 import { Editor } from "@monaco-editor/react";
+import { get_ast_gloo, run, type Node } from "alc-lisp-wasm";
+import clsx from "clsx";
+import { useRef, useState } from "react";
 import { Header } from "../components/Header";
 import { App } from "./App";
-import { useRef } from "react";
-import { run, get_ast, type Node, get_ast_gloo } from "alc-lisp-wasm";
 
 export function Home() {
   const editorRef = useRef<any>(null);
@@ -19,20 +20,14 @@ export function Home() {
                 onClick={() => {
                   const code = editorRef.current?.getValue();
 
-                  const ast_message = "ast";
-                  console.time(ast_message);
-                  get_ast(code, (node: Node) => {
-                    console.timeEnd(ast_message);
-                    console.log("[serde] node:", node);
-                  });
-
                   const gloo_message = "gloo";
                   console.time(gloo_message);
                   get_ast_gloo(code, (node: Node) => {
                     console.timeEnd(gloo_message);
                     console.log("[gloo] node:", node);
                   });
-                  // run(code);
+
+                  run(code);
                 }}
               >
                 Run
@@ -41,6 +36,12 @@ export function Home() {
             <Editor
               onMount={(editor, monaco) => {
                 editorRef.current = editor;
+              }}
+              onChange={(v) => {
+                console.log("change", v);
+              }}
+              onValidate={() => {
+                console.log("validate");
               }}
               className="flex flex-1 h-full"
               defaultLanguage="clojure"
@@ -59,20 +60,54 @@ export function Home() {
             />
           </div>
           <div className="flex flex-col flex-1">
-            <div className="flex flex-row border-y-violet-400 border-y-2 border-opacity-60">
-              <button className="bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none">
-                Output
-              </button>
-              <button className="bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none">
-                Tokens
-              </button>
-              <button className="bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none">
-                AST
-              </button>
-            </div>
+            <Details />
           </div>
         </div>
       </App>
+    </div>
+  );
+}
+
+const tabs = ["Output", "Tokens", "AST"] as const;
+
+const components: Record<(typeof tabs)[number], React.FC> = {
+  AST,
+  Tokens,
+  Output,
+};
+
+export function Tokens() {
+  return <div>Tokens</div>;
+}
+
+export function AST() {
+  return <div>AST</div>;
+}
+
+export function Output() {
+  return <div>Output</div>;
+}
+
+export function Details() {
+  const [selected, setSelected] = useState<(typeof tabs)[number]>(tabs[0]);
+
+  return (
+    <div className="flex flex-col flex-1">
+      <div className="flex flex-row border-y-violet-400 border-y-2 border-opacity-60">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            className={clsx(
+              "bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none",
+              tab === selected && "font-bold"
+            )}
+            onClick={() => setSelected(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-grow">{components[selected]({})}</div>
     </div>
   );
 }
