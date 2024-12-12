@@ -19,6 +19,8 @@ fn main() {
 
     println!("Building alc-lisp-wasm");
     <alc_lisp::ast::Node as ts_rs::TS>::export_all_to(types_dir).expect("ts_rs::TS::export_all_to");
+    <alc_lisp::interpreter::objects::Object as ts_rs::TS>::export_all_to(types_dir)
+        .expect("ts_rs::TS::export_all_to");
 
     let mut out = fs::File::create(file_ext_dir).expect("to open output file");
 

@@ -1,23 +1,44 @@
-use std::{cell::RefCell, fmt::Display};
+use std::{
+    cell::{LazyCell, RefCell},
+    fmt::Display,
+};
 
 use crate::ast::Node;
 
-use super::{Env, Reference};
+use super::{Env, Reference, NULL};
 
 #[derive(Debug, Clone)]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Serialize, serde::Deserialize),
+    serde(tag = "type", content = "value")
+)]
+#[cfg_attr(feature = "ts-rs", derive(ts_rs::TS), ts(export))]
 pub enum Object {
     Null,
     Integer(isize),
     String(String),
     Bool(bool),
     List(Vec<Reference>),
-    Builtin(fn(Vec<Reference>) -> Reference),
+    Builtin {
+        #[serde(default = "get_default_builtin", skip)]
+        function: BuiltinFunction,
+    },
     Function {
         env: RefCell<Env>,
         parameters: Vec<String>,
         body: Node,
     },
     Error(String),
+}
+
+type BuiltinFunction = fn(Vec<Reference>) -> Reference;
+
+pub const DEFAULT_BUILTIN: LazyCell<BuiltinFunction> =
+    LazyCell::new(|| |_: Vec<Reference>| -> Reference { NULL.clone() });
+
+fn get_default_builtin() -> fn(Vec<Reference>) -> Reference {
+    DEFAULT_BUILTIN.clone()
 }
 
 impl Object {
@@ -28,7 +49,7 @@ impl Object {
             Object::String(_) => "string",
             Object::Bool(_) => "bool",
             Object::List(_) => "list",
-            Object::Builtin(_) => "builtin",
+            Object::Builtin { .. } => "builtin",
             Object::Function { .. } => "function",
             Object::Error(_) => "error",
         }
@@ -54,8 +75,8 @@ impl Display for Object {
                 f.write_str("]")?;
                 Ok(())
             }
-            Object::Builtin(v) => {
-                write!(f, "BUILTIN[{:?}]", v)
+            Object::Builtin { function } => {
+                write!(f, "BUILTIN[{:?}]", function)
             }
             Object::Function { .. } => {
                 write!(f, "FUNCTION[{:p}]", self)

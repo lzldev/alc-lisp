@@ -25,272 +25,292 @@ where
 pub fn add_generic_builtins(env: &mut Env) {
     env.insert(
         "+".into(),
-        Rc::new(Object::Builtin(|args| {
-            if let Some(err) = typecheck_args(
-                "+",
-                "integer",
-                |obj| !matches!(obj.as_ref(), Object::Integer(_)),
-                &args,
-            ) {
-                return err;
-            };
-
-            let mut sum = 0;
-
-            for obj in args.iter() {
-                let Object::Integer(n) = obj.as_ref() else {
-                    panic!("This should never happen")
+        Rc::new(Object::Builtin {
+            function: |args| {
+                if let Some(err) = typecheck_args(
+                    "+",
+                    "integer",
+                    |obj| !matches!(obj.as_ref(), Object::Integer(_)),
+                    &args,
+                ) {
+                    return err;
                 };
 
-                sum += n;
-            }
+                let mut sum = 0;
 
-            return Rc::new(Object::Integer(sum));
-        })),
+                for obj in args.iter() {
+                    let Object::Integer(n) = obj.as_ref() else {
+                        panic!("This should never happen")
+                    };
+
+                    sum += n;
+                }
+
+                return Rc::new(Object::Integer(sum));
+            },
+        }),
     );
 
     env.insert(
         "-".into(),
-        Rc::new(Object::Builtin(|args| {
-            if let Some(err) = typecheck_args(
-                "-",
-                "integer",
-                |obj| !matches!(obj.as_ref(), Object::Integer(_)),
-                &args,
-            ) {
-                return err;
-            };
-
-            let Object::Integer(mut total) = args[0].as_ref() else {
-                panic!("This should never happen");
-            };
-
-            for obj in args.iter().skip(1) {
-                let Object::Integer(n) = obj.as_ref() else {
-                    panic!("This should never happen")
+        Rc::new(Object::Builtin {
+            function: |args| {
+                if let Some(err) = typecheck_args(
+                    "-",
+                    "integer",
+                    |obj| !matches!(obj.as_ref(), Object::Integer(_)),
+                    &args,
+                ) {
+                    return err;
                 };
 
-                total -= n;
-            }
+                let Object::Integer(mut total) = args[0].as_ref() else {
+                    panic!("This should never happen");
+                };
 
-            return Rc::new(Object::Integer(total));
-        })),
+                for obj in args.iter().skip(1) {
+                    let Object::Integer(n) = obj.as_ref() else {
+                        panic!("This should never happen")
+                    };
+
+                    total -= n;
+                }
+
+                return Rc::new(Object::Integer(total));
+            },
+        }),
     );
 
     env.insert(
         "*".into(),
-        Rc::new(Object::Builtin(|args| {
-            if let Some(err) = typecheck_args(
-                "*",
-                "integer",
-                |obj| !matches!(obj.as_ref(), Object::Integer(_)),
-                &args,
-            ) {
-                return err;
-            }
+        Rc::new(Object::Builtin {
+            function: |args| {
+                if let Some(err) = typecheck_args(
+                    "*",
+                    "integer",
+                    |obj| !matches!(obj.as_ref(), Object::Integer(_)),
+                    &args,
+                ) {
+                    return err;
+                }
 
-            let Object::Integer(mut total) = args[0].as_ref() else {
-                panic!("This should never happen");
-            };
-
-            for obj in args.iter().skip(1) {
-                let Object::Integer(n) = obj.as_ref() else {
-                    panic!("This should never happen")
+                let Object::Integer(mut total) = args[0].as_ref() else {
+                    panic!("This should never happen");
                 };
 
-                total *= n;
-            }
+                for obj in args.iter().skip(1) {
+                    let Object::Integer(n) = obj.as_ref() else {
+                        panic!("This should never happen")
+                    };
 
-            return Rc::new(Object::Integer(total));
-        })),
+                    total *= n;
+                }
+
+                return Rc::new(Object::Integer(total));
+            },
+        }),
     );
 
     env.insert(
         "/".into(),
-        Rc::new(Object::Builtin(|args| {
-            if let Some(err) = typecheck_args(
-                "/",
-                "integer",
-                |obj| !matches!(obj.as_ref(), Object::Integer(_)),
-                &args,
-            ) {
-                return err;
-            }
-
-            let Object::Integer(mut total) = args[0].as_ref() else {
-                panic!("This should never happen");
-            };
-
-            for obj in args.iter().skip(1) {
-                let Object::Integer(n) = obj.as_ref() else {
-                    panic!("This should never happen")
-                };
-
-                if n == &0 {
-                    return Rc::new(Object::Error(format!("division by zero")));
+        Rc::new(Object::Builtin {
+            function: |args| {
+                if let Some(err) = typecheck_args(
+                    "/",
+                    "integer",
+                    |obj| !matches!(obj.as_ref(), Object::Integer(_)),
+                    &args,
+                ) {
+                    return err;
                 }
 
-                total /= n;
-            }
+                let Object::Integer(mut total) = args[0].as_ref() else {
+                    panic!("This should never happen");
+                };
 
-            return Rc::new(Object::Integer(total));
-        })),
+                for obj in args.iter().skip(1) {
+                    let Object::Integer(n) = obj.as_ref() else {
+                        panic!("This should never happen")
+                    };
+
+                    if n == &0 {
+                        return Rc::new(Object::Error(format!("division by zero")));
+                    }
+
+                    total /= n;
+                }
+
+                return Rc::new(Object::Integer(total));
+            },
+        }),
     );
 
     env.insert(
         "==".into(),
-        Rc::new(Object::Builtin(|args| {
-            let len = args.len();
-            if len < 1 || len == 0 {
-                return Rc::new(Object::Error(format!(
-                    "Invalid argument type for function '==': got: {} expected: 2",
-                    args.len()
-                )));
-            }
-
-            if len == 1 {
-                return TRUE.clone();
-            }
-
-            let mut first = &args[0];
-
-            for last in args.iter().skip(1) {
-                let value = match (first.as_ref(), last.as_ref()) {
-                    (Object::Null, Object::Null) => true,
-                    (Object::Bool(l), Object::Bool(r)) => l == r,
-                    (Object::Integer(l), Object::Integer(r)) => l == r,
-                    (Object::String(l), Object::String(r)) => l == r,
-                    _ => false,
-                };
-
-                if !value {
-                    return bool_from_native(false);
+        Rc::new(Object::Builtin {
+            function: |args| {
+                let len = args.len();
+                if len < 1 || len == 0 {
+                    return Rc::new(Object::Error(format!(
+                        "Invalid argument type for function '==': got: {} expected: 2",
+                        args.len()
+                    )));
                 }
 
-                first = last;
-            }
+                if len == 1 {
+                    return TRUE.clone();
+                }
 
-            return bool_from_native(true);
-        })),
+                let mut first = &args[0];
+
+                for last in args.iter().skip(1) {
+                    let value = match (first.as_ref(), last.as_ref()) {
+                        (Object::Null, Object::Null) => true,
+                        (Object::Bool(l), Object::Bool(r)) => l == r,
+                        (Object::Integer(l), Object::Integer(r)) => l == r,
+                        (Object::String(l), Object::String(r)) => l == r,
+                        _ => false,
+                    };
+
+                    if !value {
+                        return bool_from_native(false);
+                    }
+
+                    first = last;
+                }
+
+                return bool_from_native(true);
+            },
+        }),
     );
 
     env.insert(
         "<".into(),
-        Rc::new(Object::Builtin(|args| {
-            let len = args.len();
-            if len < 1 || len == 0 {
-                return Rc::new(Object::Error(format!(
-                    "Invalid argument type for function '<': got: {}",
-                    args.len()
-                )));
-            }
-
-            if len == 1 {
-                return TRUE.clone();
-            }
-
-            let mut first = &args[0];
-
-            for last in args.iter().skip(1) {
-                let value = match (first.as_ref(), last.as_ref()) {
-                    (Object::Integer(l), Object::Integer(r)) => l < r,
-                    _ => false,
-                };
-
-                if !value {
-                    return bool_from_native(false);
+        Rc::new(Object::Builtin {
+            function: |args| {
+                let len = args.len();
+                if len < 1 || len == 0 {
+                    return Rc::new(Object::Error(format!(
+                        "Invalid argument type for function '<': got: {}",
+                        args.len()
+                    )));
                 }
 
-                first = last;
-            }
+                if len == 1 {
+                    return TRUE.clone();
+                }
 
-            return bool_from_native(true);
-        })),
+                let mut first = &args[0];
+
+                for last in args.iter().skip(1) {
+                    let value = match (first.as_ref(), last.as_ref()) {
+                        (Object::Integer(l), Object::Integer(r)) => l < r,
+                        _ => false,
+                    };
+
+                    if !value {
+                        return bool_from_native(false);
+                    }
+
+                    first = last;
+                }
+
+                return bool_from_native(true);
+            },
+        }),
     );
 
     env.insert(
         ">".into(),
-        Rc::new(Object::Builtin(|args| {
-            let len = args.len();
-            if len < 1 || len == 0 {
-                return Rc::new(Object::Error(format!(
-                    "Invalid argument type for function '<': got: {}",
-                    args.len()
-                )));
-            }
-
-            if len == 1 {
-                return TRUE.clone();
-            }
-
-            let mut first = &args[0];
-
-            for last in args.iter().skip(1) {
-                let value = match (first.as_ref(), last.as_ref()) {
-                    (Object::Integer(l), Object::Integer(r)) => l > r,
-                    _ => false,
-                };
-
-                if !value {
-                    return bool_from_native(false);
+        Rc::new(Object::Builtin {
+            function: |args| {
+                let len = args.len();
+                if len < 1 || len == 0 {
+                    return Rc::new(Object::Error(format!(
+                        "Invalid argument type for function '<': got: {}",
+                        args.len()
+                    )));
                 }
 
-                first = last;
-            }
+                if len == 1 {
+                    return TRUE.clone();
+                }
 
-            return bool_from_native(true);
-        })),
+                let mut first = &args[0];
+
+                for last in args.iter().skip(1) {
+                    let value = match (first.as_ref(), last.as_ref()) {
+                        (Object::Integer(l), Object::Integer(r)) => l > r,
+                        _ => false,
+                    };
+
+                    if !value {
+                        return bool_from_native(false);
+                    }
+
+                    first = last;
+                }
+
+                return bool_from_native(true);
+            },
+        }),
     );
 
     env.insert(
         "str".into(),
-        Rc::new(Object::Builtin(|args| {
-            if let Some(err) = typecheck_args(
-                "str",
-                "string",
-                |obj| !matches!(obj.as_ref(), Object::String(_)),
-                &args,
-            ) {
-                return err;
-            }
+        Rc::new(Object::Builtin {
+            function: |args| {
+                if let Some(err) = typecheck_args(
+                    "str",
+                    "string",
+                    |obj| !matches!(obj.as_ref(), Object::String(_)),
+                    &args,
+                ) {
+                    return err;
+                }
 
-            let mut result = {
-                let Object::String(inner) = args[0].as_ref() else {
-                    panic!("This should never happen");
-                };
-                inner.clone()
-            };
-
-            for obj in args.iter().skip(1) {
-                let Object::String(s) = obj.as_ref() else {
-                    panic!("This should never happen")
+                let mut result = {
+                    let Object::String(inner) = args[0].as_ref() else {
+                        panic!("This should never happen");
+                    };
+                    inner.clone()
                 };
 
-                result.push_str(s.as_str());
-            }
+                for obj in args.iter().skip(1) {
+                    let Object::String(s) = obj.as_ref() else {
+                        panic!("This should never happen")
+                    };
 
-            Reference::new(Object::String(result))
-        })),
+                    result.push_str(s.as_str());
+                }
+
+                Reference::new(Object::String(result))
+            },
+        }),
     );
 }
 
 pub fn add_native_builtins(env: &mut Env) {
     env.insert(
         "print".into(),
-        Rc::new(Object::Builtin(|args| {
-            println!(
-                "{}",
-                args.iter().map(|v| format!("{}", v)).collect::<String>()
-            );
-            return NULL.clone();
-        })),
+        Rc::new(Object::Builtin {
+            function: |args| {
+                println!(
+                    "{}",
+                    args.iter().map(|v| format!("{}", v)).collect::<String>()
+                );
+                return NULL.clone();
+            },
+        }),
     );
 
     env.insert(
         "debug".into(),
-        Rc::new(Object::Builtin(|args| {
-            println!("{:?}", args);
-            return NULL.clone();
-        })),
+        Rc::new(Object::Builtin {
+            function: |args| {
+                println!("{:?}", args);
+                return NULL.clone();
+            },
+        }),
     );
 }

@@ -238,7 +238,7 @@ impl Program {
                 }
 
                 match first.as_ref() {
-                    Object::Builtin(f) => return Ok(f(args)),
+                    Object::Builtin { function } => return Ok(function(args)),
                     Object::Function {
                         env,
                         parameters,
