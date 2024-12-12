@@ -1,0 +1,7 @@
+; String concatenation example in alc-lisp
+
+(def name "John")
+
+(def message (str "Hello " name))
+
+(print message)

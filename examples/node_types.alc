@@ -1,0 +1,13 @@
+; AST Nodes Types
+; Comment
+
+
+(def integer_literal 1)
+(def word_node integer_literal)
+(def string_literal "Hello World")
+(def boolean_literal true)
+(def list_node [1 2 3])
+(def function_literal fn [n] (
+    (+ n 1)
+))
+
