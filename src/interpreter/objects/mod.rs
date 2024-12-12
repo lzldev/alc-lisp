@@ -24,7 +24,7 @@ pub enum Object {
     Bool(bool),
     List(Vec<Reference>),
     Builtin {
-        #[serde(default = "get_default_builtin", skip)]
+        #[cfg_attr(feature = "serde", serde(default = "get_default_builtin", skip))]
         function: BuiltinFunction,
     },
     Function {
