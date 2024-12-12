@@ -17,14 +17,14 @@ export function Home() {
   const editorRef = useRef<any>(null);
 
   return (
-    <div className="flex flex-grow h-full w-full flex-1 flex-col">
+    <div className="flex h-full w-full flex-1 flex-grow flex-col">
       <Header />
       <App>
-        <div className="flex flex-1 flex-grow flex-row w-full h-full justify-stretch items-stretch">
-          <div className="flex w-[50%] flex-col border-r-violet-400 border-r-2 border-opacity-60">
-            <div className="flex flex-row border-y-violet-400 border-y-2 border-opacity-60">
+        <div className="flex h-full w-full flex-1 flex-grow flex-row items-stretch justify-stretch">
+          <div className="flex w-[50%] flex-col border-r-2 border-r-violet-400 border-opacity-60">
+            <div className="flex flex-row border-y-2 border-y-violet-400 border-opacity-60">
               <button
-                className="bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none"
+                className="bg-violet-400 px-4 py-1 text-white outline-none active:bg-violet-300"
                 onClick={() => {
                   const code = editorRef.current?.getValue();
 
@@ -51,7 +51,7 @@ export function Home() {
               onValidate={() => {
                 console.log("validate");
               }}
-              className="flex flex-1 h-full"
+              className="flex h-full flex-1"
               defaultLanguage="clojure"
               theme="vs-light"
               height="100%"
@@ -124,10 +124,10 @@ export function Output({ show }: TabProps) {
   }, []);
 
   return (
-    <div className={clsx("flex flex-grow flex-col h-full", !show && "hidden")}>
+    <div className={clsx("flex h-full flex-grow flex-col", !show && "hidden")}>
       <button
         className={clsx(
-          "bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none flex-shrink"
+          "flex-shrink bg-violet-400 px-4 py-1 text-white outline-none active:bg-violet-300",
         )}
         onClick={() => print_callbacks()}
       >
@@ -151,13 +151,13 @@ export function Details() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex flex-row border-y-violet-400 border-y-2 border-opacity-60">
+      <div className="flex flex-row border-y-2 border-y-violet-400 border-opacity-60">
         {tabs.map((tab) => (
           <button
             key={tab}
             className={clsx(
-              "bg-violet-400 active:bg-violet-300  text-white px-4 py-1 outline-none",
-              tab === selected && "font-bold"
+              "bg-violet-400 px-4 py-1 text-white outline-none active:bg-violet-300",
+              tab === selected && "font-bold",
             )}
             onClick={() => setSelected(tab)}
           >
