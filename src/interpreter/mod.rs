@@ -20,9 +20,13 @@ pub struct Program {
     pub env: Vec<RefCell<Env>>,
 }
 
+//Sentinel Values
 pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(true)));
 pub const FALSE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(false)));
 pub const NULL: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Null));
+pub const NUMBER: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Integer(0)));
+pub const STRING: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::String(String::new())));
+pub const LIST: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::List(vec![])));
 
 fn bool_from_native(value: bool) -> Reference {
     if value {

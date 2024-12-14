@@ -1,4 +1,11 @@
+mod errors;
+mod list;
+mod number;
 use std::rc::Rc;
+
+use errors::{new_args_len_error, new_type_error};
+use list::add_list_builtins;
+use number::add_number_builtins;
 
 use crate::interpreter::NULL;
 
@@ -14,133 +21,28 @@ where
     F: Fn(&Reference) -> bool,
 {
     if args.iter().any(condition) {
-        return Some(Rc::new(Object::Error(format!(
-            "Invalid argument type for function '{}': args should be {}",
-            name, typename
-        ))));
+        return Some(new_type_error(name, typename));
     };
     None
 }
 
 pub fn add_generic_builtins(env: &mut Env) {
-    env.insert(
-        "+".into(),
-        Rc::new(Object::Builtin {
-            function: |args| {
-                if let Some(err) = typecheck_args(
-                    "+",
-                    "integer",
-                    |obj| !matches!(obj.as_ref(), Object::Integer(_)),
-                    &args,
-                ) {
-                    return err;
-                };
-
-                let mut sum = 0;
-
-                for obj in args.iter() {
-                    let Object::Integer(n) = obj.as_ref() else {
-                        panic!("This should never happen")
-                    };
-
-                    sum += n;
-                }
-
-                return Rc::new(Object::Integer(sum));
-            },
-        }),
-    );
+    add_number_builtins(env);
+    add_list_builtins(env);
 
     env.insert(
-        "-".into(),
+        "len".into(),
         Rc::new(Object::Builtin {
             function: |args| {
-                if let Some(err) = typecheck_args(
-                    "-",
-                    "integer",
-                    |obj| !matches!(obj.as_ref(), Object::Integer(_)),
-                    &args,
-                ) {
-                    return err;
-                };
-
-                let Object::Integer(mut total) = args[0].as_ref() else {
-                    panic!("This should never happen");
-                };
-
-                for obj in args.iter().skip(1) {
-                    let Object::Integer(n) = obj.as_ref() else {
-                        panic!("This should never happen")
-                    };
-
-                    total -= n;
+                if args.len() != 1 {
+                    return new_args_len_error("len", &args, 1);
                 }
 
-                return Rc::new(Object::Integer(total));
-            },
-        }),
-    );
-
-    env.insert(
-        "*".into(),
-        Rc::new(Object::Builtin {
-            function: |args| {
-                if let Some(err) = typecheck_args(
-                    "*",
-                    "integer",
-                    |obj| !matches!(obj.as_ref(), Object::Integer(_)),
-                    &args,
-                ) {
-                    return err;
+                match args[0].as_ref() {
+                    Object::String(s) => return Rc::new(Object::Integer(s.len() as isize)),
+                    Object::List(l) => return Rc::new(Object::Integer(l.len() as isize)),
+                    _ => return new_type_error("len", "string or list"),
                 }
-
-                let Object::Integer(mut total) = args[0].as_ref() else {
-                    panic!("This should never happen");
-                };
-
-                for obj in args.iter().skip(1) {
-                    let Object::Integer(n) = obj.as_ref() else {
-                        panic!("This should never happen")
-                    };
-
-                    total *= n;
-                }
-
-                return Rc::new(Object::Integer(total));
-            },
-        }),
-    );
-
-    env.insert(
-        "/".into(),
-        Rc::new(Object::Builtin {
-            function: |args| {
-                if let Some(err) = typecheck_args(
-                    "/",
-                    "integer",
-                    |obj| !matches!(obj.as_ref(), Object::Integer(_)),
-                    &args,
-                ) {
-                    return err;
-                }
-
-                let Object::Integer(mut total) = args[0].as_ref() else {
-                    panic!("This should never happen");
-                };
-
-                for obj in args.iter().skip(1) {
-                    let Object::Integer(n) = obj.as_ref() else {
-                        panic!("This should never happen")
-                    };
-
-                    if n == &0 {
-                        return Rc::new(Object::Error(format!("division by zero")));
-                    }
-
-                    total /= n;
-                }
-
-                return Rc::new(Object::Integer(total));
             },
         }),
     );
@@ -150,11 +52,8 @@ pub fn add_generic_builtins(env: &mut Env) {
         Rc::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
-                if len < 1 || len == 0 {
-                    return Rc::new(Object::Error(format!(
-                        "Invalid argument type for function '==': got: {} expected: 2",
-                        args.len()
-                    )));
+                if len == 0 {
+                    return new_args_len_error("==", &args, 2);
                 }
 
                 if len == 1 {
@@ -189,11 +88,8 @@ pub fn add_generic_builtins(env: &mut Env) {
         Rc::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
-                if len < 1 || len == 0 {
-                    return Rc::new(Object::Error(format!(
-                        "Invalid argument type for function '<': got: {}",
-                        args.len()
-                    )));
+                if len == 0 {
+                    return new_args_len_error("<", &args, 2);
                 }
 
                 if len == 1 {
@@ -225,11 +121,8 @@ pub fn add_generic_builtins(env: &mut Env) {
         Rc::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
-                if len < 1 || len == 0 {
-                    return Rc::new(Object::Error(format!(
-                        "Invalid argument type for function '<': got: {}",
-                        args.len()
-                    )));
+                if len == 0 {
+                    return new_args_len_error(">", &args, 2);
                 }
 
                 if len == 1 {
