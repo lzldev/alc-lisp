@@ -40,6 +40,7 @@ type BuiltinFunction = fn(Vec<Reference>) -> Reference;
 pub const DEFAULT_BUILTIN: LazyCell<BuiltinFunction> =
     LazyCell::new(|| |_: Vec<Reference>| -> Reference { NULL.clone() });
 
+#[cfg(feature = "serde")]
 fn get_default_builtin() -> fn(Vec<Reference>) -> Reference {
     DEFAULT_BUILTIN.clone()
 }
