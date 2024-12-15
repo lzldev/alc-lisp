@@ -2,7 +2,7 @@ use std::{
     borrow::BorrowMut,
     cell::{LazyCell, RefCell},
     collections::HashMap,
-    rc::Rc,
+    rc::Rc
 };
 
 use anyhow::{anyhow, Context};
@@ -13,6 +13,7 @@ use crate::ast::Node;
 pub mod builtins;
 pub mod objects;
 
+pub type CallStack = Vec<RefCell<Env>>; 
 pub type Reference = Rc<Object>;
 pub type Env = HashMap<String, Reference>;
 
@@ -21,12 +22,12 @@ pub struct Program {
 }
 
 //Sentinel Values
-pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(true)));
-pub const FALSE: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Bool(false)));
-pub const NULL: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Null));
-pub const NUMBER: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::Integer(0)));
-pub const STRING: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::String(String::new())));
-pub const LIST: LazyCell<Reference> = LazyCell::new(|| Rc::new(Object::List(vec![])));
+pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Bool(true)));
+pub const FALSE: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Bool(false)));
+pub const NULL: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Null));
+pub const NUMBER: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Integer(0)));
+pub const STRING: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::String(String::new())));
+pub const LIST: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::List(vec![])));
 
 fn bool_from_native(value: bool) -> Reference {
     if value {
@@ -96,7 +97,7 @@ impl Program {
         }
     }
 
-    fn get_value(&mut self, name: &str) -> Rc<Object> {
+    fn get_value(&mut self, name: &str) -> Reference {
         for env in self.env.iter_mut().rev() {
             let map = env.borrow_mut().get_mut();
             if let Some(value) = map.get(name) {
@@ -107,7 +108,7 @@ impl Program {
         return NULL.clone();
     }
 
-    fn set_value(&mut self, name: String, value: Rc<Object>) {
+    fn set_value(&mut self, name: String, value: Reference) {
         let env = self.env.last_mut().unwrap().borrow_mut().get_mut();
         env.insert(name, value);
     }
@@ -123,7 +124,7 @@ impl Program {
             Node::StringLiteral(token) => {
                 let len = token.value.len();
 
-                return Ok(Rc::new(Object::String(
+                return Ok(Reference::new(Object::String(
                     token.value[1..(len - 1)].to_owned(),
                 )));
             }
@@ -133,10 +134,10 @@ impl Program {
                     .parse::<isize>()
                     .context("error parsing numberliteral:")?;
 
-                return Ok(Rc::new(Object::Integer(value)));
+                return Ok(Reference::new(Object::Integer(value)));
             }
             Node::Invalid(_) => {
-                return Ok(Rc::new(Object::Error("Evaluating Invalid Node".to_owned())))
+                return Ok(Reference::new(Object::Error("Evaluating Invalid Node".to_owned())))
             }
             Node::Expression(vec) => {
                 if vec.is_empty() {
@@ -149,7 +150,7 @@ impl Program {
                     match word.value.as_str() {
                         "define" | "def" => {
                             if len == 1 || len != 3 {
-                                return Ok(Rc::new(Object::Error(format!(
+                                return Ok(Reference::new(Object::Error(format!(
                                     "Invalid amount of arguments to define got:{} expected: 3",
                                     len
                                 ))));
@@ -158,7 +159,7 @@ impl Program {
                             let name = match &vec[1] {
                                 Node::Word(token) => token,
                                 n => {
-                                    return Ok(Rc::new(Object::Error(format!(
+                                    return Ok(Reference::new(Object::Error(format!(
                                         "Invalid token for define: {:?} should be a word",
                                         n
                                     ))))
@@ -177,7 +178,7 @@ impl Program {
                         }
                         "if" => {
                             if len != 4 && len != 3 {
-                                return Ok(Rc::new(Object::Error(format!(
+                                return Ok(Reference::new(Object::Error(format!(
                                     "Invalid amount of arguments to if got: {}",
                                     len
                                 ))));
@@ -207,7 +208,7 @@ impl Program {
                         }
                         "do" => {
                             if len != 2 {
-                                return Ok(Rc::new(Object::Error(format!(
+                                return Ok(Reference::new(Object::Error(format!(
                                     "Invalid amount of arguments to do got: {}",
                                     len
                                 ))));
@@ -249,7 +250,7 @@ impl Program {
                         body,
                     } => {
                         if args.len() != parameters.len() {
-                            return Ok(Rc::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
+                            return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
                         }
 
                         self.env.push(env.clone());
@@ -277,7 +278,7 @@ impl Program {
                     items.push(value);
                 }
 
-                return Ok(Rc::new(Object::List(items)));
+                return Ok(Reference::new(Object::List(items)));
             }
             Node::FunctionLiteral {
                 token: _,
@@ -296,7 +297,7 @@ impl Program {
 
                 let env = self.env.last().expect("to get last env").clone();
 
-                return Ok(Rc::new(Object::Function {
+                return Ok(Reference::new(Object::Function {
                     env,
                     parameters: arguments,
                     body: (**body).clone(),

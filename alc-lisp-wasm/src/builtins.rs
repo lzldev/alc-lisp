@@ -1,6 +1,6 @@
-use std::{collections::HashSet, rc::Rc, sync::Mutex};
+use std::{collections::HashSet,  sync::Mutex};
 
-use alc_lisp::interpreter::{objects::Object, Env, NULL};
+use alc_lisp::interpreter::{objects::Object, Env, Reference, NULL};
 use js_sys::{Array, Function};
 use log::info;
 use once_cell::sync::Lazy;
@@ -45,7 +45,7 @@ pub fn remove_print_callback(callback: Function) {
 pub fn add_wasm_builtins(env: &mut Env) {
     env.insert(
         "print".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 info!(
                     "{}",
@@ -78,7 +78,7 @@ pub fn add_wasm_builtins(env: &mut Env) {
 
     env.insert(
         "debug".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 info!(
                     "{:?}",

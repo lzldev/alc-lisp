@@ -1,13 +1,11 @@
-use std::rc::Rc;
-
-use crate::interpreter::{objects::Object, Env, NULL};
+use crate::interpreter::{objects::Object, Env, Reference, NULL};
 
 use super::errors::{new_args_len_error, new_type_error_with_pos};
 
 pub fn add_list_builtins(env: &mut Env) {
     env.insert(
         "nth".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
                 if len != 2 {
@@ -31,7 +29,7 @@ pub fn add_list_builtins(env: &mut Env) {
 
     env.insert(
         "head".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
                 if len != 1 {
@@ -46,16 +44,16 @@ pub fn add_list_builtins(env: &mut Env) {
                     return NULL.clone();
                 }
 
-                let vec = l.iter().take(1).cloned().collect();
+                let first  = l.iter().cloned().next();
 
-                return Rc::new(Object::List(vec));
+                return first.unwrap_or_else(|| NULL.clone());
             },
         }),
     );
 
     env.insert(
         "tail".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
                 if len != 1 {
@@ -68,14 +66,14 @@ pub fn add_list_builtins(env: &mut Env) {
 
                 let vec = l.iter().skip(1).cloned().collect();
 
-                return Rc::new(Object::List(vec));
+                return Reference::new(Object::List(vec));
             },
         }),
     );
 
     env.insert(
         "slice".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
                 if len != 2 && len != 3 {
@@ -102,7 +100,7 @@ pub fn add_list_builtins(env: &mut Env) {
                     .cloned()
                     .collect();
 
-                return Rc::new(Object::List(vec));
+                return Reference::new(Object::List(vec));
             },
         }),
     );

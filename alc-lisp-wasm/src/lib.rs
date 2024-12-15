@@ -1,5 +1,3 @@
-#![feature(once_cell_get_mut)]
-
 use std::{cell::LazyCell, collections::HashMap, panic};
 
 use alc_lisp::{

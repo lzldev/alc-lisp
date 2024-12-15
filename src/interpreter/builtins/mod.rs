@@ -32,15 +32,15 @@ pub fn add_generic_builtins(env: &mut Env) {
 
     env.insert(
         "len".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 if args.len() != 1 {
                     return new_args_len_error("len", &args, 1);
                 }
 
                 match args[0].as_ref() {
-                    Object::String(s) => return Rc::new(Object::Integer(s.len() as isize)),
-                    Object::List(l) => return Rc::new(Object::Integer(l.len() as isize)),
+                    Object::String(s) => return Reference::new(Object::Integer(s.len() as isize)),
+                    Object::List(l) => return Reference::new(Object::Integer(l.len() as isize)),
                     _ => return new_type_error("len", "string or list"),
                 }
             },
@@ -49,7 +49,7 @@ pub fn add_generic_builtins(env: &mut Env) {
 
     env.insert(
         "==".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
                 if len == 0 {
@@ -85,7 +85,7 @@ pub fn add_generic_builtins(env: &mut Env) {
 
     env.insert(
         "<".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
                 if len == 0 {
@@ -118,7 +118,7 @@ pub fn add_generic_builtins(env: &mut Env) {
 
     env.insert(
         ">".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 let len = args.len();
                 if len == 0 {
@@ -151,7 +151,7 @@ pub fn add_generic_builtins(env: &mut Env) {
 
     env.insert(
         "str".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "str",
@@ -186,7 +186,7 @@ pub fn add_generic_builtins(env: &mut Env) {
 pub fn add_native_builtins(env: &mut Env) {
     env.insert(
         "print".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 println!(
                     "{}",
@@ -199,7 +199,7 @@ pub fn add_native_builtins(env: &mut Env) {
 
     env.insert(
         "debug".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 println!("{:?}", args);
                 return NULL.clone();

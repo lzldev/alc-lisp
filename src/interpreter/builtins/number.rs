@@ -1,13 +1,11 @@
-use std::rc::Rc;
-
-use crate::interpreter::{objects::Object, Env};
+use crate::interpreter::{objects::Object, Env, Reference};
 
 use super::typecheck_args;
 
 pub fn add_number_builtins(env: &mut Env) {
     env.insert(
         "+".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "+",
@@ -28,14 +26,14 @@ pub fn add_number_builtins(env: &mut Env) {
                     sum += n;
                 }
 
-                return Rc::new(Object::Integer(sum));
+                return Reference::new(Object::Integer(sum));
             },
         }),
     );
 
     env.insert(
         "-".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "-",
@@ -58,14 +56,14 @@ pub fn add_number_builtins(env: &mut Env) {
                     total -= n;
                 }
 
-                return Rc::new(Object::Integer(total));
+                return Reference::new(Object::Integer(total));
             },
         }),
     );
 
     env.insert(
         "*".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "*",
@@ -88,14 +86,14 @@ pub fn add_number_builtins(env: &mut Env) {
                     total *= n;
                 }
 
-                return Rc::new(Object::Integer(total));
+                return Reference::new(Object::Integer(total));
             },
         }),
     );
 
     env.insert(
         "/".into(),
-        Rc::new(Object::Builtin {
+        Reference::new(Object::Builtin {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "/",
@@ -116,13 +114,13 @@ pub fn add_number_builtins(env: &mut Env) {
                     };
 
                     if n == &0 {
-                        return Rc::new(Object::Error(format!("division by zero")));
+                        return Reference::new(Object::Error(format!("division by zero")));
                     }
 
                     total /= n;
                 }
 
-                return Rc::new(Object::Integer(total));
+                return Reference::new(Object::Integer(total));
             },
         }),
     );
