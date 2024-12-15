@@ -1,11 +1,13 @@
 mod errors;
 mod list;
 mod number;
+mod string;
 use std::rc::Rc;
 
 use errors::{new_args_len_error, new_type_error};
 use list::add_list_builtins;
 use number::add_number_builtins;
+use string::add_string_builtins;
 
 use crate::interpreter::NULL;
 
@@ -29,6 +31,7 @@ where
 pub fn add_generic_builtins(env: &mut Env) {
     add_number_builtins(env);
     add_list_builtins(env);
+    add_string_builtins(env);
 
     env.insert(
         "len".into(),
@@ -145,39 +148,6 @@ pub fn add_generic_builtins(env: &mut Env) {
                 }
 
                 return bool_from_native(true);
-            },
-        }),
-    );
-
-    env.insert(
-        "str".into(),
-        Reference::new(Object::Builtin {
-            function: |args| {
-                if let Some(err) = typecheck_args(
-                    "str",
-                    "string",
-                    |obj| !matches!(obj.as_ref(), Object::String(_)),
-                    &args,
-                ) {
-                    return err;
-                }
-
-                let mut result = {
-                    let Object::String(inner) = args[0].as_ref() else {
-                        panic!("This should never happen");
-                    };
-                    inner.clone()
-                };
-
-                for obj in args.iter().skip(1) {
-                    let Object::String(s) = obj.as_ref() else {
-                        panic!("This should never happen")
-                    };
-
-                    result.push_str(s.as_str());
-                }
-
-                Reference::new(Object::String(result))
             },
         }),
     );
