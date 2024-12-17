@@ -81,12 +81,11 @@ impl Program {
                 )));
             }
             Node::NumberLiteral(token) => {
-                let value = token
+                return token
                     .value
                     .parse::<isize>()
-                    .context("error parsing numberliteral:")?;
-
-                return Ok(Reference::new(Object::Integer(value)));
+                    .map(|v| Reference::new(Object::Integer(v)))
+                    .context("error parsing numberliteral:");
             }
             Node::Invalid(_) => {
                 return Ok(Reference::new(Object::Error(
@@ -133,7 +132,7 @@ impl Program {
                         "if" => {
                             if len != 4 && len != 3 {
                                 return Ok(Reference::new(Object::Error(format!(
-                                    "Invalid amount of arguments to if got: {}",
+                                    "Invalid amount of arguments to 'if' got: {}",
                                     len
                                 ))));
                             }
@@ -163,7 +162,7 @@ impl Program {
                         "do" => {
                             if len != 2 {
                                 return Ok(Reference::new(Object::Error(format!(
-                                    "Invalid amount of arguments to do got: {}",
+                                    "Invalid amount of arguments to 'do' got: {}",
                                     len
                                 ))));
                             }
