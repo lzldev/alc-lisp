@@ -2,10 +2,10 @@ use std::{
     borrow::BorrowMut,
     cell::{LazyCell, RefCell},
     collections::HashMap,
-    rc::Rc
+    rc::Rc,
 };
 
-use anyhow::{anyhow, Context};
+use anyhow::{anyhow, Context, Result};
 use objects::Object;
 
 use crate::ast::Node;
@@ -13,7 +13,7 @@ use crate::ast::Node;
 pub mod builtins;
 pub mod objects;
 
-pub type CallStack = Vec<RefCell<Env>>; 
+pub type CallStack = Vec<RefCell<Env>>;
 pub type Reference = Rc<Object>;
 pub type Env = HashMap<String, Reference>;
 
@@ -26,7 +26,8 @@ pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Bo
 pub const FALSE: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Bool(false)));
 pub const NULL: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Null));
 pub const NUMBER: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Integer(0)));
-pub const STRING: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::String(String::new())));
+pub const STRING: LazyCell<Reference> =
+    LazyCell::new(|| Reference::new(Object::String(String::new())));
 pub const LIST: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::List(vec![])));
 
 fn bool_from_native(value: bool) -> Reference {
@@ -119,7 +120,7 @@ impl Program {
             Node::BooleanLiteral(token) => match token.value.as_str() {
                 "true" => Ok(TRUE.clone()),
                 "false" => Ok(FALSE.clone()),
-                _ => panic!("AAAAA"),
+                _ => panic!("This should never happen"),
             },
             Node::StringLiteral(token) => {
                 let len = token.value.len();
@@ -137,7 +138,9 @@ impl Program {
                 return Ok(Reference::new(Object::Integer(value)));
             }
             Node::Invalid(_) => {
-                return Ok(Reference::new(Object::Error("Evaluating Invalid Node".to_owned())))
+                return Ok(Reference::new(Object::Error(
+                    "Evaluating Invalid Node".to_owned(),
+                )))
             }
             Node::Expression(vec) => {
                 if vec.is_empty() {
@@ -289,11 +292,12 @@ impl Program {
                     .into_iter()
                     .map(|arg| {
                         let Node::Word(token) = arg else {
-                            panic!("argument is not a word")
+                            return Err(anyhow!("argument is not a word"));
                         };
-                        return token.value.clone();
+
+                        return Ok(token.value.clone());
                     })
-                    .collect();
+                    .collect::<Result<Vec<_>>>()?;
 
                 let env = self.env.last().expect("to get last env").clone();
 

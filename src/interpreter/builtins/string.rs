@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::interpreter::{objects::Object, Env};
+use crate::interpreter::{objects::Object, Env, STRING};
 
 use super::typecheck_args;
 
@@ -11,7 +11,7 @@ pub fn add_string_builtins(env: &mut Env) {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "str",
-                    "string",
+                    STRING.type_of(),
                     |obj| !matches!(obj.as_ref(), Object::String(_)),
                     &args,
                 ) {

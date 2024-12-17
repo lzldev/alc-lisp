@@ -1,4 +1,4 @@
-use crate::interpreter::{objects::Object, Env, Reference, NULL};
+use crate::interpreter::{objects::Object, Env, Reference, LIST, NULL, NUMBER};
 
 use super::errors::{new_args_len_error, new_type_error_with_pos};
 
@@ -13,10 +13,10 @@ pub fn add_list_builtins(env: &mut Env) {
                 }
 
                 let Object::Integer(n) = args[0].as_ref() else {
-                    return new_type_error_with_pos("nth", "number", 1);
+                    return new_type_error_with_pos("nth", NUMBER.type_of(), 1);
                 };
                 let Object::List(l) = args[1].as_ref() else {
-                    return new_type_error_with_pos("nth", "list", 2);
+                    return new_type_error_with_pos("nth", LIST.type_of(), 2);
                 };
 
                 return l
@@ -37,14 +37,14 @@ pub fn add_list_builtins(env: &mut Env) {
                 }
 
                 let Object::List(l) = args[0].as_ref() else {
-                    return new_type_error_with_pos("head", "list", 1);
+                    return new_type_error_with_pos("head", LIST.type_of(), 1);
                 };
 
                 if l.len() == 0 {
                     return NULL.clone();
                 }
 
-                let first  = l.iter().cloned().next();
+                let first = l.iter().cloned().next();
 
                 return first.unwrap_or_else(|| NULL.clone());
             },
@@ -61,7 +61,7 @@ pub fn add_list_builtins(env: &mut Env) {
                 }
 
                 let Object::List(l) = args[0].as_ref() else {
-                    return new_type_error_with_pos("tail", "list", 1);
+                    return new_type_error_with_pos("tail", LIST.type_of(), 1);
                 };
 
                 let vec = l.iter().skip(1).cloned().collect();
@@ -81,10 +81,10 @@ pub fn add_list_builtins(env: &mut Env) {
                 }
 
                 let Object::List(l) = args[0].as_ref() else {
-                    return new_type_error_with_pos("slice", "list", 0);
+                    return new_type_error_with_pos("slice", LIST.type_of(), 0);
                 };
                 let Object::Integer(n) = args[1].as_ref() else {
-                    return new_type_error_with_pos("slice", "integer", 1);
+                    return new_type_error_with_pos("slice", NUMBER.type_of(), 1);
                 };
 
                 let end = if let Some(Object::Integer(end)) = args.get(2).map(|v| v.as_ref()) {

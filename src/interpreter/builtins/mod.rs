@@ -2,7 +2,6 @@ mod errors;
 mod list;
 mod number;
 mod string;
-use std::rc::Rc;
 
 use errors::{new_args_len_error, new_type_error};
 use list::add_list_builtins;
@@ -11,7 +10,7 @@ use string::add_string_builtins;
 
 use crate::interpreter::NULL;
 
-use super::{bool_from_native, objects::Object, Env, Reference, TRUE};
+use super::{bool_from_native, objects::Object, Env, Reference, LIST, STRING, TRUE};
 
 fn typecheck_args<F>(
     name: &str,
@@ -44,7 +43,12 @@ pub fn add_generic_builtins(env: &mut Env) {
                 match args[0].as_ref() {
                     Object::String(s) => return Reference::new(Object::Integer(s.len() as isize)),
                     Object::List(l) => return Reference::new(Object::Integer(l.len() as isize)),
-                    _ => return new_type_error("len", "string or list"),
+                    _ => {
+                        return new_type_error(
+                            "len",
+                            &format!("{} or {}", STRING.type_of(), LIST.type_of()),
+                        )
+                    }
                 }
             },
         }),
@@ -158,10 +162,7 @@ pub fn add_native_builtins(env: &mut Env) {
         "print".into(),
         Reference::new(Object::Builtin {
             function: |args| {
-                println!(
-                    "{}",
-                    args.iter().map(|v| format!("{}", v)).collect::<String>()
-                );
+                println!("{}", args.iter().map(|v| v.to_string()).collect::<String>());
                 return NULL.clone();
             },
         }),

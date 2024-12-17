@@ -1,4 +1,4 @@
-use crate::interpreter::{objects::Object, Env, Reference};
+use crate::interpreter::{objects::Object, Env, Reference, NUMBER};
 
 use super::typecheck_args;
 
@@ -9,7 +9,7 @@ pub fn add_number_builtins(env: &mut Env) {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "+",
-                    "integer",
+                    NUMBER.type_of(),
                     |obj| !matches!(obj.as_ref(), Object::Integer(_)),
                     &args,
                 ) {
@@ -37,7 +37,7 @@ pub fn add_number_builtins(env: &mut Env) {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "-",
-                    "integer",
+                    NUMBER.type_of(),
                     |obj| !matches!(obj.as_ref(), Object::Integer(_)),
                     &args,
                 ) {
@@ -67,7 +67,7 @@ pub fn add_number_builtins(env: &mut Env) {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "*",
-                    "integer",
+                    NUMBER.type_of(),
                     |obj| !matches!(obj.as_ref(), Object::Integer(_)),
                     &args,
                 ) {
@@ -97,7 +97,7 @@ pub fn add_number_builtins(env: &mut Env) {
             function: |args| {
                 if let Some(err) = typecheck_args(
                     "/",
-                    "integer",
+                    NUMBER.type_of(),
                     |obj| !matches!(obj.as_ref(), Object::Integer(_)),
                     &args,
                 ) {
