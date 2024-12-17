@@ -3,12 +3,13 @@ mod list;
 mod number;
 mod string;
 
+#[cfg(feature = "bin")]
+pub mod native;
+
 use errors::{new_args_len_error, new_type_error};
 use list::add_list_builtins;
 use number::add_number_builtins;
 use string::add_string_builtins;
-
-use crate::interpreter::NULL;
 
 use super::{bool_from_native, objects::Object, Env, Reference, LIST, STRING, TRUE};
 
@@ -152,28 +153,6 @@ pub fn add_generic_builtins(env: &mut Env) {
                 }
 
                 return bool_from_native(true);
-            },
-        }),
-    );
-}
-
-pub fn add_native_builtins(env: &mut Env) {
-    env.insert(
-        "print".into(),
-        Reference::new(Object::Builtin {
-            function: |args| {
-                println!("{}", args.iter().map(|v| v.to_string()).collect::<String>());
-                return NULL.clone();
-            },
-        }),
-    );
-
-    env.insert(
-        "debug".into(),
-        Reference::new(Object::Builtin {
-            function: |args| {
-                println!("{:?}", args);
-                return NULL.clone();
             },
         }),
     );

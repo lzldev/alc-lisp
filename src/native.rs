@@ -1,7 +1,7 @@
 use std::{cell::LazyCell, collections::HashMap};
 
 use crate::interpreter::{
-    builtins::{add_generic_builtins, add_native_builtins},
+    builtins::{add_generic_builtins, native::add_native_builtins},
     Env,
 };
 

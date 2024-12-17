@@ -1,4 +1,4 @@
-use std::{collections::HashSet,  sync::Mutex};
+use std::{collections::HashSet, sync::Mutex};
 
 use alc_lisp::interpreter::{objects::Object, Env, Reference, NULL};
 use js_sys::{Array, Function};
