@@ -1,12 +1,8 @@
-use std::collections::HashMap;
-
 use alc_lisp::{
     ast::{Node, AST},
-    interpreter::{
-        builtins::{add_generic_builtins, add_native_builtins},
-        Env, Program,
-    },
+    interpreter::{Env, Program},
     lexer::Lexer,
+    native::NATIVE_ENV,
     repl::{start_repl, ReplArgs},
     utils::timer::Timer,
 };
@@ -97,9 +93,7 @@ fn run_file(args: Args) -> anyhow::Result<()> {
         ast.print_errors(&root);
     }
 
-    let mut globals: Env = HashMap::new();
-    add_generic_builtins(&mut globals);
-    add_native_builtins(&mut globals);
+    let globals: Env = NATIVE_ENV.clone();
 
     let mut program = Program::new(globals);
 

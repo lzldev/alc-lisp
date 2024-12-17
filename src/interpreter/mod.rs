@@ -119,11 +119,9 @@ impl Program {
                                 }
                             };
 
-                            let value = self.parse_expression(&vec[2])?;
-
-                            if is_error(&value) {
-                                return Err(anyhow!("define value error: {:?}", value));
-                            }
+                            let value = self
+                                .parse_expression(&vec[2])
+                                .and_then(new_map_error("define value error"))?;
 
                             self.set_value(name.value.clone(), value);
 
@@ -137,27 +135,20 @@ impl Program {
                                 ))));
                             }
 
-                            let condition = self.parse_expression(&vec[1])?;
-
-                            if is_error(&condition) {
-                                return Err(anyhow!("if condition error: {:?}", condition));
-                            }
+                            let condition = self
+                                .parse_expression(&vec[1])
+                                .and_then(new_map_error("if condition error"))?;
 
                             let truthy = is_truthy(condition);
 
-                            let result = if truthy {
-                                self.parse_expression(&vec[2])?
+                            return if truthy {
+                                self.parse_expression(&vec[2])
                             } else if len == 4 {
-                                self.parse_expression(&vec[3])?
+                                self.parse_expression(&vec[3])
                             } else {
-                                NULL.clone()
-                            };
-
-                            if is_error(&result) {
-                                return Err(anyhow!("if result error: {:?}", result));
+                                Ok(NULL.clone())
                             }
-
-                            return Ok(result);
+                            .and_then(new_map_error("if result error"));
                         }
                         "do" => {
                             if len != 2 {
@@ -173,27 +164,22 @@ impl Program {
                     }
                 }
 
-                let first = self.parse_expression(&vec[0])?;
-
-                if is_error(&first) {
-                    return Err(anyhow!("error in call to: {:?}", first));
-                }
+                let first = self
+                    .parse_expression(&vec[0])
+                    .and_then(new_map_error("in call to"))?;
 
                 if len == 1 {
                     return Ok(first);
                 }
 
-                let mut args: Vec<Reference> = Vec::with_capacity(len - 1);
-
-                for exp in &vec[1..] {
-                    let value = self.parse_expression(exp)?;
-
-                    if is_error(&value) {
-                        return Err(anyhow!("error in function argument: {:?}", value));
-                    }
-
-                    args.push(value);
-                }
+                let args = vec
+                    .iter()
+                    .skip(1)
+                    .map(|exp| {
+                        self.parse_expression(exp)
+                            .and_then(new_map_error("function argument"))
+                    })
+                    .collect::<Result<Vec<_>>>()?;
 
                 match first.as_ref() {
                     Object::Builtin { function } => return Ok(function(args)),
@@ -219,17 +205,13 @@ impl Program {
                 }
             }
             Node::List(vec) => {
-                let mut items: Vec<Reference> = Vec::with_capacity(vec.len());
-
-                for item in vec.iter() {
-                    let value = self.parse_expression(item)?;
-
-                    if is_error(&value) {
-                        return Err(anyhow!("error in list item: {:?}", value));
-                    }
-
-                    items.push(value);
-                }
+                let items = vec
+                    .iter()
+                    .map(|item| {
+                        self.parse_expression(item)
+                            .and_then(new_map_error("list element"))
+                    })
+                    .collect::<Result<Vec<_>>>()?;
 
                 return Ok(Reference::new(Object::List(items)));
             }
@@ -267,6 +249,16 @@ fn bool_from_native(value: bool) -> Reference {
     } else {
         FALSE.clone()
     }
+}
+
+fn new_map_error(message: &'static str) -> impl Fn(Reference) -> Result<Reference> {
+    return move |value: Reference| -> Result<Reference> {
+        if is_error(&value) {
+            return Err(anyhow!("{message}: {:?}", value));
+        } else {
+            Ok(value)
+        }
+    };
 }
 
 fn is_error(value: &Reference) -> bool {

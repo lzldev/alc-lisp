@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::interpreter::{objects::Object, Reference};
 
 pub fn new_args_len_error(name: &str, args: &Vec<Reference>, expected: usize) -> Reference {

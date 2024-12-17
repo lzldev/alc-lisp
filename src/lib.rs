@@ -5,3 +5,6 @@ pub mod utils;
 
 #[cfg(feature = "bin")]
 pub mod repl;
+
+#[cfg(feature = "bin")]
+pub mod native;

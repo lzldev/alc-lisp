@@ -1,17 +1,14 @@
-use std::{
-    collections::HashMap,
-    io::{stdin, stdout, Write},
-};
+use std::io::{stdin, stdout, Write};
 
 use anyhow::Context;
 use clap::{arg, Parser};
 use colored::Colorize;
 
-use crate::utils::timer::Timer;
+use crate::{native::NATIVE_ENV, utils::timer::Timer};
 
 use super::{
     ast::{Node, AST},
-    interpreter::{builtins::add_generic_builtins, Env, Program},
+    interpreter::Program,
     lexer::Lexer,
 };
 
@@ -49,10 +46,8 @@ impl Default for ReplArgs {
 
 pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
     println!("ALC_LISP [{}] REPL - INTERPRETER", VERSION);
-    let mut globals: Env = HashMap::new();
-    add_generic_builtins(&mut globals);
 
-    let mut globals = Option::Some(globals);
+    let mut globals = Option::Some(NATIVE_ENV.clone());
 
     let stdin = stdin();
     let mut stdout = stdout();
