@@ -10,6 +10,7 @@ dependencies = [
  "clap",
  "colored",
  "js-sys",
+ "once_cell",
  "serde",
  "ts-rs",
  "wasm-bindgen",
