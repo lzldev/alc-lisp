@@ -1,14 +1,12 @@
-use std::{
-    borrow::BorrowMut,
-    cell::{LazyCell, RefCell},
-    collections::HashMap,
-    rc::Rc,
-};
+use std::{borrow::BorrowMut, cell::RefCell, collections::HashMap, rc::Rc};
 
 use anyhow::{anyhow, Context, Result};
 use objects::Object;
 
 use crate::ast::Node;
+
+mod constants;
+pub use constants::*;
 
 pub mod builtins;
 pub mod objects;
@@ -19,53 +17,6 @@ pub type Env = HashMap<String, Reference>;
 
 pub struct Program {
     pub env: Vec<RefCell<Env>>,
-}
-
-//Sentinel Values
-pub const TRUE: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Bool(true)));
-pub const FALSE: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Bool(false)));
-pub const NULL: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Null));
-pub const NUMBER: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::Integer(0)));
-pub const STRING: LazyCell<Reference> =
-    LazyCell::new(|| Reference::new(Object::String(String::new())));
-pub const LIST: LazyCell<Reference> = LazyCell::new(|| Reference::new(Object::List(vec![])));
-
-fn bool_from_native(value: bool) -> Reference {
-    if value {
-        TRUE.clone()
-    } else {
-        FALSE.clone()
-    }
-}
-
-fn is_error(value: &Reference) -> bool {
-    return matches!(value.as_ref(), Object::Error(_));
-}
-
-fn is_truthy(value: Reference) -> bool {
-    match value.as_ref() {
-        Object::Integer(v) => {
-            if v != &0 {
-                return true;
-            }
-        }
-        Object::String(v) => {
-            if !v.is_empty() {
-                return true;
-            }
-        }
-        Object::Bool(v) => {
-            return *v;
-        }
-        Object::List(vec) => {
-            if !vec.is_empty() {
-                return true;
-            }
-        }
-        _ => {}
-    }
-
-    return false;
 }
 
 impl Program {
@@ -309,4 +260,42 @@ impl Program {
             }
         }
     }
+}
+
+fn bool_from_native(value: bool) -> Reference {
+    if value {
+        TRUE.clone()
+    } else {
+        FALSE.clone()
+    }
+}
+
+fn is_error(value: &Reference) -> bool {
+    return matches!(value.as_ref(), Object::Error(_));
+}
+
+fn is_truthy(value: Reference) -> bool {
+    match value.as_ref() {
+        Object::Integer(v) => {
+            if v != &0 {
+                return true;
+            }
+        }
+        Object::String(v) => {
+            if !v.is_empty() {
+                return true;
+            }
+        }
+        Object::Bool(v) => {
+            return *v;
+        }
+        Object::List(vec) => {
+            if !vec.is_empty() {
+                return true;
+            }
+        }
+        _ => {}
+    }
+
+    return false;
 }
