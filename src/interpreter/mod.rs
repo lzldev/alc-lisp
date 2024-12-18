@@ -21,9 +21,10 @@ pub struct Program {
 
 impl Program {
     pub fn new(global_env: Env) -> Self {
-        return Self {
-            env: vec![RefCell::new(global_env)],
-        };
+        let mut env = Vec::with_capacity(1024);
+
+        env.push(RefCell::new(global_env));
+        return Self { env };
     }
 
     pub fn eval(&mut self, root: &Node) -> anyhow::Result<Reference> {
