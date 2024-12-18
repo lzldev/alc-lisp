@@ -1,10 +1,7 @@
-use std::{
-    collections::HashMap,
-    hash::Hash,
-    sync::{Arc, Mutex, RwLock},
-};
+use std::sync::{Arc, Mutex, RwLock};
 
 use anyhow::{anyhow, Context, Result};
+use foldhash::{HashMap, HashMapExt};
 use objects::Object;
 use once_cell::sync::Lazy;
 
@@ -24,6 +21,7 @@ pub type Env = HashMap<Arc<str>, Reference>;
 
 static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<String, Reference>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
+
 macro_rules! map_rust_error {
     ($message:expr) => {
         |value: Reference| -> Result<Reference> {
@@ -52,6 +50,7 @@ impl CallStack {
     pub fn new(initial: EnvReference) -> Self {
         let mut stack =
             std::array::from_fn(|_| EnvReference::new(EnvReferenceInner::new(Env::default())));
+
         stack[0] = initial;
 
         Self { stack, sp: 0 }
@@ -83,15 +82,19 @@ impl Program {
     pub fn get_env(&self) -> CallStack {
         self.env.clone()
     }
+
     fn push_env(&mut self, env: EnvReference) {
         self.env.push_env(env);
     }
     fn pop_env(&mut self) {
         self.env.pop_env();
     }
+
+    #[allow(dead_code)]
     fn current_env(&self) -> &EnvReference {
         self.env.current_env()
     }
+
     fn current_env_mut(&mut self) -> &mut EnvReference {
         self.env.current_env_mut()
     }
@@ -317,7 +320,7 @@ impl Program {
                     })
                     .collect::<Result<Vec<_>>>()?;
 
-                let env = self.current_env().clone();
+                let env = EnvReference::new(EnvReferenceInner::new(Env::with_capacity(16)));
 
                 return Ok(Reference::new(Object::Function {
                     env,

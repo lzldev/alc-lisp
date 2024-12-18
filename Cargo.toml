@@ -15,6 +15,9 @@ web-sys = "0.3.74"
 wasm-bindgen = "0.2.97"
 ts-rs = "10.1.0"
 
+[profile.release]
+debug = 1
+
 [dependencies]
 anyhow = "1.0.93"
 
@@ -26,6 +29,7 @@ ts-rs = { workspace = true, optional = true }
 wasm-bindgen = { workspace = true, optional = true }
 js-sys = { workspace = true, optional = true }
 once_cell = { workspace = true }
+foldhash = "0.1.3"
 
 [features]
 default = ["bin"]
