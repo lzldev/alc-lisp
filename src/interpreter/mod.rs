@@ -181,11 +181,6 @@ impl Program {
                     .parse_expression(&vec[0])
                     .and_then(map_rust_error!("in call to"))?;
 
-                //TODO: only some expressions should do that
-                if len == 1 {
-                    return Ok(first);
-                }
-
                 let args = vec
                     .iter()
                     .skip(1)

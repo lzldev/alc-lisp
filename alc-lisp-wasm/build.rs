@@ -16,7 +16,7 @@ fn main() {
     };
 
     let types_dir = "./pkg/types/";
-    let file_ext_dir = env::var("OUT_DIR").unwrap() + "/types.ts"; //TODO: use cargo CARGO_TARGET_DIR
+    let file_ext_dir = env::var("OUT_DIR").unwrap() + "/types.ts";
 
     println!("Building alc-lisp-wasm");
     <alc_lisp::ast::Node as ts_rs::TS>::export_all_to(types_dir).expect("ts_rs::TS::export_all_to");
