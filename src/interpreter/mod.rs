@@ -15,6 +15,18 @@ pub type CallStack = Vec<RefCell<Env>>;
 pub type Reference = Rc<Object>;
 pub type Env = HashMap<String, Reference>;
 
+macro_rules! map_rust_error {
+    ($message:expr) => {
+        |value: Reference| -> Result<Reference> {
+            if is_error(&value) {
+                return Err(anyhow!(concat!($message, ": {:?}"), value));
+            } else {
+                Ok(value)
+            }
+        }
+    };
+}
+
 pub struct Program {
     pub env: Vec<RefCell<Env>>,
 }
@@ -122,7 +134,7 @@ impl Program {
 
                             let value = self
                                 .parse_expression(&vec[2])
-                                .and_then(new_map_error("define value error"))?;
+                                .and_then(map_rust_error!("define value error"))?;
 
                             self.set_value(name.value.clone(), value);
 
@@ -138,7 +150,7 @@ impl Program {
 
                             let condition = self
                                 .parse_expression(&vec[1])
-                                .and_then(new_map_error("if condition error"))?;
+                                .and_then(map_rust_error!("if condition error"))?;
 
                             let truthy = is_truthy(condition);
 
@@ -149,7 +161,7 @@ impl Program {
                             } else {
                                 Ok(NULL.clone())
                             }
-                            .and_then(new_map_error("if result error"));
+                            .and_then(map_rust_error!("if result error"));
                         }
                         "do" => {
                             if len != 2 {
@@ -167,8 +179,9 @@ impl Program {
 
                 let first = self
                     .parse_expression(&vec[0])
-                    .and_then(new_map_error("in call to"))?;
+                    .and_then(map_rust_error!("in call to"))?;
 
+                //TODO: only some expressions should do that
                 if len == 1 {
                     return Ok(first);
                 }
@@ -178,7 +191,7 @@ impl Program {
                     .skip(1)
                     .map(|exp| {
                         self.parse_expression(exp)
-                            .and_then(new_map_error("function argument"))
+                            .and_then(map_rust_error!("function argument"))
                     })
                     .collect::<Result<Vec<_>>>()?;
 
@@ -210,7 +223,7 @@ impl Program {
                     .iter()
                     .map(|item| {
                         self.parse_expression(item)
-                            .and_then(new_map_error("list element"))
+                            .and_then(map_rust_error!("list element"))
                     })
                     .collect::<Result<Vec<_>>>()?;
 
@@ -252,16 +265,7 @@ fn bool_from_native(value: bool) -> Reference {
     }
 }
 
-fn new_map_error(message: &'static str) -> impl Fn(Reference) -> Result<Reference> {
-    return move |value: Reference| -> Result<Reference> {
-        if is_error(&value) {
-            return Err(anyhow!("{message}: {:?}", value));
-        } else {
-            Ok(value)
-        }
-    };
-}
-
+#[inline(always)]
 fn is_error(value: &Reference) -> bool {
     return matches!(value.as_ref(), Object::Error(_));
 }

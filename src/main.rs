@@ -40,6 +40,9 @@ enum Commands {
 }
 
 fn main() -> anyhow::Result<()> {
+    let _path = module_path!();
+    println!("{_path}");
+
     let args = Args::parse();
 
     match (&args.command, &args.file_name) {
