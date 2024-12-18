@@ -65,7 +65,7 @@ impl Display for Object {
         match self {
             Object::Null => f.write_str("null"),
             Object::Integer(v) => write!(f, "{}", v),
-            Object::String(v) => f.write_str(v.as_str()),
+            Object::String(v) => f.write_fmt(format_args!("\"{}\"", v.as_str())),
             Object::Bool(v) => write!(f, "{}", v),
             Object::List(vec) => {
                 f.write_str("[")?;
@@ -106,7 +106,7 @@ impl PartialEq for Object {
                 Self::Builtin {
                     function: r_function,
                 },
-            ) => l_function == r_function,
+            ) => std::ptr::addr_eq(l_function, r_function),
             (
                 Self::Function {
                     env: l_env,

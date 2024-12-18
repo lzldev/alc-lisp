@@ -88,13 +88,7 @@ pub fn equals(args: Vec<Reference>) -> Reference {
     let mut first = &args[0];
 
     for last in args.iter().skip(1) {
-        let value = match (first.as_ref(), last.as_ref()) {
-            (Object::Null, Object::Null) => true,
-            (Object::Bool(l), Object::Bool(r)) => l == r,
-            (Object::Integer(l), Object::Integer(r)) => l == r,
-            (Object::String(l), Object::String(r)) => l == r,
-            _ => false,
-        };
+        let value = first.as_ref() == last.as_ref();
 
         if !value {
             return bool_from_native(false);
