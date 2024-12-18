@@ -35,6 +35,7 @@ macro_rules! map_rust_error {
     };
 }
 
+#[derive(Debug, Clone)]
 pub struct Program {
     env: CallStack,
 }

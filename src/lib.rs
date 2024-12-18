@@ -1,3 +1,5 @@
+#![feature(allocator_api)]
+#![feature(test)]
 #![feature(lock_value_accessors)]
 
 pub mod ast;
@@ -10,3 +12,6 @@ pub mod repl;
 
 #[cfg(feature = "bin")]
 pub mod native;
+
+#[cfg(test)]
+mod bench;
