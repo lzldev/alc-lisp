@@ -82,3 +82,30 @@ impl Node {
         }
     }
 }
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Word(l0), Self::Word(r0)) => l0 == r0,
+            (Self::Invalid(l0), Self::Invalid(r0)) => l0 == r0,
+            (Self::Expression(l0), Self::Expression(r0)) => l0 == r0,
+            (Self::List(l0), Self::List(r0)) => l0 == r0,
+            (Self::StringLiteral(l0), Self::StringLiteral(r0)) => l0 == r0,
+            (Self::NumberLiteral(l0), Self::NumberLiteral(r0)) => l0 == r0,
+            (Self::BooleanLiteral(l0), Self::BooleanLiteral(r0)) => l0 == r0,
+            (
+                Self::FunctionLiteral {
+                    token: l_token,
+                    arguments: l_arguments,
+                    body: l_body,
+                },
+                Self::FunctionLiteral {
+                    token: r_token,
+                    arguments: r_arguments,
+                    body: r_body,
+                },
+            ) => l_token == r_token && l_arguments == r_arguments && l_body == r_body,
+            _ => false,
+        }
+    }
+}

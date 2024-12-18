@@ -91,3 +91,67 @@ impl Display for Object {
         }
     }
 }
+
+impl PartialEq for Object {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Integer(l0), Self::Integer(r0)) => l0 == r0,
+            (Self::String(l0), Self::String(r0)) => l0 == r0,
+            (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
+            (Self::List(l0), Self::List(r0)) => l0 == r0,
+            (
+                Self::Builtin {
+                    function: l_function,
+                },
+                Self::Builtin {
+                    function: r_function,
+                },
+            ) => l_function == r_function,
+            (
+                Self::Function {
+                    env: l_env,
+                    parameters: l_parameters,
+                    body: l_body,
+                },
+                Self::Function {
+                    env: r_env,
+                    parameters: r_parameters,
+                    body: r_body,
+                },
+            ) => l_env == r_env && l_parameters == r_parameters && l_body == r_body,
+            (Self::Error(l0), Self::Error(r0)) => l0 == r0,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
+    }
+}
+impl Eq for Object {}
+
+impl PartialOrd for Object {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Object::Null, _) => Some(std::cmp::Ordering::Less),
+            (Object::Bool(left), Object::Bool(right)) => Some(left.cmp(right)),
+            (Object::Bool(_), _) => Some(std::cmp::Ordering::Less),
+            (Object::Integer(left), Object::Integer(right)) => Some(left.cmp(right)),
+            (Object::Integer(_), _) => Some(std::cmp::Ordering::Less),
+            (Object::String(left), Object::String(right)) => Some(left.cmp(right)),
+            (Object::String(_), _) => Some(std::cmp::Ordering::Less),
+            (Object::List(left), Object::List(right)) => {
+                let llen = left.len();
+                let rlen = right.len();
+
+                return Some(llen.cmp(&rlen));
+            }
+            (Object::List(_), _) => Some(std::cmp::Ordering::Less),
+            (Object::Builtin { .. }, _) => Some(std::cmp::Ordering::Less),
+            (Object::Function { .. }, _) => Some(std::cmp::Ordering::Less),
+            (Object::Error { .. }, _) => Some(std::cmp::Ordering::Less),
+        }
+    }
+}
+
+impl Ord for Object {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}

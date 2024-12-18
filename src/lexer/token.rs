@@ -16,12 +16,27 @@ impl Token {
     }
 }
 
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+            && self.token_type == other.token_type
+            && self.start == other.start
+            && self.end == other.end
+    }
+}
+
 #[derive(Clone, Debug, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "ts-rs", derive(ts_rs::TS))]
 pub struct TokenPosition {
     pub line: usize,
     pub col: usize,
+}
+
+impl PartialEq for TokenPosition {
+    fn eq(&self, other: &Self) -> bool {
+        self.line == other.line && self.col == other.col
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -53,5 +68,11 @@ impl TokenType {
                 c
             )), //TODO: Return result instead
         }
+    }
+}
+
+impl PartialEq for TokenType {
+    fn eq(&self, other: &Self) -> bool {
+        core::mem::discriminant(self) == core::mem::discriminant(other)
     }
 }

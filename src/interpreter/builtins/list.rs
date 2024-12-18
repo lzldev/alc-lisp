@@ -23,6 +23,11 @@ pub fn add_list_builtins(env: &mut Env) {
         "slice".into(),
         Reference::new(Object::Builtin { function: slice }),
     );
+
+    env.insert(
+        "sort".into(),
+        Reference::new(Object::Builtin { function: sort }),
+    );
 }
 
 /// Returns the n-th element of a list
@@ -107,6 +112,23 @@ pub fn slice(args: Vec<Reference>) -> Reference {
         .take(end - *n as usize)
         .cloned()
         .collect();
+
+    return Reference::new(Object::List(vec));
+}
+
+pub fn sort(args: Vec<Reference>) -> Reference {
+    let len = args.len();
+
+    if len != 1 {
+        return new_args_len_error("sort", &args, 2);
+    }
+
+    let Object::List(l) = args[0].as_ref() else {
+        return new_type_error_with_pos("sort", LIST.type_of(), 0);
+    };
+
+    let mut vec = l.iter().cloned().collect::<Vec<_>>();
+    vec.sort();
 
     return Reference::new(Object::List(vec));
 }
