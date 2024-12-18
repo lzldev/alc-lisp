@@ -1,11 +1,11 @@
 use std::{
-    cell::{LazyCell, RefCell},
+    cell::LazyCell,
     fmt::Display,
 };
 
 use crate::ast::Node;
 
-use super::{Env, EnvReference, EnvReferenceInner, Reference, NULL};
+use super::{EnvReference, Reference, NULL};
 
 #[cfg(feature = "wasm")]
 mod wasm;
