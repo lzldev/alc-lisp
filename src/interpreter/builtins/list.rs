@@ -52,42 +52,55 @@ pub const MAP: BuiltinFunction = |program, args| {
         return new_type_error_with_pos("map", LIST.type_of(), 0);
     };
 
-    let Object::Function {
-        parameters,
-        body,
-        env,
-        ..
-    } = args[1].as_ref()
-    else {
-        return new_type_error_with_pos("map", FUNCTION.type_of(), 1);
-    };
+    match args[1].as_ref() {
+        Object::Function {
+            parameters,
+            body,
+            env,
+            ..
+        } => {
+            let base_env = env.read().clone();
 
-    let base_env = env.read().clone();
+            let result = l
+                .iter()
+                .map(|item| {
+                    let mut env = base_env.clone();
 
-    let result = l
-        .iter()
-        .map(|item| {
-            let mut env = base_env.clone();
+                    if let Some(param) = parameters.first() {
+                        env.insert(param.clone(), item.clone());
+                    }
 
-            if let Some(param) = parameters.first() {
-                env.insert(param.clone(), item.clone());
+                    program.push_env(EnvReference::new(EnvReferenceInner::new(env)));
+
+                    let result = program
+                        .parse_expression(body)
+                        .and_then(map_rust_error!("map error"));
+
+                    program.pop_env();
+
+                    result
+                })
+                .collect::<anyhow::Result<Arc<_>>>();
+
+            match result {
+                Ok(result) => Reference::new(Object::List(result)),
+                Err(err) => Reference::new(Object::Error(err.to_string().into())),
             }
+        }
+        Object::Builtin { function } => {
+            let result = l
+                .iter()
+                .map(|item| {
+                    Ok(function(program, vec![item.clone()])).and_then(map_rust_error!("map error"))
+                })
+                .collect::<anyhow::Result<Arc<_>>>();
 
-            program.push_env(EnvReference::new(EnvReferenceInner::new(env)));
-
-            let result = program
-                .parse_expression(body)
-                .and_then(map_rust_error!("map error"));
-
-            program.pop_env();
-
-            result
-        })
-        .collect::<anyhow::Result<Arc<_>>>();
-
-    match result {
-        Ok(result) => Reference::new(Object::List(result)),
-        Err(err) => Reference::new(Object::Error(err.to_string().into())),
+            match result {
+                Ok(result) => Reference::new(Object::List(result)),
+                Err(err) => Reference::new(Object::Error(err.to_string().into())),
+            }
+        }
+        _ => new_type_error_with_pos("map", FUNCTION.type_of(), 1),
     }
 };
 
