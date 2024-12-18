@@ -1,3 +1,4 @@
+//! Generic builtin functions
 pub mod errors;
 mod list;
 mod number;
@@ -28,6 +29,7 @@ where
     None
 }
 
+/// Adds all builtin functions to the environment
 pub fn add_generic_builtins(env: &mut Env) {
     add_number_builtins(env);
     add_list_builtins(env);
@@ -58,6 +60,7 @@ pub fn add_generic_builtins(env: &mut Env) {
     );
 }
 
+/// Returns the length of a list or string
 pub fn len(args: Vec<Reference>) -> Reference {
     if args.len() != 1 {
         return new_args_len_error("len", &args, 1);
@@ -75,6 +78,7 @@ pub fn len(args: Vec<Reference>) -> Reference {
     }
 }
 
+/// Equal comparison between values
 pub fn equals(args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len == 0 {
@@ -100,6 +104,7 @@ pub fn equals(args: Vec<Reference>) -> Reference {
     return bool_from_native(true);
 }
 
+/// Lesser than comparison between values
 pub fn lesser_than(args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len == 0 {
@@ -128,6 +133,7 @@ pub fn lesser_than(args: Vec<Reference>) -> Reference {
     return bool_from_native(true);
 }
 
+/// Greater than comparison between values
 pub fn greather_than(args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len == 0 {
