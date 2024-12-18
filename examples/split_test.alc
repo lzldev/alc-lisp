@@ -1,0 +1,5 @@
+(def input "Hello World, this is a test")
+(def output (split input " "))
+
+(print "input:"  input)
+(print "output:" output)

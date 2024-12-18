@@ -1,5 +1,11 @@
 //! Builtin functions for working with lists
-use crate::interpreter::{objects::Object, Env, Reference, LIST, NULL, NUMBER};
+use std::sync::Arc;
+
+use crate::interpreter::{
+    map_rust_error,
+    objects::{BuiltinFunction, Object},
+    Env, EnvReference, EnvReferenceInner, Program, Reference, FUNCTION, LIST, NULL, NUMBER,
+};
 
 use super::errors::{new_args_len_error, new_type_error_with_pos};
 
@@ -28,10 +34,65 @@ pub fn add_list_builtins(env: &mut Env) {
         "sort".into(),
         Reference::new(Object::Builtin { function: sort }),
     );
+
+    env.insert(
+        "map".into(),
+        Reference::new(Object::Builtin { function: MAP }),
+    );
 }
 
+/// Maps a function over a list and returns it's results as a new list
+pub const MAP: BuiltinFunction = |program, args| {
+    let len = args.len();
+    if len != 2 {
+        return new_args_len_error("map", &args, 2);
+    }
+
+    let Object::List(l) = args[0].as_ref() else {
+        return new_type_error_with_pos("map", LIST.type_of(), 0);
+    };
+
+    let Object::Function {
+        parameters,
+        body,
+        env,
+        ..
+    } = args[1].as_ref()
+    else {
+        return new_type_error_with_pos("map", FUNCTION.type_of(), 1);
+    };
+
+    let base_env = env.read().clone();
+
+    let result = l
+        .iter()
+        .map(|item| {
+            let mut env = base_env.clone();
+
+            if let Some(param) = parameters.first() {
+                env.insert(param.clone(), item.clone());
+            }
+
+            program.push_env(EnvReference::new(EnvReferenceInner::new(env)));
+
+            let result = program
+                .parse_expression(body)
+                .and_then(map_rust_error!("map error"));
+
+            program.pop_env();
+
+            result
+        })
+        .collect::<anyhow::Result<Arc<_>>>();
+
+    match result {
+        Ok(result) => Reference::new(Object::List(result)),
+        Err(err) => Reference::new(Object::Error(err.to_string().into())),
+    }
+};
+
 /// Returns the n-th element of a list
-pub fn nth(args: Vec<Reference>) -> Reference {
+pub fn nth(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len != 2 {
         return new_args_len_error("nth", &args, 2);
@@ -48,7 +109,7 @@ pub fn nth(args: Vec<Reference>) -> Reference {
 }
 
 /// Returns the first element of a list
-pub fn head(args: Vec<Reference>) -> Reference {
+pub fn head(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("head", &args, 1);
@@ -68,7 +129,7 @@ pub fn head(args: Vec<Reference>) -> Reference {
 }
 
 /// Returns the tail of a list
-pub fn tail(args: Vec<Reference>) -> Reference {
+pub fn tail(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("tail", &args, 1);
@@ -84,7 +145,7 @@ pub fn tail(args: Vec<Reference>) -> Reference {
 }
 
 /// Returns a slice of a list. If the third argument is not provided, the slice will go to the end of the list.
-pub fn slice(args: Vec<Reference>) -> Reference {
+pub fn slice(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len != 2 && len != 3 {
         return new_args_len_error("slice", &args, 2);
@@ -113,7 +174,7 @@ pub fn slice(args: Vec<Reference>) -> Reference {
     Reference::new(Object::List(vec))
 }
 
-pub fn sort(args: Vec<Reference>) -> Reference {
+pub fn sort(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
 
     if len != 1 {

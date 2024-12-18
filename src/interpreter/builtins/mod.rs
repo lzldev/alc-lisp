@@ -12,7 +12,7 @@ use list::add_list_builtins;
 use number::add_number_builtins;
 use string::add_string_builtins;
 
-use super::{bool_from_native, objects::Object, Env, Reference, LIST, STRING, TRUE};
+use super::{bool_from_native, objects::Object, Env, Program, Reference, LIST, STRING, TRUE};
 
 fn typecheck_args<F>(
     name: &str,
@@ -61,7 +61,7 @@ pub fn add_generic_builtins(env: &mut Env) {
 }
 
 /// Returns the length of a list or string
-pub fn len(args: Vec<Reference>) -> Reference {
+pub fn len(_: &mut Program, args: Vec<Reference>) -> Reference {
     if args.len() != 1 {
         return new_args_len_error("len", &args, 1);
     }
@@ -77,7 +77,7 @@ pub fn len(args: Vec<Reference>) -> Reference {
 }
 
 /// Equal comparison between values
-pub fn equals(args: Vec<Reference>) -> Reference {
+pub fn equals(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len == 0 {
         return new_args_len_error("==", &args, 2);
@@ -103,7 +103,7 @@ pub fn equals(args: Vec<Reference>) -> Reference {
 }
 
 /// Lesser than comparison between values
-pub fn lesser_than(args: Vec<Reference>) -> Reference {
+pub fn lesser_than(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len == 0 {
         return new_args_len_error("<", &args, 2);
@@ -132,7 +132,7 @@ pub fn lesser_than(args: Vec<Reference>) -> Reference {
 }
 
 /// Greater than comparison between values
-pub fn greather_than(args: Vec<Reference>) -> Reference {
+pub fn greather_than(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len == 0 {
         return new_args_len_error(">", &args, 2);

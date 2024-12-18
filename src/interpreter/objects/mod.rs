@@ -5,7 +5,7 @@ use std::{
 
 use crate::ast::Node;
 
-use super::{EnvReference, Reference, NULL};
+use super::{EnvReference, Program, Reference, NULL};
 
 #[cfg(feature = "wasm")]
 mod wasm;
@@ -36,13 +36,13 @@ pub enum Object {
     Error(Arc<str>),
 }
 
-type BuiltinFunction = fn(Vec<Reference>) -> Reference;
+pub type BuiltinFunction = fn(&mut Program, Vec<Reference>) -> Reference;
 
 pub static DEFAULT_BUILTIN: LazyLock<BuiltinFunction> =
-    LazyLock::new(|| |_: Vec<Reference>| -> Reference { NULL.clone() });
+    LazyLock::new(|| |_: &mut Program, _: Vec<Reference>| -> Reference { NULL.clone() });
 
 #[cfg(feature = "serde")]
-fn get_default_builtin() -> fn(Vec<Reference>) -> Reference {
+fn get_default_builtin() -> fn(&mut Program, Vec<Reference>) -> Reference {
     *DEFAULT_BUILTIN
 }
 

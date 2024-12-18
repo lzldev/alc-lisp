@@ -1,5 +1,5 @@
 //! Builtin functions for arithmetic operations
-use crate::interpreter::{objects::Object, Env, Reference, NUMBER, STRING};
+use crate::interpreter::{objects::Object, Env, Program, Reference, NUMBER, STRING};
 
 use super::{
     errors::{new_args_len_error, new_type_error_with_pos},
@@ -37,7 +37,7 @@ pub fn add_number_builtins(env: &mut Env) {
 }
 
 /// Adds numbers
-pub fn add(args: Vec<Reference>) -> Reference {
+pub fn add(_: &mut Program, args: Vec<Reference>) -> Reference {
     if let Some(err) = typecheck_args(
         "+",
         NUMBER.type_of(),
@@ -61,7 +61,7 @@ pub fn add(args: Vec<Reference>) -> Reference {
 }
 
 /// Subtracts numbers
-pub fn subtract(args: Vec<Reference>) -> Reference {
+pub fn subtract(_: &mut Program, args: Vec<Reference>) -> Reference {
     if let Some(err) = typecheck_args(
         "-",
         NUMBER.type_of(),
@@ -87,7 +87,7 @@ pub fn subtract(args: Vec<Reference>) -> Reference {
 }
 
 /// Multiplies numbers
-pub fn multiply(args: Vec<Reference>) -> Reference {
+pub fn multiply(_: &mut Program, args: Vec<Reference>) -> Reference {
     if let Some(err) = typecheck_args(
         "*",
         NUMBER.type_of(),
@@ -113,7 +113,7 @@ pub fn multiply(args: Vec<Reference>) -> Reference {
 }
 
 /// Divides numbers
-pub fn divide(args: Vec<Reference>) -> Reference {
+pub fn divide(_: &mut Program, args: Vec<Reference>) -> Reference {
     if let Some(err) = typecheck_args(
         "/",
         NUMBER.type_of(),
@@ -142,7 +142,7 @@ pub fn divide(args: Vec<Reference>) -> Reference {
     Reference::new(Object::Integer(total))
 }
 
-pub fn parse_int(args: Vec<Reference>) -> Reference {
+pub fn parse_int(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("sort", &args, 1);

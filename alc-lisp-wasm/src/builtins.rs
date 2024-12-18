@@ -41,7 +41,7 @@ pub fn add_wasm_builtins(env: &mut Env) {
     env.insert(
         "print".into(),
         Reference::new(Object::Builtin {
-            function: |args| {
+            function: |_, args| {
                 info!(
                     "{}",
                     args.iter().fold(String::new(), |mut output, b| {
@@ -77,7 +77,7 @@ pub fn add_wasm_builtins(env: &mut Env) {
     env.insert(
         "debug".into(),
         Reference::new(Object::Builtin {
-            function: |args| {
+            function: |_, args| {
                 info!(
                     "{:?}",
                     args.iter().fold(String::new(), |mut output, b| {

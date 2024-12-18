@@ -25,15 +25,17 @@ static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<Arc<str>, Reference>>> =
 
 macro_rules! map_rust_error {
     ($message:expr) => {
-        |value: Reference| -> Result<Reference> {
-            if is_error(&value) {
-                return Err(anyhow!(concat!($message, ": {:?}"), value));
+        |value: Reference| -> anyhow::Result<Reference> {
+            if crate::interpreter::is_error(&value) {
+                return Err(anyhow::anyhow!(concat!($message, ": {:?}"), value));
             } else {
                 Ok(value)
             }
         }
     };
 }
+
+pub(crate) use map_rust_error;
 
 #[derive(Debug, Clone)]
 pub struct Program {
@@ -272,7 +274,7 @@ impl Program {
                     .collect::<Result<Vec<_>>>()?;
 
                 match first.as_ref() {
-                    Object::Builtin { function } => Ok(function(args)),
+                    Object::Builtin { function } => Ok(function(self, args)),
                     Object::Function {
                         env,
                         parameters,

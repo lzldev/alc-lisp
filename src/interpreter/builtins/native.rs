@@ -9,7 +9,7 @@ use std::{
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 
-use crate::interpreter::{objects::Object, Env, Reference, NULL, STRING};
+use crate::interpreter::{objects::Object, Env, Program, Reference, NULL, STRING};
 
 use super::{errors::new_args_len_error, typecheck_args};
 
@@ -63,25 +63,25 @@ type FileRef = Option<File>;
 static OPEN_FILE: Lazy<Mutex<FileRef>> = Lazy::new(|| Mutex::new(None));
 
 /// Prints the arguments to stdout
-fn print(args: Vec<Reference>) -> Reference {
+fn print(_: &mut Program, args: Vec<Reference>) -> Reference {
     println!("{}", args.iter().map(|v| v.to_string()).collect::<String>());
     NULL.clone()
 }
 
 /// Prints the arguments to stdout in a debug format.
-pub fn debug(args: Vec<Reference>) -> Reference {
+pub fn debug(_: &mut Program, args: Vec<Reference>) -> Reference {
     println!("{:?}", args);
     NULL.clone()
 }
 
 /// Prints the arguments to stdout in a pretty debug format.
-pub fn pdebug(args: Vec<Reference>) -> Reference {
+pub fn pdebug(_: &mut Program, args: Vec<Reference>) -> Reference {
     println!("{:#?}", args);
     NULL.clone()
 }
 
 /// Reads the current global file into a string
-pub fn read_file(_: Vec<Reference>) -> Reference {
+pub fn read_file(_: &mut Program, _: Vec<Reference>) -> Reference {
     let mut lock = OPEN_FILE.lock();
 
     if lock.is_none() {
@@ -104,7 +104,7 @@ pub fn read_file(_: Vec<Reference>) -> Reference {
 }
 
 /// Returns the current working directory
-pub fn pwd(_: Vec<Reference>) -> Reference {
+pub fn pwd(_: &mut Program, _: Vec<Reference>) -> Reference {
     Reference::new(Object::String(
         current_dir()
             .expect("to get current dir")
@@ -115,7 +115,7 @@ pub fn pwd(_: Vec<Reference>) -> Reference {
 }
 
 /// Returns the current global file descriptor as a string
-pub fn file(_: Vec<Reference>) -> Reference {
+pub fn file(_: &mut Program, _: Vec<Reference>) -> Reference {
     let lock = OPEN_FILE.lock();
 
     if let Some(file) = lock.as_ref() {
@@ -126,7 +126,7 @@ pub fn file(_: Vec<Reference>) -> Reference {
 }
 
 /// Opens a file into the global file descriptor
-pub fn open(args: Vec<Reference>) -> Reference {
+pub fn open(_: &mut Program, args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("open", &args, 1);
@@ -153,7 +153,7 @@ pub fn open(args: Vec<Reference>) -> Reference {
 }
 
 ///Closes the global file descriptor
-pub fn close(_: Vec<Reference>) -> Reference {
+pub fn close(_: &mut Program, _: Vec<Reference>) -> Reference {
     *OPEN_FILE.lock() = None;
 
     NULL.clone()
