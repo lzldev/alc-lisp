@@ -1,7 +1,15 @@
+# alc-lisp web
+
+- setup the rust project and run: `make build-wasm` in the root directory
+
+- go into the `web` directory and run `pnpm install`
+- `pnpm run link`
+- `pnpm dev`
+
 # Astro Starter Kit: Minimal
 
 ```sh
-npm create astro@latest -- --template minimal
+pnpm create astro@latest -- --template minimal
 ```
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/minimal)
