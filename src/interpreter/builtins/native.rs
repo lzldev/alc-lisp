@@ -69,19 +69,19 @@ fn print(args: Vec<Reference>) -> Reference {
 }
 
 /// Prints the arguments to stdout in a debug format.
-pub fn debug(args: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
+pub fn debug(args: Vec<Reference>) -> Reference {
     println!("{:?}", args);
     return NULL.clone();
 }
 
 /// Prints the arguments to stdout in a pretty debug format.
-pub fn pdebug(args: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
+pub fn pdebug(args: Vec<Reference>) -> Reference {
     println!("{:#?}", args);
     return NULL.clone();
 }
 
 /// Reads the current global file into a string
-pub fn read_file(_: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
+pub fn read_file(_: Vec<Reference>) -> Reference {
     let mut lock = OPEN_FILE.lock().unwrap();
 
     let file = lock.as_mut().expect("file not opened");
@@ -97,7 +97,7 @@ pub fn read_file(_: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
 }
 
 /// Returns the current working directory
-pub fn pwd(_: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
+pub fn pwd(_: Vec<Reference>) -> Reference {
     return Reference::new(Object::String(
         current_dir()
             .expect("to get current dir")
@@ -108,7 +108,7 @@ pub fn pwd(_: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
 }
 
 /// Returns the current global file descriptor as a string
-pub fn file(_: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
+pub fn file(_: Vec<Reference>) -> Reference {
     let lock = OPEN_FILE.lock().unwrap();
 
     if let Some(file) = lock.as_ref() {
@@ -119,7 +119,7 @@ pub fn file(_: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
 }
 
 /// Opens a file into the global file descriptor
-pub fn open(args: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
+pub fn open(args: Vec<Reference>) -> Reference {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("open", &args, 1);
@@ -146,7 +146,7 @@ pub fn open(args: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
 }
 
 ///Closes the global file descriptor
-pub fn close(_: Vec<std::rc::Rc<Object>>) -> std::rc::Rc<Object> {
+pub fn close(_: Vec<Reference>) -> Reference {
     *OPEN_FILE.lock().unwrap() = None;
 
     return NULL.clone();

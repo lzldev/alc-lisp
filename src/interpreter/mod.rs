@@ -1,8 +1,11 @@
-use core::slice;
-use std::{borrow::BorrowMut, cell::RefCell, collections::HashMap, rc::Rc};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex, RwLock},
+};
 
 use anyhow::{anyhow, Context, Result};
 use objects::Object;
+use once_cell::sync::Lazy;
 
 use crate::ast::Node;
 
@@ -13,9 +16,13 @@ pub mod builtins;
 pub mod objects;
 
 // pub type CallStack = Vec<RefCell<Env>>;
-pub type Reference = Rc<Object>;
-pub type EnvReference = RefCell<Env>;
+pub type Reference = Arc<Object>;
+pub type EnvReference = Arc<EnvReferenceInner>;
+pub type EnvReferenceInner = RwLock<Env>;
 pub type Env = HashMap<String, Reference>;
+
+static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<String, Reference>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
 macro_rules! map_rust_error {
     ($message:expr) => {
@@ -37,13 +44,14 @@ const STACK_SIZE: usize = 1024;
 
 #[derive(Debug, Clone)]
 pub struct CallStack {
-    stack: [RefCell<Env>; STACK_SIZE],
+    stack: [EnvReference; STACK_SIZE],
     sp: usize,
 }
 
 impl CallStack {
     pub fn new(initial: EnvReference) -> Self {
-        let mut stack = std::array::from_fn(|_| RefCell::new(Env::new()));
+        let mut stack =
+            std::array::from_fn(|_| EnvReference::new(EnvReferenceInner::new(Env::new())));
         stack[0] = initial;
 
         Self { stack, sp: 0 }
@@ -57,10 +65,10 @@ impl CallStack {
         self.sp -= 1;
     }
     pub fn current_env(&self) -> &EnvReference {
-        unsafe { self.stack.get_unchecked(self.sp) }
+        &self.stack[self.sp]
     }
     pub fn current_env_mut(&mut self) -> &mut EnvReference {
-        unsafe { self.stack.get_unchecked_mut(self.sp) }
+        &mut self.stack[self.sp]
     }
 
     pub fn active_slice(&self) -> &[EnvReference] {
@@ -88,9 +96,14 @@ impl Program {
         self.env.current_env_mut()
     }
 
+    fn set_value(&mut self, name: String, value: Reference) {
+        let mut env = unsafe { self.current_env_mut().write().unwrap_unchecked() };
+        env.insert(name, value);
+    }
+
     fn get_value(&mut self, name: &str) -> Reference {
         for env in self.env.active_slice().iter().rev() {
-            let map = env.borrow();
+            let map = unsafe { env.as_ref().read().unwrap_unchecked() };
             if let Some(value) = map.get(name) {
                 return value.clone();
             }
@@ -101,7 +114,7 @@ impl Program {
 
     pub fn new(global_env: Env) -> Self {
         return Self {
-            env: CallStack::new(RefCell::new(global_env)),
+            env: CallStack::new(EnvReference::new(EnvReferenceInner::new(global_env))),
         };
     }
 
@@ -128,11 +141,6 @@ impl Program {
         }
     }
 
-    fn set_value(&mut self, name: String, value: Reference) {
-        let env = self.current_env_mut().borrow_mut().get_mut();
-        env.insert(name, value);
-    }
-
     fn parse_expression(&mut self, node: &Node) -> anyhow::Result<Reference> {
         match node {
             Node::Word(token) => Ok(self.get_value(token.value.as_str())),
@@ -149,11 +157,22 @@ impl Program {
                 )));
             }
             Node::NumberLiteral(token) => {
-                return token
-                    .value
-                    .parse::<isize>()
-                    .map(|v| Reference::new(Object::Integer(v)))
-                    .context("error parsing numberliteral:");
+                let st = token.value.as_str();
+                let mut table = NUMBER_LOOKUP_TABLE.lock().unwrap();
+
+                if let Some(value) = table.get(st) {
+                    return Ok(value.clone());
+                } else {
+                    let value = token
+                        .value
+                        .parse::<isize>()
+                        .map(|v| Reference::new(Object::Integer(v)))
+                        .context("error parsing numberliteral:")?;
+
+                    table.insert(st.to_owned(), value.clone());
+
+                    return Ok(value);
+                }
             }
             Node::Invalid(_) => {
                 return Ok(Reference::new(Object::Error(
@@ -256,7 +275,9 @@ impl Program {
                             return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
                         }
 
-                        self.push_env(env.clone());
+                        self.push_env(EnvReference::new(EnvReferenceInner::new(
+                            env.read().unwrap().clone(),
+                        )));
                         for (idx, arg) in parameters.iter().enumerate() {
                             self.set_value(arg.clone(), args[idx].clone());
                         }

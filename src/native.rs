@@ -1,4 +1,4 @@
-use std::{cell::LazyCell, collections::HashMap};
+use std::cell::LazyCell;
 
 use crate::interpreter::{
     builtins::{add_generic_builtins, native::add_native_builtins},
@@ -6,7 +6,7 @@ use crate::interpreter::{
 };
 
 pub const NATIVE_ENV: LazyCell<Env> = LazyCell::new(|| {
-    let mut globals: Env = HashMap::new();
+    let mut globals: Env = Env::new();
 
     add_generic_builtins(&mut globals);
     add_native_builtins(&mut globals);

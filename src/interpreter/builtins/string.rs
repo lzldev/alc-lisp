@@ -1,13 +1,17 @@
 //! Builtin functions for string operations
-use std::rc::Rc;
-
 use crate::interpreter::{objects::Object, Env, Reference, STRING};
 
 use super::{errors::new_args_len_error, typecheck_args};
 
 pub fn add_string_builtins(env: &mut Env) {
-    env.insert("str".into(), Rc::new(Object::Builtin { function: str }));
-    env.insert("lines".into(), Rc::new(Object::Builtin { function: lines }));
+    env.insert(
+        "str".into(),
+        Reference::new(Object::Builtin { function: str }),
+    );
+    env.insert(
+        "lines".into(),
+        Reference::new(Object::Builtin { function: lines }),
+    );
 }
 
 /// Concatenates the arguments into a string
@@ -33,7 +37,7 @@ pub fn str(args: Vec<Reference>) -> Reference {
         .cloned()
         .collect::<String>();
 
-    Rc::new(Object::String(result))
+    Reference::new(Object::String(result))
 }
 
 /// Splits a string into a list of lines
@@ -61,5 +65,5 @@ fn lines(args: Vec<Reference>) -> Reference {
         .map(|v| Reference::new(Object::String(v.to_owned())))
         .collect::<Vec<_>>();
 
-    Rc::new(Object::List(lines))
+    Reference::new(Object::List(lines))
 }

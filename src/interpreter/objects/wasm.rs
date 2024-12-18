@@ -31,9 +31,7 @@ impl From<Object> for wasm_bindgen::JsValue {
                 array.into()
             }
             Object::Builtin { .. } => BUILTIN_MESSAGE.clone(),
-            Object::Function { env, .. } => {
-                JsString::from(format!("FUNCTION [{:p}]", env.as_ptr())).into()
-            }
+            Object::Function { env, .. } => JsString::from(format!("FUNCTION [{:p}]", env)).into(),
             Object::Error(_) => todo!(),
         }
     }

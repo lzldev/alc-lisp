@@ -5,7 +5,7 @@ use std::{
 
 use crate::ast::Node;
 
-use super::{Env, Reference, NULL};
+use super::{Env, EnvReference, EnvReferenceInner, Reference, NULL};
 
 #[cfg(feature = "wasm")]
 mod wasm;
@@ -28,7 +28,7 @@ pub enum Object {
         function: BuiltinFunction,
     },
     Function {
-        env: RefCell<Env>,
+        env: EnvReference,
         parameters: Vec<String>,
         body: Node,
     },
@@ -118,7 +118,11 @@ impl PartialEq for Object {
                     parameters: r_parameters,
                     body: r_body,
                 },
-            ) => l_env == r_env && l_parameters == r_parameters && l_body == r_body,
+            ) => {
+                std::ptr::addr_eq(l_env, r_env)
+                    && std::ptr::addr_eq(l_parameters, r_parameters)
+                    && std::ptr::addr_eq(l_body, r_body)
+            }
             (Self::Error(l0), Self::Error(r0)) => l0 == r0,
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
@@ -152,6 +156,10 @@ impl PartialOrd for Object {
 
 impl Ord for Object {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
+        self.partial_cmp(other)
+            .unwrap_or_else(|| std::cmp::Ordering::Less)
     }
 }
+
+unsafe impl Send for Object {}
+unsafe impl Sync for Object {}
