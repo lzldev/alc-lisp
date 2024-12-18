@@ -4,6 +4,7 @@ import {
   parse_and_run,
   print_callbacks,
   remove_print_callback,
+  run,
   type Node,
   type Object,
   type Token,
@@ -40,6 +41,19 @@ export function Home() {
                       setAST(ast);
                     },
                   );
+                }}
+              >
+                Full Run
+              </button>
+              <button
+                className="bg-violet-400 px-4 py-1 text-white outline-none active:bg-violet-300"
+                onClick={() => {
+                  const code = editorRef.current?.getValue();
+
+                  const start = performance.now();
+                  run(code);
+                  const end = performance.now();
+                  console.log("[js] total:", (end - start).toFixed(4), "ms");
                 }}
               >
                 Run

@@ -20,6 +20,7 @@ once_cell = { workspace = true }
 serde-wasm-bindgen = "0.6.5"
 wasm-bindgen = { workspace = true }
 web-sys = { workspace = true, features = ["Performance", "Window"] }
+parking_lot = { workspace = true }
 
 [build-dependencies]
 ts-rs = { workspace = true }

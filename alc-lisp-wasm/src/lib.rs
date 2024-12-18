@@ -137,9 +137,7 @@ pub fn run(code: String) {
         panic!("ast::has_errors");
     }
 
-    let mut globals: Env = Env::default();
-    add_generic_builtins(&mut globals);
-    add_wasm_builtins(&mut globals);
+    let globals: Env = WASM_ENV.clone();
 
     let mut program = Program::new(globals);
 
