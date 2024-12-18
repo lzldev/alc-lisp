@@ -44,10 +44,7 @@ pub fn nth(args: Vec<Reference>) -> Reference {
         return new_type_error_with_pos("nth", LIST.type_of(), 2);
     };
 
-    return l
-        .get(*n as usize)
-        .map(|v| v.clone())
-        .unwrap_or(NULL.clone());
+    l.get(*n as usize).cloned().unwrap_or(NULL.clone())
 }
 
 /// Returns the first element of a list
@@ -61,13 +58,13 @@ pub fn head(args: Vec<Reference>) -> Reference {
         return new_type_error_with_pos("head", LIST.type_of(), 1);
     };
 
-    if l.len() == 0 {
+    if l.is_empty() {
         return NULL.clone();
     }
 
-    let first = l.iter().cloned().next();
+    let first = l.iter().next().cloned();
 
-    return first.unwrap_or_else(|| NULL.clone());
+    first.unwrap_or_else(|| NULL.clone())
 }
 
 /// Returns the tail of a list
@@ -83,7 +80,7 @@ pub fn tail(args: Vec<Reference>) -> Reference {
 
     let vec = l.iter().skip(1).cloned().collect();
 
-    return Reference::new(Object::List(vec));
+    Reference::new(Object::List(vec))
 }
 
 /// Returns a slice of a list. If the third argument is not provided, the slice will go to the end of the list.
@@ -113,7 +110,7 @@ pub fn slice(args: Vec<Reference>) -> Reference {
         .cloned()
         .collect();
 
-    return Reference::new(Object::List(vec));
+    Reference::new(Object::List(vec))
 }
 
 pub fn sort(args: Vec<Reference>) -> Reference {
@@ -127,8 +124,8 @@ pub fn sort(args: Vec<Reference>) -> Reference {
         return new_type_error_with_pos("sort", LIST.type_of(), 0);
     };
 
-    let mut vec = l.iter().cloned().collect::<Vec<_>>();
+    let mut vec = l.to_vec();
     vec.sort();
 
-    return Reference::new(Object::List(vec));
+    Reference::new(Object::List(vec))
 }

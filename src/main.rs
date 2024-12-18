@@ -70,7 +70,7 @@ fn run_file(args: Args) -> anyhow::Result<()> {
     let tokens = lexer.tokens();
 
     if args.debug_lexer || args.debug {
-        println!("LEXER\n----{}\n----", lexer.to_string());
+        println!("LEXER\n----{}\n----", lexer);
         dbg!(&tokens);
     }
 

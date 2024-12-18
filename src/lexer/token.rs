@@ -12,7 +12,7 @@ pub struct Token {
 
 impl Token {
     pub fn token_type(&self) -> &TokenType {
-        return &self.token_type;
+        &self.token_type
     }
 }
 

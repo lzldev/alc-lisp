@@ -46,8 +46,8 @@ fn main() {
 
         println!("{}", export);
 
-        out.write(export.as_bytes()).expect("to write to file");
-        out.write(b"\n").expect("to write to file");
+        out.write_all(export.as_bytes()).expect("to write to file");
+        out.write_all(b"\n").expect("to write to file");
     }
 
     println!("types written to : [{}]", &file_ext_dir);
@@ -62,7 +62,7 @@ impl<'m> DropMessage<'m> {
     pub fn new(message: &'m String) -> Self {
         println!("{}", message);
         DropMessage {
-            message: message,
+            message,
             err: false,
         }
     }
@@ -73,7 +73,7 @@ impl<'m> DropMessage<'m> {
     }
 }
 
-impl<'m> Drop for DropMessage<'m> {
+impl Drop for DropMessage<'_> {
     fn drop(&mut self) {
         if self.err {
             eprintln!("{}", self.message);

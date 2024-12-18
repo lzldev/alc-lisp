@@ -65,19 +65,19 @@ static OPEN_FILE: Lazy<Mutex<FileRef>> = Lazy::new(|| Mutex::new(None));
 /// Prints the arguments to stdout
 fn print(args: Vec<Reference>) -> Reference {
     println!("{}", args.iter().map(|v| v.to_string()).collect::<String>());
-    return NULL.clone();
+    NULL.clone()
 }
 
 /// Prints the arguments to stdout in a debug format.
 pub fn debug(args: Vec<Reference>) -> Reference {
     println!("{:?}", args);
-    return NULL.clone();
+    NULL.clone()
 }
 
 /// Prints the arguments to stdout in a pretty debug format.
 pub fn pdebug(args: Vec<Reference>) -> Reference {
     println!("{:#?}", args);
-    return NULL.clone();
+    NULL.clone()
 }
 
 /// Reads the current global file into a string
@@ -93,18 +93,18 @@ pub fn read_file(_: Vec<Reference>) -> Reference {
     file.seek(std::io::SeekFrom::Start(0))
         .expect("trying to seek file");
 
-    return Reference::new(Object::String(string));
+    Reference::new(Object::String(string))
 }
 
 /// Returns the current working directory
 pub fn pwd(_: Vec<Reference>) -> Reference {
-    return Reference::new(Object::String(
+    Reference::new(Object::String(
         current_dir()
             .expect("to get current dir")
             .to_str()
             .expect("to convert pathbuf to str")
             .to_owned(),
-    ));
+    ))
 }
 
 /// Returns the current global file descriptor as a string
@@ -112,9 +112,9 @@ pub fn file(_: Vec<Reference>) -> Reference {
     let lock = OPEN_FILE.lock().unwrap();
 
     if let Some(file) = lock.as_ref() {
-        return Reference::new(Object::String(format!("FILE[{:p}]", file)));
+        Reference::new(Object::String(format!("FILE[{:p}]", file)))
     } else {
-        return NULL.clone();
+        NULL.clone()
     }
 }
 
@@ -142,12 +142,12 @@ pub fn open(args: Vec<Reference>) -> Reference {
 
     *OPEN_FILE.lock().unwrap() = Some(file);
 
-    return NULL.clone();
+    NULL.clone()
 }
 
 ///Closes the global file descriptor
 pub fn close(_: Vec<Reference>) -> Reference {
     *OPEN_FILE.lock().unwrap() = None;
 
-    return NULL.clone();
+    NULL.clone()
 }

@@ -31,7 +31,7 @@ impl AST {
     }
 
     pub fn has_errors(&self) -> bool {
-        return !self.errors.is_empty();
+        !self.errors.is_empty()
     }
 
     pub fn print_errors(&self, root: &Node) {
@@ -52,9 +52,9 @@ impl AST {
             self.tokens.pop();
         }
         if count > 0 {
-            return Some(count);
+            Some(count)
         } else {
-            return None;
+            None
         }
     }
 
@@ -67,21 +67,18 @@ impl AST {
             nodes.push(self.parse_expression()?);
         }
 
-        if self.tokens.len() > 0 {
+        if !self.tokens.is_empty() {
             return Err(anyhow!(
                 "not all tokens were consumed from the ast: still missing: {}",
                 self.tokens.len()
             ));
         }
 
-        return Ok(Node::Expression(nodes));
+        Ok(Node::Expression(nodes))
     }
 
     fn parse_expression(&mut self) -> anyhow::Result<Node> {
-        let token = self
-            .tokens
-            .pop()
-            .ok_or_else(|| return anyhow!("no expression"))?;
+        let token = self.tokens.pop().ok_or_else(|| anyhow!("no expression"))?;
 
         if let TokenType::Comment = token.token_type() {
             return self.parse_expression();
@@ -106,10 +103,10 @@ impl AST {
 
                 self.current_position.pop();
 
-                if let None = self.tokens.pop() {
+                if self.tokens.pop().is_none() {
                     let last_position = nodes
                         .last()
-                        .and_then(|node| Some(node.last_char()))
+                        .map(|node| node.last_char())
                         .unwrap_or_else(|| &TokenPosition { line: 0, col: 0 });
 
                     return Err(anyhow!(
@@ -146,10 +143,10 @@ impl AST {
 
                 self.current_position.pop();
 
-                if let None = self.tokens.pop() {
+                if self.tokens.pop().is_none() {
                     let last_position = nodes
                         .last()
-                        .and_then(|node| Some(node.last_char()))
+                        .map(|node| node.last_char())
                         .unwrap_or_else(|| &TokenPosition { line: 0, col: 0 });
 
                     return Err(anyhow!(
@@ -186,7 +183,7 @@ impl AST {
 
         *(self.current_position.last_mut().unwrap()) += 1;
 
-        return Ok(node);
+        Ok(node)
     }
 
     fn parse_function(&mut self, fn_word: Token) -> anyhow::Result<Node> {
@@ -210,10 +207,10 @@ impl AST {
             body = Node::Expression(vec![body])
         }
 
-        return Ok(Node::FunctionLiteral {
+        Ok(Node::FunctionLiteral {
             token: fn_word,
             arguments: words,
             body: Box::new(body),
-        });
+        })
     }
 }

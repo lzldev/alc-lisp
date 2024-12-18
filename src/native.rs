@@ -1,11 +1,11 @@
-use std::cell::LazyCell;
+use std::sync::LazyLock;
 
 use crate::interpreter::{
     builtins::{add_generic_builtins, native::add_native_builtins},
     Env,
 };
 
-pub const NATIVE_ENV: LazyCell<Env> = LazyCell::new(|| {
+pub static NATIVE_ENV: LazyLock<Env> = LazyLock::new(|| {
     let mut globals: Env = Env::default();
 
     add_generic_builtins(&mut globals);

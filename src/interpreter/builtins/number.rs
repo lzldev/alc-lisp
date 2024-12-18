@@ -57,7 +57,7 @@ pub fn add(args: Vec<Reference>) -> Reference {
         sum += n;
     }
 
-    return Reference::new(Object::Integer(sum));
+    Reference::new(Object::Integer(sum))
 }
 
 /// Subtracts numbers
@@ -83,7 +83,7 @@ pub fn subtract(args: Vec<Reference>) -> Reference {
         total -= n;
     }
 
-    return Reference::new(Object::Integer(total));
+    Reference::new(Object::Integer(total))
 }
 
 /// Multiplies numbers
@@ -109,7 +109,7 @@ pub fn multiply(args: Vec<Reference>) -> Reference {
         total *= n;
     }
 
-    return Reference::new(Object::Integer(total));
+    Reference::new(Object::Integer(total))
 }
 
 /// Divides numbers
@@ -133,13 +133,13 @@ pub fn divide(args: Vec<Reference>) -> Reference {
         };
 
         if n == &0 {
-            return Reference::new(Object::Error(format!("division by zero")));
+            return Reference::new(Object::Error("division by zero".to_string()));
         }
 
         total /= n;
     }
 
-    return Reference::new(Object::Integer(total));
+    Reference::new(Object::Integer(total))
 }
 
 pub fn parse_int(args: Vec<Reference>) -> Reference {
@@ -149,12 +149,12 @@ pub fn parse_int(args: Vec<Reference>) -> Reference {
     }
 
     let Object::String(input) = args[0].as_ref() else {
-        return new_type_error_with_pos("parse_int", &STRING.type_of(), 0);
+        return new_type_error_with_pos("parse_int", STRING.type_of(), 0);
     };
 
     if let Ok(value) = input.parse::<isize>() {
-        return Reference::new(Object::Integer(value));
+        Reference::new(Object::Integer(value))
     } else {
-        return Reference::new(Object::Error(format!("Could not parse int")));
+        Reference::new(Object::Error("Could not parse int".to_string()))
     }
 }

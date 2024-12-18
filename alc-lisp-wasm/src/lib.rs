@@ -1,4 +1,4 @@
-use std::{cell::LazyCell, panic};
+use std::{cell::LazyCell, panic, sync::LazyLock};
 
 use alc_lisp::{
     ast::AST,
@@ -18,9 +18,11 @@ mod function_container;
 #[wasm_bindgen(typescript_custom_section)]
 const TYPES_EXTENSION: &str = include_str!(concat!(env!("OUT_DIR"), "/types.ts")); //Generated in `build.rs`
 
-const WINDOW: LazyCell<Window> = LazyCell::new(|| web_sys::window().expect("window not found"));
-const PERFORMANCE: LazyCell<Performance> =
-    LazyCell::new(|| WINDOW.performance().expect("performance not found"));
+thread_local! {
+static WINDOW: LazyCell<Window> = LazyCell::new(|| web_sys::window().expect("window not found"));
+static PERFORMANCE: LazyCell<Performance> =
+    LazyCell::new(|| WINDOW.with(|window| {window.performance().expect("performance not found")}));
+}
 
 #[wasm_bindgen(start)]
 pub fn init() {
@@ -69,7 +71,7 @@ pub fn get_ast_gloo(code: String, callback: js_sys::Function) {
         .expect("error running callback");
 }
 
-const WASM_ENV: LazyCell<Env> = LazyCell::new(|| {
+static WASM_ENV: LazyLock<Env> = LazyLock::new(|| {
     let mut globals: Env = Env::default();
 
     add_generic_builtins(&mut globals);
@@ -141,9 +143,9 @@ pub fn run(code: String) {
 
     let mut program = Program::new(globals);
 
-    let start = PERFORMANCE.now(); // TODO:Remove Timing code
+    let start = PERFORMANCE.with(|p| p.now()); // TODO:Remove Timing code
     let result = program.eval(&root).expect("program::eval");
-    let end = PERFORMANCE.now() - start; // TODO:Remove Timing code
+    let end = PERFORMANCE.with(|p| p.now()) - start; // TODO:Remove Timing code
 
     info!("took:{:.4}ms", end);
 

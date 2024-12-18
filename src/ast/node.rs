@@ -64,7 +64,7 @@ impl Node {
             i += 1;
         }
 
-        return Ok(node);
+        Ok(node)
     }
 
     pub fn last_char(&self) -> &TokenPosition {
@@ -73,10 +73,10 @@ impl Node {
             | Node::StringLiteral(token)
             | Node::Word(token)
             | Node::NumberLiteral(token)
-            | Node::BooleanLiteral(token) => return &token.end,
+            | Node::BooleanLiteral(token) => &token.end,
             Node::Expression(vec) | Node::List(vec) => vec
                 .last()
-                .and_then(|node| Some(node.last_char()))
+                .map(|node| node.last_char())
                 .unwrap_or_else(|| &TokenPosition { line: 10, col: 0 }),
             Node::FunctionLiteral { body, .. } => body.last_char(),
         }

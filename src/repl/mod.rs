@@ -14,7 +14,7 @@ use super::{
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Default)]
 pub struct ReplArgs {
     ///Time the execution
     #[arg(short, long, default_value_t = false)]
@@ -31,17 +31,6 @@ pub struct ReplArgs {
     ///Show AST Debug information
     #[arg(long, default_value_t = false)]
     debug_ast: bool,
-}
-
-impl Default for ReplArgs {
-    fn default() -> Self {
-        Self {
-            time: Default::default(),
-            debug: Default::default(),
-            debug_lexer: Default::default(),
-            debug_ast: Default::default(),
-        }
-    }
 }
 
 pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
@@ -106,11 +95,8 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
     };
 
     loop {
-        match run_repl() {
-            Err(err) => {
-                println!("{} {:?}", "error:".red(), err)
-            }
-            _ => {}
+        if let Err(err) = run_repl() {
+            println!("{} {:?}", "error:".red(), err)
         }
     }
 }

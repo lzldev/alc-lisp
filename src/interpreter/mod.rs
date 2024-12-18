@@ -71,10 +71,10 @@ impl CallStack {
     }
 
     pub fn active_slice(&self) -> &[EnvReference] {
-        return &self.stack[0..=self.sp];
+        &self.stack[0..=self.sp]
     }
     pub fn active_slice_mut(&mut self) -> &mut [EnvReference] {
-        return &mut self.stack[0..=self.sp];
+        &mut self.stack[0..=self.sp]
     }
 }
 
@@ -112,13 +112,13 @@ impl Program {
             }
         }
 
-        return NULL.clone();
+        NULL.clone()
     }
 
     pub fn new(global_env: Env) -> Self {
-        return Self {
+        Self {
             env: CallStack::new(EnvReference::new(EnvReferenceInner::new(global_env))),
-        };
+        }
     }
 
     pub fn eval(&mut self, root: &Node) -> anyhow::Result<Reference> {
@@ -155,16 +155,16 @@ impl Program {
             Node::StringLiteral(token) => {
                 let len = token.value.len();
 
-                return Ok(Reference::new(Object::String(
+                Ok(Reference::new(Object::String(
                     token.value[1..(len - 1)].to_owned(),
-                )));
+                )))
             }
             Node::NumberLiteral(token) => {
                 let st = token.value.as_str();
                 let mut table = NUMBER_LOOKUP_TABLE.lock().unwrap();
 
                 if let Some(value) = table.get(st) {
-                    return Ok(value.clone());
+                    Ok(value.clone())
                 } else {
                     let value = token
                         .value
@@ -174,14 +174,12 @@ impl Program {
 
                     table.insert(st.to_owned(), value.clone());
 
-                    return Ok(value);
+                    Ok(value)
                 }
             }
-            Node::Invalid(_) => {
-                return Ok(Reference::new(Object::Error(
-                    "Evaluating Invalid Node".to_owned(),
-                )))
-            }
+            Node::Invalid(_) => Ok(Reference::new(Object::Error(
+                "Evaluating Invalid Node".to_owned(),
+            ))),
             Node::Expression(vec) => {
                 if vec.is_empty() {
                     return Ok(NULL.clone());
@@ -268,7 +266,7 @@ impl Program {
                     .collect::<Result<Vec<_>>>()?;
 
                 match first.as_ref() {
-                    Object::Builtin { function } => return Ok(function(args)),
+                    Object::Builtin { function } => Ok(function(args)),
                     Object::Function {
                         env,
                         parameters,
@@ -285,12 +283,12 @@ impl Program {
                         for (idx, arg) in parameters.iter().enumerate() {
                             self.set_value(arg.clone(), args[idx].clone());
                         }
-                        let ret = self.eval(&body)?;
+                        let ret = self.eval(body)?;
                         self.pop_env();
 
-                        return Ok(ret);
+                        Ok(ret)
                     }
-                    obj => return Err(anyhow!("Cannot call value of type {}", obj.type_of())),
+                    obj => Err(anyhow!("Cannot call value of type {}", obj.type_of())),
                 }
             }
             Node::List(vec) => {
@@ -302,7 +300,7 @@ impl Program {
                     })
                     .collect::<Result<Vec<_>>>()?;
 
-                return Ok(Reference::new(Object::List(items)));
+                Ok(Reference::new(Object::List(items)))
             }
             Node::FunctionLiteral {
                 token: _,
@@ -310,23 +308,23 @@ impl Program {
                 body,
             } => {
                 let arguments = arguments
-                    .into_iter()
+                    .iter()
                     .map(|arg| {
                         let Node::Word(token) = arg else {
                             return Err(anyhow!("argument is not a word"));
                         };
 
-                        return Ok(token.value.clone());
+                        Ok(token.value.clone())
                     })
                     .collect::<Result<Vec<_>>>()?;
 
                 let env = EnvReference::new(EnvReferenceInner::new(Env::with_capacity(16)));
 
-                return Ok(Reference::new(Object::Function {
+                Ok(Reference::new(Object::Function {
                     env,
                     parameters: arguments,
                     body: (**body).clone(),
-                }));
+                }))
             }
         }
     }
@@ -342,7 +340,7 @@ fn bool_from_native(value: bool) -> Reference {
 
 #[inline(always)]
 fn is_error(value: &Reference) -> bool {
-    return matches!(value.as_ref(), Object::Error(_));
+    matches!(value.as_ref(), Object::Error(_))
 }
 
 fn is_truthy(value: Reference) -> bool {
@@ -368,5 +366,5 @@ fn is_truthy(value: Reference) -> bool {
         _ => {}
     }
 
-    return false;
+    false
 }

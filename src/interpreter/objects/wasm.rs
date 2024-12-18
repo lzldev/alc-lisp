@@ -5,8 +5,10 @@ use wasm_bindgen::JsValue;
 
 use super::Object;
 
-pub const BUILTIN_MESSAGE: LazyCell<wasm_bindgen::JsValue> =
+thread_local! {
+pub static BUILTIN_MESSAGE: LazyCell<wasm_bindgen::JsValue> =
     LazyCell::new(|| JsString::from("Builtin Function").into());
+}
 
 impl From<Object> for wasm_bindgen::JsValue {
     fn from(value: Object) -> Self {
@@ -30,7 +32,7 @@ impl From<Object> for wasm_bindgen::JsValue {
 
                 array.into()
             }
-            Object::Builtin { .. } => BUILTIN_MESSAGE.clone(),
+            Object::Builtin { .. } => BUILTIN_MESSAGE.with(|m| m.as_ref().clone()),
             Object::Function { env, .. } => JsString::from(format!("FUNCTION [{:p}]", env)).into(),
             Object::Error(_) => todo!(),
         }

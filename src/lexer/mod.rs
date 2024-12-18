@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use anyhow::anyhow;
 
 mod token;
@@ -23,22 +25,6 @@ impl Lexer {
 
     fn is_word_symbol(c: char) -> bool {
         matches!(c, '+' | '-' | '/' | '*' | '_' | '=' | '?' | '!' | '<' | '>')
-    }
-
-    pub fn to_string(&self) -> String {
-        let mut out = String::new();
-        let mut line = 0;
-
-        for token in self.tokens.iter() {
-            if token.start.line > line {
-                line = token.start.line;
-                out.push_str("\n");
-            }
-            out.push_str(" ");
-            out.push_str(&token.value);
-        }
-
-        out
     }
 
     pub fn parse(&mut self) -> anyhow::Result<()> {
@@ -77,10 +63,9 @@ impl Lexer {
                     }
 
                     iter.next()
-                        .and_then(|f| {
+                        .inspect(|&f| {
                             col += 1;
                             string.push(f);
-                            Some(f)
                         })
                         .ok_or_else(|| {
                             anyhow!("unterminated string literal at {}:{}", line, col)
@@ -172,6 +157,23 @@ impl Lexer {
             }
         }
 
-        return Ok(());
+        Ok(())
+    }
+}
+
+impl Display for Lexer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut line = 0;
+
+        for token in self.tokens.iter() {
+            if token.start.line > line {
+                line = token.start.line;
+                f.write_str("\n")?;
+            }
+            f.write_str(" ")?;
+            f.write_str(&token.value)?;
+        }
+
+        Ok(())
     }
 }

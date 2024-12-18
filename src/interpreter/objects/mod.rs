@@ -1,4 +1,4 @@
-use std::{cell::LazyCell, fmt::Display};
+use std::{fmt::Display, sync::LazyLock};
 
 use crate::ast::Node;
 
@@ -35,12 +35,12 @@ pub enum Object {
 
 type BuiltinFunction = fn(Vec<Reference>) -> Reference;
 
-pub const DEFAULT_BUILTIN: LazyCell<BuiltinFunction> =
-    LazyCell::new(|| |_: Vec<Reference>| -> Reference { NULL.clone() });
+pub static DEFAULT_BUILTIN: LazyLock<BuiltinFunction> =
+    LazyLock::new(|| |_: Vec<Reference>| -> Reference { NULL.clone() });
 
 #[cfg(feature = "serde")]
 fn get_default_builtin() -> fn(Vec<Reference>) -> Reference {
-    DEFAULT_BUILTIN.clone()
+    *DEFAULT_BUILTIN
 }
 
 impl Object {
@@ -130,32 +130,31 @@ impl Eq for Object {}
 
 impl PartialOrd for Object {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match (self, other) {
-            (Object::Null, _) => Some(std::cmp::Ordering::Less),
-            (Object::Bool(left), Object::Bool(right)) => Some(left.cmp(right)),
-            (Object::Bool(_), _) => Some(std::cmp::Ordering::Less),
-            (Object::Integer(left), Object::Integer(right)) => Some(left.cmp(right)),
-            (Object::Integer(_), _) => Some(std::cmp::Ordering::Less),
-            (Object::String(left), Object::String(right)) => Some(left.cmp(right)),
-            (Object::String(_), _) => Some(std::cmp::Ordering::Less),
-            (Object::List(left), Object::List(right)) => {
-                let llen = left.len();
-                let rlen = right.len();
-
-                return Some(llen.cmp(&rlen));
-            }
-            (Object::List(_), _) => Some(std::cmp::Ordering::Less),
-            (Object::Builtin { .. }, _) => Some(std::cmp::Ordering::Less),
-            (Object::Function { .. }, _) => Some(std::cmp::Ordering::Less),
-            (Object::Error { .. }, _) => Some(std::cmp::Ordering::Less),
-        }
+        Some(self.cmp(other))
     }
 }
 
 impl Ord for Object {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other)
-            .unwrap_or_else(|| std::cmp::Ordering::Less)
+        match (self, other) {
+            (Object::Null, _) => std::cmp::Ordering::Less,
+            (Object::Bool(left), Object::Bool(right)) => left.cmp(right),
+            (Object::Bool(_), _) => std::cmp::Ordering::Less,
+            (Object::Integer(left), Object::Integer(right)) => left.cmp(right),
+            (Object::Integer(_), _) => std::cmp::Ordering::Less,
+            (Object::String(left), Object::String(right)) => left.cmp(right),
+            (Object::String(_), _) => std::cmp::Ordering::Less,
+            (Object::List(left), Object::List(right)) => {
+                let llen = left.len();
+                let rlen = right.len();
+
+                llen.cmp(&rlen)
+            }
+            (Object::List(_), _) => std::cmp::Ordering::Less,
+            (Object::Builtin { .. }, _) => std::cmp::Ordering::Less,
+            (Object::Function { .. }, _) => std::cmp::Ordering::Less,
+            (Object::Error { .. }, _) => std::cmp::Ordering::Less,
+        }
     }
 }
 

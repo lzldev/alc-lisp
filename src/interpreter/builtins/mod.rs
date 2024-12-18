@@ -18,7 +18,7 @@ fn typecheck_args<F>(
     name: &str,
     typename: &str,
     condition: F,
-    args: &Vec<Reference>,
+    args: &[Reference],
 ) -> Option<Reference>
 where
     F: Fn(&Reference) -> bool,
@@ -67,14 +67,12 @@ pub fn len(args: Vec<Reference>) -> Reference {
     }
 
     match args[0].as_ref() {
-        Object::String(s) => return Reference::new(Object::Integer(s.len() as isize)),
-        Object::List(l) => return Reference::new(Object::Integer(l.len() as isize)),
-        _ => {
-            return new_type_error(
-                "len",
-                &format!("{} or {}", STRING.type_of(), LIST.type_of()),
-            )
-        }
+        Object::String(s) => Reference::new(Object::Integer(s.len() as isize)),
+        Object::List(l) => Reference::new(Object::Integer(l.len() as isize)),
+        _ => new_type_error(
+            "len",
+            &format!("{} or {}", STRING.type_of(), LIST.type_of()),
+        ),
     }
 }
 
@@ -101,7 +99,7 @@ pub fn equals(args: Vec<Reference>) -> Reference {
         first = last;
     }
 
-    return bool_from_native(true);
+    bool_from_native(true)
 }
 
 /// Lesser than comparison between values
@@ -130,7 +128,7 @@ pub fn lesser_than(args: Vec<Reference>) -> Reference {
         first = last;
     }
 
-    return bool_from_native(true);
+    bool_from_native(true)
 }
 
 /// Greater than comparison between values
@@ -159,5 +157,5 @@ pub fn greather_than(args: Vec<Reference>) -> Reference {
         first = last;
     }
 
-    return bool_from_native(true);
+    bool_from_native(true)
 }

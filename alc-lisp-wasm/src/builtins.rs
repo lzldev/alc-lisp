@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Mutex};
+use std::{collections::HashSet, fmt::Write as _, sync::Mutex};
 
 use alc_lisp::interpreter::{objects::Object, Env, Reference, NULL};
 use js_sys::{Array, Function};
@@ -49,7 +49,10 @@ pub fn add_wasm_builtins(env: &mut Env) {
             function: |args| {
                 info!(
                     "{}",
-                    args.iter().map(|v| format!("{}", v)).collect::<String>()
+                    args.iter().fold(String::new(), |mut output, b| {
+                        let _ = write!(output, "{}", b);
+                        output
+                    })
                 );
 
                 let callbacks = CALLBACKS.lock().unwrap();
@@ -71,7 +74,7 @@ pub fn add_wasm_builtins(env: &mut Env) {
                         .expect("to call print callback");
                 });
 
-                return NULL.clone();
+                NULL.clone()
             },
         }),
     );
@@ -82,9 +85,12 @@ pub fn add_wasm_builtins(env: &mut Env) {
             function: |args| {
                 info!(
                     "{:?}",
-                    args.iter().map(|v| format!("{}", v)).collect::<String>()
+                    args.iter().fold(String::new(), |mut output, b| {
+                        let _ = write!(output, "{}", b);
+                        output
+                    })
                 );
-                return NULL.clone();
+                NULL.clone()
             },
         }),
     );
