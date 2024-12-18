@@ -145,9 +145,16 @@ pub fn open(_: &mut Program, args: Vec<Reference>) -> Reference {
         panic!("This should never happen");
     };
 
-    let file = File::open(inner.as_ref()).expect("error trying to open file");
+    let file = File::open(inner.as_ref());
 
-    *OPEN_FILE.lock() = Some(file);
+    match file {
+        Ok(file) => {
+            *OPEN_FILE.lock() = Some(file);
+        }
+        Err(err) => {
+            return Reference::new(Object::Error(format!("Error opening file: {}", err).into()));
+        }
+    };
 
     NULL.clone()
 }
