@@ -27,6 +27,26 @@ pub fn add_native_builtins(env: &mut Env) {
     );
 
     env.insert(
+        "debug".into(),
+        Reference::new(Object::Builtin {
+            function: |args| {
+                println!("{:?}", args);
+                return NULL.clone();
+            },
+        }),
+    );
+
+    env.insert(
+        "pdebug".into(),
+        Reference::new(Object::Builtin {
+            function: |args| {
+                println!("{:#?}", args);
+                return NULL.clone();
+            },
+        }),
+    );
+
+    env.insert(
         "pwd".into(),
         Reference::new(Object::Builtin {
             function: |_| {
@@ -37,16 +57,6 @@ pub fn add_native_builtins(env: &mut Env) {
                         .expect("to convert pathbuf to str")
                         .to_owned(),
                 ));
-            },
-        }),
-    );
-
-    env.insert(
-        "debug".into(),
-        Reference::new(Object::Builtin {
-            function: |args| {
-                println!("{:?}", args);
-                return NULL.clone();
             },
         }),
     );
@@ -76,6 +86,17 @@ pub fn add_native_builtins(env: &mut Env) {
                 let file = File::open(inner).expect("error trying to open file");
 
                 *OPEN_FILE.lock().unwrap() = Some(file);
+
+                return NULL.clone();
+            },
+        }),
+    );
+
+    env.insert(
+        "close".into(),
+        Reference::new(Object::Builtin {
+            function: |_| {
+                *OPEN_FILE.lock().unwrap() = None;
 
                 return NULL.clone();
             },

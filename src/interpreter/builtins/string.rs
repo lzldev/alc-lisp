@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
-use crate::interpreter::{objects::Object, Env, STRING};
+use crate::interpreter::{objects::Object, Env, Reference, STRING};
 
-use super::typecheck_args;
+use super::{errors::new_args_len_error, typecheck_args};
 
 pub fn add_string_builtins(env: &mut Env) {
     env.insert(
@@ -31,6 +31,38 @@ pub fn add_string_builtins(env: &mut Env) {
                     .collect::<String>();
 
                 Rc::new(Object::String(result))
+            },
+        }),
+    );
+
+    env.insert(
+        "lines".into(),
+        Rc::new(Object::Builtin {
+            function: |args| {
+                let len = args.len();
+                if len != 1 {
+                    return new_args_len_error("lines", &args, 1);
+                }
+
+                if let Some(err) = typecheck_args(
+                    "lines",
+                    STRING.type_of(),
+                    |obj| !matches!(obj.as_ref(), Object::String(_)),
+                    &args,
+                ) {
+                    return err;
+                }
+
+                let Object::String(inner) = args[0].as_ref() else {
+                    panic!("This should never happen");
+                };
+
+                let lines = inner
+                    .split("\n")
+                    .map(|v| Reference::new(Object::String(v.to_owned())))
+                    .collect::<Vec<_>>();
+
+                Rc::new(Object::List(lines))
             },
         }),
     );
