@@ -45,7 +45,7 @@ impl Lexer {
                     line += 1
                 }
                 '(' | ')' | '[' | ']' | '\'' => self.tokens.push(Token {
-                    value: value.to_string(),
+                    value: value.to_string().into(),
                     token_type: TokenType::from_char(value)?,
                     start: TokenPosition {
                         line,
@@ -72,7 +72,7 @@ impl Lexer {
                         })?; // Push Last quote
 
                     self.tokens.push(Token {
-                        value: string,
+                        value: string.into(),
                         token_type: TokenType::StringLiteral,
                         start: TokenPosition {
                             line,
@@ -92,7 +92,7 @@ impl Lexer {
 
                     //TODO: Add ignore comments flag to the lexer; to skip adding it into the final result
                     self.tokens.push(Token {
-                        value: comment,
+                        value: comment.into(),
                         token_type: TokenType::Comment,
                         start: TokenPosition {
                             line,
@@ -113,7 +113,7 @@ impl Lexer {
                         }
 
                         self.tokens.push(Token {
-                            value: number,
+                            value: number.into(),
                             token_type: TokenType::NumberLiteral,
                             start: TokenPosition {
                                 line,
@@ -134,7 +134,7 @@ impl Lexer {
                         }
 
                         self.tokens.push(Token {
-                            value: word,
+                            value: word.into(),
                             token_type: TokenType::Word,
                             start: TokenPosition {
                                 line,
@@ -144,7 +144,7 @@ impl Lexer {
                         })
                     } else {
                         self.tokens.push(Token {
-                            value: value.to_string(),
+                            value: value.to_string().into(),
                             token_type: TokenType::Unknown,
                             start: TokenPosition {
                                 line,

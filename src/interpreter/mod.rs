@@ -20,7 +20,7 @@ pub type EnvReference = Arc<EnvReferenceInner>;
 pub type EnvReferenceInner = RwLock<Env>;
 pub type Env = HashMap<Arc<str>, Reference>;
 
-static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<String, Reference>>> =
+static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<Arc<str>, Reference>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 macro_rules! map_rust_error {
@@ -100,9 +100,9 @@ impl Program {
         self.env.current_env_mut()
     }
 
-    fn set_value(&mut self, name: String, value: Reference) {
+    fn set_value(&mut self, name: Arc<str>, value: Reference) {
         let mut env = self.current_env_mut().write();
-        env.insert(name.into(), value);
+        env.insert(name, value);
     }
 
     fn get_value(&mut self, name: &str) -> Reference {
@@ -146,8 +146,8 @@ impl Program {
 
     fn parse_expression(&mut self, node: &Node) -> anyhow::Result<Reference> {
         match node {
-            Node::Word(token) => Ok(self.get_value(token.value.as_str())),
-            Node::BooleanLiteral(token) => match token.value.as_str() {
+            Node::Word(token) => Ok(self.get_value(token.value.as_ref())),
+            Node::BooleanLiteral(token) => match token.value.as_ref() {
                 "true" => Ok(TRUE.clone()),
                 "false" => Ok(FALSE.clone()),
                 _ => panic!("This should never happen"),
@@ -160,10 +160,9 @@ impl Program {
                 )))
             }
             Node::NumberLiteral(token) => {
-                let st = token.value.as_str();
                 let mut table = NUMBER_LOOKUP_TABLE.lock();
 
-                if let Some(value) = table.get(st) {
+                if let Some(value) = table.get(&token.value) {
                     Ok(value.clone())
                 } else {
                     let value = token
@@ -172,7 +171,7 @@ impl Program {
                         .map(|v| Reference::new(Object::Integer(v)))
                         .context("error parsing numberliteral:")?;
 
-                    table.insert(st.to_owned(), value.clone());
+                    table.insert(token.value.clone(), value.clone());
 
                     Ok(value)
                 }
@@ -188,7 +187,7 @@ impl Program {
                 let len = vec.len();
 
                 if let Node::Word(word) = &vec[0] {
-                    match word.value.as_str() {
+                    match word.value.as_ref() {
                         "define" | "def" => {
                             if len == 1 || len != 3 {
                                 return Ok(Reference::new(Object::Error(format!(
@@ -281,7 +280,7 @@ impl Program {
                         )));
 
                         for (idx, arg) in parameters.iter().enumerate() {
-                            self.set_value(arg.to_string(), args[idx].clone());
+                            self.set_value(arg.clone(), args[idx].clone());
                         }
                         let ret = self.eval(body)?;
                         self.pop_env();
@@ -314,7 +313,7 @@ impl Program {
                             return Err(anyhow!("argument is not a word"));
                         };
 
-                        Ok(token.value.clone().into())
+                        Ok(token.value.clone())
                     })
                     .collect::<Result<Arc<[_]>>>()?;
 

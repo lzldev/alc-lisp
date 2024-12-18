@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
 use anyhow::anyhow;
 
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "ts-rs", derive(ts_rs::TS))]
 pub struct Token {
-    pub value: String,
+    pub value: Arc<str>,
     pub token_type: TokenType,
     pub start: TokenPosition,
     pub end: TokenPosition,
