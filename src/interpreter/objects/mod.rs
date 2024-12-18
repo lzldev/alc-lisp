@@ -1,7 +1,4 @@
-use std::{
-    cell::LazyCell,
-    fmt::Display,
-};
+use std::{cell::LazyCell, fmt::Display};
 
 use crate::ast::Node;
 
@@ -28,6 +25,7 @@ pub enum Object {
         function: BuiltinFunction,
     },
     Function {
+        #[cfg_attr(feature = "ts-rs", ts(skip))]
         env: EnvReference,
         parameters: Vec<String>,
         body: Node,
