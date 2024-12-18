@@ -40,7 +40,3 @@ bin = ["dep:clap", "dep:colored"]
 serde = ["dep:serde"]
 ts-rs = ["dep:ts-rs", "serde"]
 wasm = ["dep:wasm-bindgen", "dep:js-sys", "ts-rs"]
-
-
-[profile.release]
-lto = true
