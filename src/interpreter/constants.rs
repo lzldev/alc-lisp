@@ -7,5 +7,5 @@ pub static TRUE: LazyLock<Reference> = LazyLock::new(|| Reference::new(Object::B
 pub static FALSE: LazyLock<Reference> = LazyLock::new(|| Reference::new(Object::Bool(false)));
 pub static NUMBER: LazyLock<Reference> = LazyLock::new(|| Reference::new(Object::Integer(0)));
 pub static STRING: LazyLock<Reference> =
-    LazyLock::new(|| Reference::new(Object::String(String::new())));
+    LazyLock::new(|| Reference::new(Object::String(String::new().into())));
 pub static LIST: LazyLock<Reference> = LazyLock::new(|| Reference::new(Object::List(Arc::new([]))));

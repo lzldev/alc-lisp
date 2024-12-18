@@ -4,10 +4,10 @@ use std::{
     env::current_dir,
     fs::File,
     io::{Read, Seek},
-    sync::Mutex,
 };
 
 use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 
 use crate::interpreter::{objects::Object, Env, Reference, NULL, STRING};
 
@@ -82,18 +82,25 @@ pub fn pdebug(args: Vec<Reference>) -> Reference {
 
 /// Reads the current global file into a string
 pub fn read_file(_: Vec<Reference>) -> Reference {
-    let mut lock = OPEN_FILE.lock().unwrap();
+    let mut lock = OPEN_FILE.lock();
 
-    let file = lock.as_mut().expect("file not opened");
+    if lock.is_none() {
+        return Reference::new(Object::String("".into()));
+    }
+
+    let mut file = lock.take().unwrap();
 
     let mut string = String::new();
+
     file.read_to_string(&mut string)
         .expect("error reading file");
 
     file.seek(std::io::SeekFrom::Start(0))
         .expect("trying to seek file");
 
-    Reference::new(Object::String(string))
+    let _ = lock.insert(file);
+
+    Reference::new(Object::String(string.into()))
 }
 
 /// Returns the current working directory
@@ -103,16 +110,16 @@ pub fn pwd(_: Vec<Reference>) -> Reference {
             .expect("to get current dir")
             .to_str()
             .expect("to convert pathbuf to str")
-            .to_owned(),
+            .into(),
     ))
 }
 
 /// Returns the current global file descriptor as a string
 pub fn file(_: Vec<Reference>) -> Reference {
-    let lock = OPEN_FILE.lock().unwrap();
+    let lock = OPEN_FILE.lock();
 
     if let Some(file) = lock.as_ref() {
-        Reference::new(Object::String(format!("FILE[{:p}]", file)))
+        Reference::new(Object::String(format!("FILE[{:p}]", file).into()))
     } else {
         NULL.clone()
     }
@@ -138,16 +145,16 @@ pub fn open(args: Vec<Reference>) -> Reference {
         panic!("This should never happen");
     };
 
-    let file = File::open(inner).expect("error trying to open file");
+    let file = File::open(inner.as_ref()).expect("error trying to open file");
 
-    *OPEN_FILE.lock().unwrap() = Some(file);
+    *OPEN_FILE.lock() = Some(file);
 
     NULL.clone()
 }
 
 ///Closes the global file descriptor
 pub fn close(_: Vec<Reference>) -> Reference {
-    *OPEN_FILE.lock().unwrap() = None;
+    *OPEN_FILE.lock() = None;
 
     NULL.clone()
 }

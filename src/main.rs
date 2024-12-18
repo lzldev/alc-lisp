@@ -9,6 +9,13 @@ use alc_lisp::{
 use anyhow::Context;
 use clap::{arg, Parser, Subcommand};
 
+#[cfg(feature = "mimalloc")]
+use mimalloc::MiMalloc;
+
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 #[derive(Parser, Debug)]
 #[command(version)]
 struct Args {

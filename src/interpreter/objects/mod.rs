@@ -20,7 +20,7 @@ mod wasm;
 pub enum Object {
     Null,
     Integer(isize),
-    String(String),
+    String(Arc<str>),
     Bool(bool),
     List(Arc<[Reference]>),
     Builtin {
@@ -33,7 +33,7 @@ pub enum Object {
         parameters: Arc<[Arc<str>]>,
         body: Node,
     },
-    Error(String),
+    Error(Arc<str>),
 }
 
 type BuiltinFunction = fn(Vec<Reference>) -> Reference;
@@ -66,7 +66,7 @@ impl Display for Object {
         match self {
             Object::Null => f.write_str("null"),
             Object::Integer(v) => write!(f, "{}", v),
-            Object::String(v) => f.write_fmt(format_args!("\"{}\"", v.as_str())),
+            Object::String(v) => f.write_fmt(format_args!("\"{}\"", v)),
             Object::Bool(v) => write!(f, "{}", v),
             Object::List(vec) => {
                 f.write_str("[")?;

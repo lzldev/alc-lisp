@@ -133,7 +133,7 @@ pub fn divide(args: Vec<Reference>) -> Reference {
         };
 
         if n == &0 {
-            return Reference::new(Object::Error("division by zero".to_string()));
+            return Reference::new(Object::Error("division by zero".into()));
         }
 
         total /= n;
@@ -155,6 +155,6 @@ pub fn parse_int(args: Vec<Reference>) -> Reference {
     if let Ok(value) = input.parse::<isize>() {
         Reference::new(Object::Integer(value))
     } else {
-        Reference::new(Object::Error("Could not parse int".to_string()))
+        Reference::new(Object::Error("Could not parse int".into()))
     }
 }

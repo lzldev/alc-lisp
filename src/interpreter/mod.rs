@@ -156,7 +156,7 @@ impl Program {
                 let len = token.value.len();
 
                 Ok(Reference::new(Object::String(
-                    token.value[1..(len - 1)].to_owned(),
+                    token.value[1..(len - 1)].into(),
                 )))
             }
             Node::NumberLiteral(token) => {
@@ -177,7 +177,7 @@ impl Program {
                 }
             }
             Node::Invalid(_) => Ok(Reference::new(Object::Error(
-                "Evaluating Invalid Node".to_owned(),
+                "Evaluating Invalid Node".into(),
             ))),
             Node::Expression(vec) => {
                 if vec.is_empty() {
@@ -190,19 +190,25 @@ impl Program {
                     match word.value.as_ref() {
                         "define" | "def" => {
                             if len == 1 || len != 3 {
-                                return Ok(Reference::new(Object::Error(format!(
-                                    "Invalid amount of arguments to define got:{} expected: 3",
-                                    len
-                                ))));
+                                return Ok(Reference::new(Object::Error(
+                                    format!(
+                                        "Invalid amount of arguments to define got:{} expected: 3",
+                                        len
+                                    )
+                                    .into(),
+                                )));
                             }
 
                             let name = match &vec[1] {
                                 Node::Word(token) => token,
                                 n => {
-                                    return Ok(Reference::new(Object::Error(format!(
-                                        "Invalid token for define: {:?} should be a word",
-                                        n
-                                    ))))
+                                    return Ok(Reference::new(Object::Error(
+                                        format!(
+                                            "Invalid token for define: {:?} should be a word",
+                                            n
+                                        )
+                                        .into(),
+                                    )))
                                 }
                             };
 
@@ -216,10 +222,10 @@ impl Program {
                         }
                         "if" => {
                             if len != 4 && len != 3 {
-                                return Ok(Reference::new(Object::Error(format!(
-                                    "Invalid amount of arguments to 'if' got: {}",
-                                    len
-                                ))));
+                                return Ok(Reference::new(Object::Error(
+                                    format!("Invalid amount of arguments to 'if' got: {}", len)
+                                        .into(),
+                                )));
                             }
 
                             let condition = self
@@ -239,10 +245,10 @@ impl Program {
                         }
                         "do" => {
                             if len != 2 {
-                                return Ok(Reference::new(Object::Error(format!(
-                                    "Invalid amount of arguments to 'do' got: {}",
-                                    len
-                                ))));
+                                return Ok(Reference::new(Object::Error(
+                                    format!("Invalid amount of arguments to 'do' got: {}", len)
+                                        .into(),
+                                )));
                             }
 
                             return self.eval(&vec[1]);
@@ -272,7 +278,7 @@ impl Program {
                         body,
                     } => {
                         if args.len() != parameters.len() {
-                            return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
+                            return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()).into())));
                         }
 
                         self.push_env(EnvReference::new(EnvReferenceInner::new(

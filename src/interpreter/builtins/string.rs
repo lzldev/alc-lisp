@@ -34,12 +34,11 @@ pub fn str(args: Vec<Reference>) -> Reference {
                 panic!("This should never happen");
             };
 
-            inner
+            inner.as_ref()
         })
-        .cloned()
         .collect::<String>();
 
-    Reference::new(Object::String(result))
+    Reference::new(Object::String(result.into()))
 }
 
 /// Splits a string into a list of lines
@@ -64,7 +63,7 @@ fn lines(args: Vec<Reference>) -> Reference {
 
     let lines = inner
         .split("\n")
-        .map(|v| Reference::new(Object::String(v.to_owned())))
+        .map(|v| Reference::new(Object::String(v.into())))
         .collect::<Arc<_>>();
 
     Reference::new(Object::List(lines))
