@@ -13,6 +13,7 @@ pub mod objects;
 
 pub type CallStack = Vec<RefCell<Env>>;
 pub type Reference = Rc<Object>;
+pub type EnvReference = RefCell<Env>;
 pub type Env = HashMap<String, Reference>;
 
 macro_rules! map_rust_error {
@@ -28,10 +29,38 @@ macro_rules! map_rust_error {
 }
 
 pub struct Program {
-    pub env: Vec<RefCell<Env>>,
+    env: CallStack,
 }
 
 impl Program {
+    pub fn get_env(&self) -> CallStack {
+        self.env.clone()
+    }
+
+    fn push_env(&mut self, env: EnvReference) {
+        self.env.push(env);
+    }
+    fn pop_env(&mut self) {
+        self.env.pop();
+    }
+    fn current_env(&self) -> &EnvReference {
+        unsafe { self.env.last().unwrap_unchecked() }
+    }
+    fn current_env_mut(&mut self) -> &mut EnvReference {
+        unsafe { self.env.last_mut().unwrap_unchecked() }
+    }
+
+    fn get_value(&mut self, name: &str) -> Reference {
+        for env in self.env.iter_mut().rev() {
+            let map = env.borrow();
+            if let Some(value) = map.get(name) {
+                return value.clone();
+            }
+        }
+
+        return NULL.clone();
+    }
+
     pub fn new(global_env: Env) -> Self {
         let mut env = Vec::with_capacity(1024);
 
@@ -62,19 +91,8 @@ impl Program {
         }
     }
 
-    fn get_value(&mut self, name: &str) -> Reference {
-        for env in self.env.iter_mut().rev() {
-            let map = env.borrow_mut().get_mut();
-            if let Some(value) = map.get(name) {
-                return value.clone();
-            }
-        }
-
-        return NULL.clone();
-    }
-
     fn set_value(&mut self, name: String, value: Reference) {
-        let env = self.env.last_mut().unwrap().borrow_mut().get_mut();
+        let env = self.current_env_mut().borrow_mut().get_mut();
         env.insert(name, value);
     }
 
@@ -201,12 +219,12 @@ impl Program {
                             return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
                         }
 
-                        self.env.push(env.clone());
+                        self.push_env(env.clone());
                         for (idx, arg) in parameters.iter().enumerate() {
                             self.set_value(arg.clone(), args[idx].clone());
                         }
                         let ret = self.eval(&body)?;
-                        self.env.pop();
+                        self.pop_env();
 
                         return Ok(ret);
                     }
@@ -240,7 +258,7 @@ impl Program {
                     })
                     .collect::<Result<Vec<_>>>()?;
 
-                let env = self.env.last().expect("to get last env").clone();
+                let env = self.current_env().clone();
 
                 return Ok(Reference::new(Object::Function {
                     env,
