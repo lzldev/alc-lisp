@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "ts-rs", derive(ts_rs::TS))]
 pub struct Token {
@@ -27,7 +27,7 @@ impl PartialEq for Token {
     }
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "ts-rs", derive(ts_rs::TS))]
 pub struct TokenPosition {
@@ -41,7 +41,7 @@ impl PartialEq for TokenPosition {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "ts-rs", derive(ts_rs::TS))]
 pub enum TokenType {
@@ -53,6 +53,7 @@ pub enum TokenType {
     StringLiteral,
     Word,
     NumberLiteral,
+    #[default]
     Unknown,
     Comment,
 }
