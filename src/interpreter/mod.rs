@@ -1,9 +1,10 @@
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::Arc;
 
 use anyhow::{anyhow, Context, Result};
 use foldhash::{HashMap, HashMapExt};
 use objects::Object;
 use once_cell::sync::Lazy;
+use parking_lot::{Mutex, RwLock};
 
 use crate::ast::Node;
 
@@ -100,14 +101,13 @@ impl Program {
     }
 
     fn set_value(&mut self, name: String, value: Reference) {
-        let mut env = unsafe { self.current_env_mut().write().unwrap_unchecked() };
+        let mut env = self.current_env_mut().write();
         env.insert(name.into(), value);
     }
 
     fn get_value(&mut self, name: &str) -> Reference {
         for env in self.env.active_slice().iter().rev() {
-            let map = unsafe { env.as_ref().read().unwrap_unchecked() };
-            if let Some(value) = map.get(name) {
+            if let Some(value) = env.read().get(name) {
                 return value.clone();
             }
         }
@@ -161,7 +161,7 @@ impl Program {
             }
             Node::NumberLiteral(token) => {
                 let st = token.value.as_str();
-                let mut table = NUMBER_LOOKUP_TABLE.lock().unwrap();
+                let mut table = NUMBER_LOOKUP_TABLE.lock();
 
                 if let Some(value) = table.get(st) {
                     Ok(value.clone())
@@ -276,9 +276,9 @@ impl Program {
                             return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
                         }
 
-                        self.push_env(EnvReference::new(EnvReferenceInner::new(unsafe {
-                            env.as_ref().get_cloned().unwrap_unchecked()
-                        })));
+                        self.push_env(EnvReference::new(EnvReferenceInner::new(
+                            env.read().clone(),
+                        )));
 
                         for (idx, arg) in parameters.iter().enumerate() {
                             self.set_value(arg.clone(), args[idx].clone());

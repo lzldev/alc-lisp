@@ -8,12 +8,6 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::function_container::FunctionContainer;
 
-#[wasm_bindgen(typescript_custom_section)]
-const ADD_PRINT_CALLBACK_TYPE: &'static str = r#"
-type PrintCallbackFn = (...objs:Object[]) => void;
-type AddPrintCallBackFn = (callback:PrintCallbackFn) => void;
-"#;
-
 static CALLBACKS: Lazy<Mutex<HashSet<FunctionContainer>>> =
     Lazy::new(|| Mutex::new(HashSet::new()));
 

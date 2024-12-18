@@ -14,9 +14,7 @@ js-sys = "0.3.74"
 web-sys = "0.3.74"
 wasm-bindgen = "0.2.97"
 ts-rs = "10.1.0"
-
-[profile.release]
-debug = 1
+parking_lot = { version = "0.12.3" }
 
 [dependencies]
 anyhow = "1.0.93"
@@ -30,6 +28,11 @@ wasm-bindgen = { workspace = true, optional = true }
 js-sys = { workspace = true, optional = true }
 once_cell = { workspace = true }
 foldhash = "0.1.3"
+parking_lot = { workspace = true, features = [
+    "serde",
+    "nightly",
+    "hardware-lock-elision",
+] }
 
 [features]
 default = ["bin"]
@@ -37,3 +40,7 @@ bin = ["dep:clap", "dep:colored"]
 serde = ["dep:serde"]
 ts-rs = ["dep:ts-rs", "serde"]
 wasm = ["dep:wasm-bindgen", "dep:js-sys", "ts-rs"]
+
+
+[profile.release]
+lto = true

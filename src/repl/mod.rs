@@ -84,7 +84,7 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
                 _t = Timer::new("EVAL:");
             }
             let result = program.eval(&root).context("program::eval");
-            globals = Some(program.get_env().active_slice()[0].read().unwrap().clone());
+            globals = Some(program.get_env().active_slice()[0].read().clone());
 
             result?
         };
