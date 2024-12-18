@@ -6,7 +6,7 @@ use crate::interpreter::{
 };
 
 pub const NATIVE_ENV: LazyCell<Env> = LazyCell::new(|| {
-    let mut globals: Env = Env::new();
+    let mut globals: Env = Env::default();
 
     add_generic_builtins(&mut globals);
     add_native_builtins(&mut globals);

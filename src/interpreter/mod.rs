@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    hash::Hash,
     sync::{Arc, Mutex, RwLock},
 };
 
@@ -19,11 +20,10 @@ pub mod objects;
 pub type Reference = Arc<Object>;
 pub type EnvReference = Arc<EnvReferenceInner>;
 pub type EnvReferenceInner = RwLock<Env>;
-pub type Env = HashMap<String, Reference>;
+pub type Env = HashMap<Arc<str>, Reference>;
 
 static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<String, Reference>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
-
 macro_rules! map_rust_error {
     ($message:expr) => {
         |value: Reference| -> Result<Reference> {
@@ -51,7 +51,7 @@ pub struct CallStack {
 impl CallStack {
     pub fn new(initial: EnvReference) -> Self {
         let mut stack =
-            std::array::from_fn(|_| EnvReference::new(EnvReferenceInner::new(Env::new())));
+            std::array::from_fn(|_| EnvReference::new(EnvReferenceInner::new(Env::default())));
         stack[0] = initial;
 
         Self { stack, sp: 0 }
@@ -98,7 +98,7 @@ impl Program {
 
     fn set_value(&mut self, name: String, value: Reference) {
         let mut env = unsafe { self.current_env_mut().write().unwrap_unchecked() };
-        env.insert(name, value);
+        env.insert(name.into(), value);
     }
 
     fn get_value(&mut self, name: &str) -> Reference {
@@ -275,9 +275,10 @@ impl Program {
                             return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()))));
                         }
 
-                        self.push_env(EnvReference::new(EnvReferenceInner::new(
-                            env.read().unwrap().clone(),
-                        )));
+                        self.push_env(EnvReference::new(EnvReferenceInner::new(unsafe {
+                            env.as_ref().get_cloned().unwrap_unchecked()
+                        })));
+
                         for (idx, arg) in parameters.iter().enumerate() {
                             self.set_value(arg.clone(), args[idx].clone());
                         }

@@ -1,3 +1,5 @@
+#![feature(lock_value_accessors)]
+
 pub mod ast;
 pub mod interpreter;
 pub mod lexer;

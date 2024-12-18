@@ -70,7 +70,7 @@ pub fn get_ast_gloo(code: String, callback: js_sys::Function) {
 }
 
 const WASM_ENV: LazyCell<Env> = LazyCell::new(|| {
-    let mut globals: Env = Env::new();
+    let mut globals: Env = Env::default();
 
     add_generic_builtins(&mut globals);
     add_wasm_builtins(&mut globals);
@@ -135,7 +135,7 @@ pub fn run(code: String) {
         panic!("ast::has_errors");
     }
 
-    let mut globals: Env = Env::new();
+    let mut globals: Env = Env::default();
     add_generic_builtins(&mut globals);
     add_wasm_builtins(&mut globals);
 

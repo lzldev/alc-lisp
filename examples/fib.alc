@@ -1,6 +1,9 @@
 (def fib fn [v v2 n] (do (if (== n 0) v (fib v2 (+ v v2) (- n 1)))))
 
-(fib 1 1 10)
+(fib 1 1 50)
+(fib 1 1 50)
+(fib 1 1 50)
+(fib 1 1 50)
 
 
 
