@@ -3,7 +3,7 @@ use crate::interpreter::{objects::Object, Env, Reference, NUMBER};
 
 use super::typecheck_args;
 
-/// add arithmetic builtins to the environment
+/// Add arithmetic builtins to the environment
 pub fn add_number_builtins(env: &mut Env) {
     env.insert(
         "+".into(),
@@ -26,7 +26,7 @@ pub fn add_number_builtins(env: &mut Env) {
     );
 }
 
-/// adds numbers
+/// Adds numbers
 pub fn add(args: Vec<Reference>) -> Reference {
     if let Some(err) = typecheck_args(
         "+",
@@ -50,7 +50,7 @@ pub fn add(args: Vec<Reference>) -> Reference {
     return Reference::new(Object::Integer(sum));
 }
 
-/// subtracts numbers
+/// Subtracts numbers
 pub fn subtract(args: Vec<Reference>) -> Reference {
     if let Some(err) = typecheck_args(
         "-",
@@ -76,7 +76,7 @@ pub fn subtract(args: Vec<Reference>) -> Reference {
     return Reference::new(Object::Integer(total));
 }
 
-/// multiplies numbers
+/// Multiplies numbers
 pub fn multiply(args: Vec<Reference>) -> Reference {
     if let Some(err) = typecheck_args(
         "*",
@@ -102,7 +102,7 @@ pub fn multiply(args: Vec<Reference>) -> Reference {
     return Reference::new(Object::Integer(total));
 }
 
-/// divides numbers
+/// Divides numbers
 pub fn divide(args: Vec<Reference>) -> Reference {
     if let Some(err) = typecheck_args(
         "/",

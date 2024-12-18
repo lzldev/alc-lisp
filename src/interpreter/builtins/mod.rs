@@ -35,125 +35,129 @@ pub fn add_generic_builtins(env: &mut Env) {
 
     env.insert(
         "len".into(),
-        Reference::new(Object::Builtin {
-            function: |args| {
-                if args.len() != 1 {
-                    return new_args_len_error("len", &args, 1);
-                }
-
-                match args[0].as_ref() {
-                    Object::String(s) => return Reference::new(Object::Integer(s.len() as isize)),
-                    Object::List(l) => return Reference::new(Object::Integer(l.len() as isize)),
-                    _ => {
-                        return new_type_error(
-                            "len",
-                            &format!("{} or {}", STRING.type_of(), LIST.type_of()),
-                        )
-                    }
-                }
-            },
-        }),
+        Reference::new(Object::Builtin { function: len }),
     );
 
     env.insert(
         "==".into(),
-        Reference::new(Object::Builtin {
-            function: |args| {
-                let len = args.len();
-                if len == 0 {
-                    return new_args_len_error("==", &args, 2);
-                }
-
-                if len == 1 {
-                    return TRUE.clone();
-                }
-
-                let mut first = &args[0];
-
-                for last in args.iter().skip(1) {
-                    let value = match (first.as_ref(), last.as_ref()) {
-                        (Object::Null, Object::Null) => true,
-                        (Object::Bool(l), Object::Bool(r)) => l == r,
-                        (Object::Integer(l), Object::Integer(r)) => l == r,
-                        (Object::String(l), Object::String(r)) => l == r,
-                        _ => false,
-                    };
-
-                    if !value {
-                        return bool_from_native(false);
-                    }
-
-                    first = last;
-                }
-
-                return bool_from_native(true);
-            },
-        }),
+        Reference::new(Object::Builtin { function: equals }),
     );
 
     env.insert(
         "<".into(),
         Reference::new(Object::Builtin {
-            function: |args| {
-                let len = args.len();
-                if len == 0 {
-                    return new_args_len_error("<", &args, 2);
-                }
-
-                if len == 1 {
-                    return TRUE.clone();
-                }
-
-                let mut first = &args[0];
-
-                for last in args.iter().skip(1) {
-                    let value = match (first.as_ref(), last.as_ref()) {
-                        (Object::Integer(l), Object::Integer(r)) => l < r,
-                        _ => false,
-                    };
-
-                    if !value {
-                        return bool_from_native(false);
-                    }
-
-                    first = last;
-                }
-
-                return bool_from_native(true);
-            },
+            function: lesser_than,
         }),
     );
 
     env.insert(
         ">".into(),
         Reference::new(Object::Builtin {
-            function: |args| {
-                let len = args.len();
-                if len == 0 {
-                    return new_args_len_error(">", &args, 2);
-                }
-
-                if len == 1 {
-                    return TRUE.clone();
-                }
-
-                let mut first = &args[0];
-
-                for last in args.iter().skip(1) {
-                    let value = match (first.as_ref(), last.as_ref()) {
-                        (Object::Integer(l), Object::Integer(r)) => l > r,
-                        _ => false,
-                    };
-
-                    if !value {
-                        return bool_from_native(false);
-                    }
-
-                    first = last;
-                }
-
-                return bool_from_native(true);
-            },
+            function: greather_than,
         }),
     );
+}
+
+pub fn len(args: Vec<Reference>) -> Reference {
+    if args.len() != 1 {
+        return new_args_len_error("len", &args, 1);
+    }
+
+    match args[0].as_ref() {
+        Object::String(s) => return Reference::new(Object::Integer(s.len() as isize)),
+        Object::List(l) => return Reference::new(Object::Integer(l.len() as isize)),
+        _ => {
+            return new_type_error(
+                "len",
+                &format!("{} or {}", STRING.type_of(), LIST.type_of()),
+            )
+        }
+    }
+}
+
+pub fn equals(args: Vec<Reference>) -> Reference {
+    let len = args.len();
+    if len == 0 {
+        return new_args_len_error("==", &args, 2);
+    }
+
+    if len == 1 {
+        return TRUE.clone();
+    }
+
+    let mut first = &args[0];
+
+    for last in args.iter().skip(1) {
+        let value = match (first.as_ref(), last.as_ref()) {
+            (Object::Null, Object::Null) => true,
+            (Object::Bool(l), Object::Bool(r)) => l == r,
+            (Object::Integer(l), Object::Integer(r)) => l == r,
+            (Object::String(l), Object::String(r)) => l == r,
+            _ => false,
+        };
+
+        if !value {
+            return bool_from_native(false);
+        }
+
+        first = last;
+    }
+
+    return bool_from_native(true);
+}
+
+pub fn lesser_than(args: Vec<Reference>) -> Reference {
+    let len = args.len();
+    if len == 0 {
+        return new_args_len_error("<", &args, 2);
+    }
+
+    if len == 1 {
+        return TRUE.clone();
+    }
+
+    let mut first = &args[0];
+
+    for last in args.iter().skip(1) {
+        let value = match (first.as_ref(), last.as_ref()) {
+            (Object::Integer(l), Object::Integer(r)) => l < r,
+            _ => false,
+        };
+
+        if !value {
+            return bool_from_native(false);
+        }
+
+        first = last;
+    }
+
+    return bool_from_native(true);
+}
+
+pub fn greather_than(args: Vec<Reference>) -> Reference {
+    let len = args.len();
+    if len == 0 {
+        return new_args_len_error(">", &args, 2);
+    }
+
+    if len == 1 {
+        return TRUE.clone();
+    }
+
+    let mut first = &args[0];
+
+    for last in args.iter().skip(1) {
+        let value = match (first.as_ref(), last.as_ref()) {
+            (Object::Integer(l), Object::Integer(r)) => l > r,
+            _ => false,
+        };
+
+        if !value {
+            return bool_from_native(false);
+        }
+
+        first = last;
+    }
+
+    return bool_from_native(true);
 }
