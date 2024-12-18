@@ -1,3 +1,4 @@
+use core::slice;
 use std::{borrow::BorrowMut, cell::RefCell, collections::HashMap, rc::Rc};
 
 use anyhow::{anyhow, Context, Result};
@@ -11,7 +12,7 @@ pub use constants::*;
 pub mod builtins;
 pub mod objects;
 
-pub type CallStack = Vec<RefCell<Env>>;
+// pub type CallStack = Vec<RefCell<Env>>;
 pub type Reference = Rc<Object>;
 pub type EnvReference = RefCell<Env>;
 pub type Env = HashMap<String, Reference>;
@@ -32,26 +33,63 @@ pub struct Program {
     env: CallStack,
 }
 
+const STACK_SIZE: usize = 1024;
+
+#[derive(Debug, Clone)]
+pub struct CallStack {
+    stack: [RefCell<Env>; STACK_SIZE],
+    sp: usize,
+}
+
+impl CallStack {
+    pub fn new(initial: EnvReference) -> Self {
+        let mut stack = std::array::from_fn(|_| RefCell::new(Env::new()));
+        stack[0] = initial;
+
+        Self { stack, sp: 0 }
+    }
+
+    pub fn push_env(&mut self, env: EnvReference) {
+        self.sp += 1;
+        self.stack[self.sp] = env;
+    }
+    pub fn pop_env(&mut self) {
+        self.sp -= 1;
+    }
+    pub fn current_env(&self) -> &EnvReference {
+        unsafe { self.stack.get_unchecked(self.sp) }
+    }
+    pub fn current_env_mut(&mut self) -> &mut EnvReference {
+        unsafe { self.stack.get_unchecked_mut(self.sp) }
+    }
+
+    pub fn active_slice(&self) -> &[EnvReference] {
+        return &self.stack[0..=self.sp];
+    }
+    pub fn active_slice_mut(&mut self) -> &mut [EnvReference] {
+        return &mut self.stack[0..=self.sp];
+    }
+}
+
 impl Program {
     pub fn get_env(&self) -> CallStack {
         self.env.clone()
     }
-
     fn push_env(&mut self, env: EnvReference) {
-        self.env.push(env);
+        self.env.push_env(env);
     }
     fn pop_env(&mut self) {
-        self.env.pop();
+        self.env.pop_env();
     }
     fn current_env(&self) -> &EnvReference {
-        unsafe { self.env.last().unwrap_unchecked() }
+        self.env.current_env()
     }
     fn current_env_mut(&mut self) -> &mut EnvReference {
-        unsafe { self.env.last_mut().unwrap_unchecked() }
+        self.env.current_env_mut()
     }
 
     fn get_value(&mut self, name: &str) -> Reference {
-        for env in self.env.iter_mut().rev() {
+        for env in self.env.active_slice().iter().rev() {
             let map = env.borrow();
             if let Some(value) = map.get(name) {
                 return value.clone();
@@ -62,10 +100,9 @@ impl Program {
     }
 
     pub fn new(global_env: Env) -> Self {
-        let mut env = Vec::with_capacity(1024);
-
-        env.push(RefCell::new(global_env));
-        return Self { env };
+        return Self {
+            env: CallStack::new(RefCell::new(global_env)),
+        };
     }
 
     pub fn eval(&mut self, root: &Node) -> anyhow::Result<Reference> {
