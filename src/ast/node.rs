@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::anyhow;
 
 use crate::lexer::{Token, TokenPosition};
@@ -14,8 +16,8 @@ use super::ASTPosition;
 pub enum Node {
     Word(Token),
     Invalid(Token),
-    Expression(Vec<Node>), //TODO: Those lists should have a Token for the starting and ending
-    List(Vec<Node>),
+    Expression(Arc<[Node]>), //TODO: Those lists should have a Token for the starting and ending
+    List(Arc<[Node]>),
     StringLiteral(Token),
     NumberLiteral(Token),
     BooleanLiteral(Token),

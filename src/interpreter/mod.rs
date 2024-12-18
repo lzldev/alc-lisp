@@ -281,7 +281,7 @@ impl Program {
                         )));
 
                         for (idx, arg) in parameters.iter().enumerate() {
-                            self.set_value(arg.clone(), args[idx].clone());
+                            self.set_value(arg.to_string(), args[idx].clone());
                         }
                         let ret = self.eval(body)?;
                         self.pop_env();
@@ -298,7 +298,7 @@ impl Program {
                         self.parse_expression(item)
                             .and_then(map_rust_error!("list element"))
                     })
-                    .collect::<Result<Vec<_>>>()?;
+                    .collect::<Result<Arc<[_]>>>()?;
 
                 Ok(Reference::new(Object::List(items)))
             }
@@ -314,9 +314,9 @@ impl Program {
                             return Err(anyhow!("argument is not a word"));
                         };
 
-                        Ok(token.value.clone())
+                        Ok(token.value.clone().into())
                     })
-                    .collect::<Result<Vec<_>>>()?;
+                    .collect::<Result<Arc<[_]>>>()?;
 
                 let env = EnvReference::new(EnvReferenceInner::new(Env::with_capacity(16)));
 

@@ -1,4 +1,6 @@
 //! Builtin functions for string operations
+use std::sync::Arc;
+
 use crate::interpreter::{objects::Object, Env, Reference, STRING};
 
 use super::{errors::new_args_len_error, typecheck_args};
@@ -63,7 +65,7 @@ fn lines(args: Vec<Reference>) -> Reference {
     let lines = inner
         .split("\n")
         .map(|v| Reference::new(Object::String(v.to_owned())))
-        .collect::<Vec<_>>();
+        .collect::<Arc<_>>();
 
     Reference::new(Object::List(lines))
 }

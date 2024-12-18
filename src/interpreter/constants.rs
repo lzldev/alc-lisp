@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
 use super::{objects::Object, Reference};
 
@@ -8,4 +8,4 @@ pub static FALSE: LazyLock<Reference> = LazyLock::new(|| Reference::new(Object::
 pub static NUMBER: LazyLock<Reference> = LazyLock::new(|| Reference::new(Object::Integer(0)));
 pub static STRING: LazyLock<Reference> =
     LazyLock::new(|| Reference::new(Object::String(String::new())));
-pub static LIST: LazyLock<Reference> = LazyLock::new(|| Reference::new(Object::List(vec![])));
+pub static LIST: LazyLock<Reference> = LazyLock::new(|| Reference::new(Object::List(Arc::new([]))));

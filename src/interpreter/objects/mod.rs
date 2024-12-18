@@ -1,4 +1,7 @@
-use std::{fmt::Display, sync::LazyLock};
+use std::{
+    fmt::Display,
+    sync::{Arc, LazyLock},
+};
 
 use crate::ast::Node;
 
@@ -19,7 +22,7 @@ pub enum Object {
     Integer(isize),
     String(String),
     Bool(bool),
-    List(Vec<Reference>),
+    List(Arc<[Reference]>),
     Builtin {
         #[cfg_attr(feature = "serde", serde(default = "get_default_builtin", skip))]
         function: BuiltinFunction,
@@ -27,7 +30,7 @@ pub enum Object {
     Function {
         #[cfg_attr(feature = "ts-rs", ts(skip))]
         env: EnvReference,
-        parameters: Vec<String>,
+        parameters: Arc<[Arc<str>]>,
         body: Node,
     },
     Error(String),

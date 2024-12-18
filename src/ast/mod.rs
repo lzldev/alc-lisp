@@ -74,7 +74,7 @@ impl AST {
             ));
         }
 
-        Ok(Node::Expression(nodes))
+        Ok(Node::Expression(nodes.into()))
     }
 
     fn parse_expression(&mut self) -> anyhow::Result<Node> {
@@ -116,7 +116,7 @@ impl AST {
                     ));
                 }
 
-                Node::Expression(nodes)
+                Node::Expression(nodes.into())
             }
             lexer::TokenType::RParen => {
                 return Err(anyhow!(
@@ -156,7 +156,7 @@ impl AST {
                     ));
                 }
 
-                Node::List(nodes)
+                Node::List(nodes.into())
             }
             lexer::TokenType::RSquare => {
                 return Err(anyhow!(
@@ -204,12 +204,12 @@ impl AST {
         let mut body = self.parse_expression().context("invalid function body:")?;
 
         if !matches!(body, Node::Expression(_)) {
-            body = Node::Expression(vec![body])
+            body = Node::Expression([body].into())
         }
 
         Ok(Node::FunctionLiteral {
             token: fn_word,
-            arguments: words,
+            arguments: words.to_vec(),
             body: Box::new(body),
         })
     }

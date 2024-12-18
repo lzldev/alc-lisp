@@ -27,7 +27,7 @@ impl From<Object> for wasm_bindgen::JsValue {
                 let array = js_sys::Array::new_with_length(vec.len() as u32);
 
                 vec.into_iter().enumerate().for_each(|(idx, arg)| {
-                    array.set(idx as u32, JsValue::from((*arg).clone()));
+                    array.set(idx as u32, JsValue::from((arg).as_ref().clone()));
                 });
 
                 array.into()

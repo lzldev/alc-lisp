@@ -127,5 +127,5 @@ pub fn sort(args: Vec<Reference>) -> Reference {
     let mut vec = l.to_vec();
     vec.sort();
 
-    Reference::new(Object::List(vec))
+    Reference::new(Object::List(vec.into()))
 }
