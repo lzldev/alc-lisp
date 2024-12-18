@@ -14,7 +14,11 @@ js-sys = "0.3.76"
 web-sys = "0.3.76"
 wasm-bindgen = "0.2.99"
 ts-rs = "10.1.0"
-parking_lot = { version = "0.12.3" }
+parking_lot = { version = "0.12.3", features = [
+    "serde",
+    "nightly",
+    "hardware-lock-elision",
+] }
 
 [dependencies]
 anyhow = "1.0.94"
@@ -28,11 +32,12 @@ wasm-bindgen = { workspace = true, optional = true }
 js-sys = { workspace = true, optional = true }
 once_cell = { workspace = true }
 foldhash = "0.1.3"
-parking_lot = { workspace = true, features = [
-    "serde",
-    "nightly",
-    "hardware-lock-elision",
-] }
+parking_lot = { workspace = true }
+mimalloc = { version = "0.1.43", features = [
+    "extended",
+    "override",
+    "local_dynamic_tls",
+], optional = true }
 
 [features]
 default = ["bin"]
@@ -40,11 +45,21 @@ bin = ["dep:clap", "dep:colored"]
 serde = ["dep:serde"]
 ts-rs = ["dep:ts-rs", "serde"]
 wasm = ["dep:wasm-bindgen", "dep:js-sys", "ts-rs"]
+mimalloc = ["dep:mimalloc"]
 
 
 [profile.fast]
 inherits = "release"
 codegen-units = 1
 lto = "fat"
-opt-level = 3
+opt-level = 2
 panic = "abort"
+overflow-checks = false
+strip = "debuginfo"
+
+[profile.fast.build-override]
+inherits = "release"
+codegen-units = 1
+opt-level = 2
+overflow-checks = false
+strip = "debuginfo"
