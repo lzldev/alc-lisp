@@ -39,6 +39,11 @@ pub fn add_list_builtins(env: &mut Env) {
         "map".into(),
         Reference::new(Object::Builtin { function: MAP }),
     );
+
+    env.insert(
+        "flat".into(),
+        Reference::new(Object::Builtin { function: FLAT }),
+    );
 }
 
 /// Maps a function over a list and returns it's results as a new list
@@ -203,3 +208,33 @@ pub fn sort(_: &mut Program, args: Vec<Reference>) -> Reference {
 
     Reference::new(Object::List(vec.into()))
 }
+
+/// Flattens a list
+pub const FLAT: BuiltinFunction = |program, args| {
+    let len = args.len();
+    if len != 1 {
+        return new_args_len_error("flat", &args, 1);
+    }
+
+    let Object::List(l) = args[0].as_ref() else {
+        return new_type_error_with_pos("flat", LIST.type_of(), 0);
+    };
+
+    let mut output = Vec::<Reference>::with_capacity(l.len());
+
+    l.iter().for_each(|item| match item.as_ref() {
+        Object::List(_) => {
+            let result = FLAT(program, vec![item.clone()]);
+
+            match result.as_ref() {
+                Object::List(list) => output.extend_from_slice(list),
+                _ => output.push(result),
+            }
+        }
+        _ => {
+            output.push(item.clone());
+        }
+    });
+
+    Reference::new(Object::List(output.into()))
+};

@@ -160,6 +160,3 @@ impl Ord for Object {
         }
     }
 }
-
-unsafe impl Send for Object {}
-unsafe impl Sync for Object {}
