@@ -108,6 +108,25 @@ impl Program {
         env.insert(name, value);
     }
 
+    pub fn run_function(
+        &mut self,
+        closure: &EnvReference,
+        body: &Node,
+        parameters: &Arc<[Arc<str>]>,
+        args: &[Reference],
+    ) -> anyhow::Result<Reference> {
+        let mut env = closure.read().clone();
+
+        env.extend(parameters.iter().cloned().zip(args.iter().cloned()));
+
+        self.env
+            .push_env(EnvReference::new(EnvReferenceInner::new(env)));
+        let result = self.eval(body);
+        self.env.pop_env();
+
+        result
+    }
+
     fn get_value(&mut self, name: &str) -> Reference {
         for env in self.env.active_slice().iter().rev() {
             if let Some(value) = env.read().get(name) {
@@ -284,19 +303,11 @@ impl Program {
                             return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()).into())));
                         }
 
-                        self.push_env(EnvReference::new(EnvReferenceInner::new(
-                            env.read().clone(),
-                        )));
-
-                        for (idx, arg) in parameters.iter().enumerate() {
-                            self.set_value(arg.clone(), args[idx].clone());
-                        }
-                        let ret = self.eval(body)?;
-                        self.pop_env();
-
-                        Ok(ret)
+                        self.run_function(env, body, parameters, &args)
                     }
-                    obj => Err(anyhow!("Cannot call value of type {}", obj.type_of())),
+                    obj => Ok(Reference::new(Object::Error(
+                        format!("Cannot call value of type {}", obj.type_of()).into(),
+                    ))),
                 }
             }
             Node::List(vec) => {

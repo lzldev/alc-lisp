@@ -1,5 +1,5 @@
 build-release:
-	cargo build --profile=fast --features=mimalloc
+	cargo build --profile=release --features=mimalloc
 
 build-fast:
 	cargo build --profile=fast --features=mimalloc
