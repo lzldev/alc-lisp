@@ -1,0 +1,5 @@
+(def input [[1 1] [2 2] [3 3 [4 4]]])
+(def output (flat input))
+
+(print "input: " input)
+(print "output: " output)

@@ -7,7 +7,10 @@ use crate::interpreter::{
     Env, EnvReference, EnvReferenceInner, Program, Reference, FUNCTION, LIST, NULL, NUMBER,
 };
 
-use super::errors::{new_args_len_error, new_type_error_with_pos};
+use super::{
+    errors::{new_args_len_error, new_type_error_with_pos},
+    typecheck_args,
+};
 
 pub fn add_list_builtins(env: &mut Env) {
     env.insert(
@@ -43,6 +46,16 @@ pub fn add_list_builtins(env: &mut Env) {
     env.insert(
         "flat".into(),
         Reference::new(Object::Builtin { function: FLAT }),
+    );
+
+    env.insert(
+        "concat".into(),
+        Reference::new(Object::Builtin { function: CONCAT }),
+    );
+
+    env.insert(
+        "reduce".into(),
+        Reference::new(Object::Builtin { function: REDUCE }),
     );
 }
 
@@ -237,4 +250,96 @@ pub const FLAT: BuiltinFunction = |program, args| {
     });
 
     Reference::new(Object::List(output.into()))
+};
+
+// Concatenate lists
+pub const CONCAT: BuiltinFunction = |_, args| {
+    let len = args.len();
+    if len < 2 {
+        return new_args_len_error("concat", &args, 2);
+    }
+
+    if let Some(err) = typecheck_args(
+        "concat",
+        LIST.type_of(),
+        |obj| !matches!(obj.as_ref(), Object::List(_)),
+        &args,
+    ) {
+        return err;
+    }
+
+    let l = args
+        .iter()
+        .flat_map(|item| {
+            let Object::List(list) = item.as_ref() else {
+                panic!("This should never happen");
+            };
+            list.iter()
+        })
+        .cloned()
+        .collect::<Arc<[Reference]>>();
+
+    Reference::new(Object::List(l))
+};
+
+pub const REDUCE: BuiltinFunction = |program, args| {
+    let len = args.len();
+    if len != 2 {
+        return new_args_len_error("map", &args, 2);
+    }
+
+    let Object::List(l) = args[0].as_ref() else {
+        return new_type_error_with_pos("map", LIST.type_of(), 0);
+    };
+
+    match args[1].as_ref() {
+        Object::Function {
+            parameters,
+            body,
+            env,
+            ..
+        } => {
+            let base_env = env.read().clone();
+
+            let result = l
+                .iter()
+                .map(|item| {
+                    let mut env = base_env.clone();
+
+                    if let Some(param) = parameters.first() {
+                        env.insert(param.clone(), item.clone());
+                    }
+
+                    program.push_env(EnvReference::new(EnvReferenceInner::new(env)));
+
+                    let result = program
+                        .parse_expression(body)
+                        .and_then(map_rust_error!("map error"));
+
+                    program.pop_env();
+
+                    result
+                })
+                .collect::<anyhow::Result<Arc<_>>>();
+
+            match result {
+                Ok(result) => Reference::new(Object::List(result)),
+                Err(err) => Reference::new(Object::Error(err.to_string().into())),
+            }
+        }
+        Object::Builtin { function } => {
+            let result = l
+                .iter()
+                .map(|item| {
+                    Ok(function(program, vec![item.clone()])).and_then(map_rust_error!("map error"))
+                })
+                .collect::<anyhow::Result<Arc<_>>>();
+
+            match result {
+                Ok(result) => Reference::new(Object::List(result)),
+                Err(err) => Reference::new(Object::Error(err.to_string().into())),
+            }
+        }
+        _ => new_type_error_with_pos("map", FUNCTION.type_of(), 1),
+    }
 };
