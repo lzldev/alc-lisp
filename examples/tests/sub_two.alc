@@ -1,0 +1,4 @@
+; Subtract two numbers
+(def expected 0)
+(def message "the result should be 0")
+(def output (- 2 2))

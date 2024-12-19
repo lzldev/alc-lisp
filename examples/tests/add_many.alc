@@ -1,0 +1,4 @@
+; Add many numbers
+(def expected 12)
+(def message "the result should be 12")
+(def output (+ 2 2 2 2 2 2))

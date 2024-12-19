@@ -1,0 +1,4 @@
+; Add two numbers
+(def expected 4)
+(def message "the result should be 4")
+(def output (+ 2 2))

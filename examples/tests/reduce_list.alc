@@ -1,0 +1,11 @@
+; Reduce list of numbers
+
+(def input [[1 1] [2 2] [3 3] [4 4]])
+(def expected [[1 2 3 4] [1 2 3 4]])
+(def message "the lists should be equal")
+
+(def output
+  (reduce input
+          fn [acc v] ([(concat (nth 0 acc) [(nth 0 v)])
+                       (concat (nth 1 acc) [(nth 1 v)])])
+          [[] []]))
