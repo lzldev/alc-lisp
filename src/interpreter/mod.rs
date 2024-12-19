@@ -274,20 +274,7 @@ impl Program {
                                 )));
                             }
 
-                            let exp = &vec[1];
-
-                            return match &vec[1] {
-                                Node::Expression(exps) => {
-                                    if exps.len() != 1 {
-                                        // FIXME: Wrap the function body since its using Program::eval instead of Program::parse_expression.
-                                        // Is this needed?
-                                        return self.eval(&Node::Expression([exp.clone()].into()));
-                                    }
-
-                                    self.eval(exp)
-                                }
-                                _ => self.eval(exp),
-                            };
+                            return self.eval(&vec[1]);
                         }
                         _ => {}
                     }

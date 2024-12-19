@@ -41,12 +41,12 @@ pub fn add_generic_builtins(env: &mut Env) {
 
     env.insert(
         "len".into(),
-        Reference::new(Object::Builtin { function: len }),
+        Reference::new(Object::Builtin { function: LEN }),
     );
 
     env.insert(
         "==".into(),
-        Reference::new(Object::Builtin { function: equals }),
+        Reference::new(Object::Builtin { function: EQUALS }),
     );
 
     env.insert(
@@ -59,20 +59,20 @@ pub fn add_generic_builtins(env: &mut Env) {
     env.insert(
         "<".into(),
         Reference::new(Object::Builtin {
-            function: lesser_than,
+            function: LESSER_THAN,
         }),
     );
 
     env.insert(
         ">".into(),
         Reference::new(Object::Builtin {
-            function: greather_than,
+            function: GREATHER_THAN,
         }),
     );
 }
 
 /// Returns the length of a list or string
-pub fn len(_: &mut Program, args: Vec<Reference>) -> Reference {
+const LEN: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -> Reference {
     if args.len() != 1 {
         return new_args_len_error("len", &args, 1);
     }
@@ -85,7 +85,7 @@ pub fn len(_: &mut Program, args: Vec<Reference>) -> Reference {
             &format!("{} or {}", STRING.type_of(), LIST.type_of()),
         ),
     }
-}
+};
 
 const NOT_EQUALS: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -> Reference {
     let len = args.len();
@@ -113,7 +113,7 @@ const NOT_EQUALS: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -> R
 };
 
 /// Equal comparison between values
-pub fn equals(_: &mut Program, args: Vec<Reference>) -> Reference {
+const EQUALS: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -> Reference {
     let len = args.len();
     if len == 0 {
         return new_args_len_error("==", &args, 2);
@@ -136,10 +136,10 @@ pub fn equals(_: &mut Program, args: Vec<Reference>) -> Reference {
     }
 
     bool_from_native(true)
-}
+};
 
 /// Lesser than comparison between values
-pub fn lesser_than(_: &mut Program, args: Vec<Reference>) -> Reference {
+const LESSER_THAN: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -> Reference {
     let len = args.len();
     if len == 0 {
         return new_args_len_error("<", &args, 2);
@@ -165,10 +165,10 @@ pub fn lesser_than(_: &mut Program, args: Vec<Reference>) -> Reference {
     }
 
     bool_from_native(true)
-}
+};
 
 /// Greater than comparison between values
-pub fn greather_than(_: &mut Program, args: Vec<Reference>) -> Reference {
+const GREATHER_THAN: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -> Reference {
     let len = args.len();
     if len == 0 {
         return new_args_len_error(">", &args, 2);
@@ -194,4 +194,4 @@ pub fn greather_than(_: &mut Program, args: Vec<Reference>) -> Reference {
     }
 
     bool_from_native(true)
-}
+};
