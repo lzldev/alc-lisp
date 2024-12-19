@@ -115,6 +115,7 @@ impl Program {
         parameters: &Arc<[Arc<str>]>,
         args: &[Reference],
     ) -> anyhow::Result<Reference> {
+        //TODO: When calling a function multiple times with the same parameters, the environment should be cloned only once
         let mut env = closure.read().clone();
 
         env.extend(parameters.iter().cloned().zip(args.iter().cloned()));
@@ -302,6 +303,17 @@ impl Program {
                         if args.len() != parameters.len() {
                             return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()).into())));
                         }
+
+                        let body = match body {
+                            Node::Expression(expressions) => {
+                                if expressions.len() == 1 {
+                                    &expressions[0]
+                                } else {
+                                    body
+                                }
+                            }
+                            _ => body,
+                        };
 
                         self.run_function(env, body, parameters, &args)
                     }
