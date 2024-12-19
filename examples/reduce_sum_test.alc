@@ -1,0 +1,11 @@
+(def input [1 2 3])
+
+(def output
+  (reduce input
+          fn [acc v] ((+ acc v))
+          0))
+
+(print "input: " input)
+(print "output: " output)
+
+output

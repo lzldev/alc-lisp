@@ -2,9 +2,9 @@
 use std::sync::Arc;
 
 use crate::interpreter::{
-    map_rust_error,
+    is_error, map_rust_error,
     objects::{BuiltinFunction, Object},
-    Env, EnvReference, EnvReferenceInner, Program, Reference, FUNCTION, LIST, NULL, NUMBER,
+    Env, Program, Reference, FUNCTION, LIST, NULL, NUMBER,
 };
 
 use super::{
@@ -77,27 +77,9 @@ pub const MAP: BuiltinFunction = |program, args| {
             env,
             ..
         } => {
-            let base_env = env.read().clone();
-
             let result = l
                 .iter()
-                .map(|item| {
-                    let mut env = base_env.clone();
-
-                    if let Some(param) = parameters.first() {
-                        env.insert(param.clone(), item.clone());
-                    }
-
-                    program.push_env(EnvReference::new(EnvReferenceInner::new(env)));
-
-                    let result = program
-                        .parse_expression(body)
-                        .and_then(map_rust_error!("map error"));
-
-                    program.pop_env();
-
-                    result
-                })
+                .map(|item| program.run_function(env, body, parameters, &[item.clone()]))
                 .collect::<anyhow::Result<Arc<_>>>();
 
             match result {
@@ -282,9 +264,12 @@ pub const CONCAT: BuiltinFunction = |_, args| {
     Reference::new(Object::List(l))
 };
 
+///Reduces a list
+///
+///Third argument is optional: initial value for the accumulator
 pub const REDUCE: BuiltinFunction = |program, args| {
     let len = args.len();
-    if len != 2 {
+    if len != 2 && len != 3 {
         return new_args_len_error("map", &args, 2);
     }
 
@@ -299,46 +284,27 @@ pub const REDUCE: BuiltinFunction = |program, args| {
             env,
             ..
         } => {
-            let base_env = env.read().clone();
+            let mut acc = args.get(2).cloned().unwrap_or_else(|| NULL.clone());
 
-            let result = l
-                .iter()
-                .map(|item| {
-                    let mut env = base_env.clone();
+            for item in l.iter() {
+                let result =
+                    program.run_function(env, body, parameters, &[acc.clone(), item.clone()]);
 
-                    if let Some(param) = parameters.first() {
-                        env.insert(param.clone(), item.clone());
+                match result {
+                    Ok(v) => {
+                        if is_error(&v) {
+                            return v;
+                        }
+
+                        acc = v
                     }
-
-                    program.push_env(EnvReference::new(EnvReferenceInner::new(env)));
-
-                    let result = program
-                        .parse_expression(body)
-                        .and_then(map_rust_error!("map error"));
-
-                    program.pop_env();
-
-                    result
-                })
-                .collect::<anyhow::Result<Arc<_>>>();
-
-            match result {
-                Ok(result) => Reference::new(Object::List(result)),
-                Err(err) => Reference::new(Object::Error(err.to_string().into())),
+                    Err(err) => {
+                        return Reference::new(Object::Error(err.to_string().into()));
+                    }
+                }
             }
-        }
-        Object::Builtin { function } => {
-            let result = l
-                .iter()
-                .map(|item| {
-                    Ok(function(program, vec![item.clone()])).and_then(map_rust_error!("map error"))
-                })
-                .collect::<anyhow::Result<Arc<_>>>();
 
-            match result {
-                Ok(result) => Reference::new(Object::List(result)),
-                Err(err) => Reference::new(Object::Error(err.to_string().into())),
-            }
+            acc
         }
         _ => new_type_error_with_pos("map", FUNCTION.type_of(), 1),
     }

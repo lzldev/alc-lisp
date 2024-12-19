@@ -3,3 +3,5 @@
 
 (print "input: " input)
 (print "output: " output)
+
+output

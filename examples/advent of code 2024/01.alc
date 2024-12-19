@@ -1,0 +1,10 @@
+(open "./examples/advent of code 2024/input/01.txt")
+
+(def input
+  (flat
+   (map
+    (lines (read_file))
+    fn [v] ((def values (split v "   "))
+            (map values parse_int)))))
+
+(print "input: " input)
