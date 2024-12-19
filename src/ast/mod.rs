@@ -17,6 +17,9 @@ pub type ASTPosition = Vec<usize>;
 
 impl AST {
     pub fn with_tokens(mut tokens: Vec<Token>) -> Self {
+        if tokens.is_empty() {
+            panic!("ast::with_tokens: no tokens to parse");
+        }
         tokens.reverse(); //TODO:Fix this ?
 
         AST {
@@ -203,8 +206,15 @@ impl AST {
 
         let mut body = self.parse_expression().context("invalid function body:")?;
 
-        if !matches!(body, Node::Expression(_)) {
-            body = Node::Expression([body].into())
+        match body {
+            Node::Expression(ref exps) => {
+                if exps.len() != 1 {
+                    // FIXME: Wrap the function body since its using Program::eval instead of Program::parse_expression.
+                    // Is this needed?
+                    body = Node::Expression([body].into())
+                }
+            }
+            _ => body = Node::Expression([body].into()),
         }
 
         Ok(Node::FunctionLiteral {

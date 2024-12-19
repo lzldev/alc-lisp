@@ -12,7 +12,11 @@ use list::add_list_builtins;
 use number::add_number_builtins;
 use string::add_string_builtins;
 
-use super::{bool_from_native, objects::Object, Env, Program, Reference, LIST, STRING, TRUE};
+use super::{
+    bool_from_native,
+    objects::{BuiltinFunction, Object},
+    Env, Program, Reference, LIST, STRING, TRUE,
+};
 
 fn typecheck_args<F>(
     name: &str,
@@ -46,6 +50,13 @@ pub fn add_generic_builtins(env: &mut Env) {
     );
 
     env.insert(
+        "!=".into(),
+        Reference::new(Object::Builtin {
+            function: NOT_EQUALS,
+        }),
+    );
+
+    env.insert(
         "<".into(),
         Reference::new(Object::Builtin {
             function: lesser_than,
@@ -75,6 +86,31 @@ pub fn len(_: &mut Program, args: Vec<Reference>) -> Reference {
         ),
     }
 }
+
+const NOT_EQUALS: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -> Reference {
+    let len = args.len();
+    if len == 0 {
+        return new_args_len_error("==", &args, 2);
+    }
+
+    if len == 1 {
+        return TRUE.clone();
+    }
+
+    let mut first = &args[0];
+
+    for last in args.iter().skip(1) {
+        let value = first.as_ref() == last.as_ref();
+
+        if !value {
+            return bool_from_native(true);
+        }
+
+        first = last;
+    }
+
+    bool_from_native(false)
+};
 
 /// Equal comparison between values
 pub fn equals(_: &mut Program, args: Vec<Reference>) -> Reference {

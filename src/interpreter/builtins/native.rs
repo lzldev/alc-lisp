@@ -4,14 +4,22 @@ use std::{
     env::current_dir,
     fs::File,
     io::{Read, Seek},
+    thread,
+    time::Duration,
 };
 
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 
-use crate::interpreter::{objects::Object, Env, Program, Reference, NULL, STRING};
+use crate::interpreter::{
+    objects::{BuiltinFunction, Object},
+    Env, Program, Reference, NULL, NUMBER, STRING,
+};
 
-use super::{errors::new_args_len_error, typecheck_args};
+use super::{
+    errors::{new_args_len_error, new_type_error_with_pos},
+    typecheck_args,
+};
 
 /// Adds the native builtins to a environment
 pub fn add_native_builtins(env: &mut Env) {
@@ -56,9 +64,23 @@ pub fn add_native_builtins(env: &mut Env) {
         "file".into(),
         Reference::new(Object::Builtin { function: file }),
     );
+
+    env.insert(
+        "sleep".into(),
+        Reference::new(Object::Builtin { function: SLEEP }),
+    );
 }
 
 type FileRef = Option<File>;
+
+pub const SLEEP: BuiltinFunction = |_, args| {
+    let Object::Integer(millis) = args[0].as_ref() else {
+        return new_type_error_with_pos("sleep", NUMBER.type_of(), 0);
+    };
+
+    thread::sleep(Duration::from_millis(*millis as u64));
+    NULL.clone()
+};
 
 static OPEN_FILE: Lazy<Mutex<FileRef>> = Lazy::new(|| Mutex::new(None));
 

@@ -87,17 +87,17 @@ impl Program {
         self.env.clone()
     }
 
-    fn push_env(&mut self, env: EnvReference) {
-        self.env.push_env(env);
-    }
-    fn pop_env(&mut self) {
-        self.env.pop_env();
-    }
+    // fn push_env(&mut self, env: EnvReference) {
+    //     self.env.push_env(env);
+    // }
 
-    #[allow(dead_code)]
-    fn current_env(&self) -> &EnvReference {
-        self.env.current_env()
-    }
+    // fn pop_env(&mut self) {
+    //     self.env.pop_env();
+    // }
+
+    // fn current_env(&self) -> &EnvReference {
+    //     self.env.current_env()
+    // }
 
     fn current_env_mut(&mut self) -> &mut EnvReference {
         self.env.current_env_mut()
@@ -212,7 +212,7 @@ impl Program {
                 if let Node::Word(word) = &vec[0] {
                     match word.value.as_ref() {
                         "define" | "def" => {
-                            if len == 1 || len != 3 {
+                            if len != 3 {
                                 return Ok(Reference::new(Object::Error(
                                     format!(
                                         "Invalid amount of arguments to define got:{} expected: 3",
@@ -274,7 +274,20 @@ impl Program {
                                 )));
                             }
 
-                            return self.eval(&vec[1]);
+                            let exp = &vec[1];
+
+                            return match &vec[1] {
+                                Node::Expression(exps) => {
+                                    if exps.len() != 1 {
+                                        // FIXME: Wrap the function body since its using Program::eval instead of Program::parse_expression.
+                                        // Is this needed?
+                                        return self.eval(&Node::Expression([exp.clone()].into()));
+                                    }
+
+                                    self.eval(exp)
+                                }
+                                _ => self.eval(exp),
+                            };
                         }
                         _ => {}
                     }
@@ -304,19 +317,9 @@ impl Program {
                             return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()).into())));
                         }
 
-                        let body = match body {
-                            Node::Expression(expressions) => {
-                                if expressions.len() == 1 {
-                                    &expressions[0]
-                                } else {
-                                    body
-                                }
-                            }
-                            _ => body,
-                        };
-
                         self.run_function(env, body, parameters, &args)
                     }
+                    Object::Null => Ok(first),
                     obj => Ok(Reference::new(Object::Error(
                         format!("Cannot call value of type {}", obj.type_of()).into(),
                     ))),

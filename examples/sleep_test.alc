@@ -1,0 +1,8 @@
+(def rec fn [n] (if (== n 0)
+                  fn [] ()
+                  (do ((print "sleeping")
+                       (sleep 1000)
+                       (rec (- n 1))))))
+
+
+(rec 2)

@@ -1,6 +1,6 @@
 use alc_lisp::{
     ast::{Node, AST},
-    interpreter::{Env, Program},
+    interpreter::{objects::Object, Env, Program},
     lexer::Lexer,
     native::NATIVE_ENV,
     repl::{start_repl, ReplArgs},
@@ -9,6 +9,7 @@ use alc_lisp::{
 use anyhow::Context;
 use clap::{arg, Parser, Subcommand};
 
+use colored::Colorize;
 #[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
 
@@ -78,7 +79,6 @@ fn run_file(args: Args) -> anyhow::Result<()> {
 
     if args.debug_lexer || args.debug {
         println!("LEXER\n----{}\n----", lexer);
-        dbg!(&tokens);
     }
 
     let mut ast = AST::with_tokens(tokens);
@@ -112,6 +112,13 @@ fn run_file(args: Args) -> anyhow::Result<()> {
         program.eval(&root)?
     };
 
-    println!("{}", result);
+    match result.as_ref() {
+        Object::Error(err) => {
+            println!("{}{}", "error:".red(), err);
+        }
+        v => {
+            println!("{}", v);
+        }
+    }
     Ok(())
 }
