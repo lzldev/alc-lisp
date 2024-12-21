@@ -39,11 +39,11 @@ impl Lexer {
             let col_start = col;
 
             match value {
-                ' ' => {}
                 '\n' => {
                     col = 0;
                     line += 1
                 }
+                ' ' | '\x09'..='\x0d' => {}
                 '(' | ')' | '[' | ']' | '\'' => self.tokens.push(Token {
                     value: value.to_string().into(),
                     token_type: TokenType::from_char(value)?,
