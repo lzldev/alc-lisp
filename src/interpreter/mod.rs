@@ -144,11 +144,132 @@ impl Program {
         }
     }
 
-    pub fn eval(&mut self, root: &Node) -> anyhow::Result<Reference> {
-        let mut last_result: Reference = NULL.clone();
+    pub fn call_expression(&mut self, nodes: &[Node]) -> anyhow::Result<Reference> {
+        if nodes.is_empty() {
+            return Ok(NULL.clone());
+        }
 
+        let len = nodes.len();
+
+        if let Node::Word(word) = &nodes[0] {
+            match word.value.as_ref() {
+                "define" | "def" => {
+                    if len != 3 {
+                        return Ok(Reference::new(Object::Error(
+                            format!(
+                                "Invalid amount of arguments to define got:{} expected: 3",
+                                len
+                            )
+                            .into(),
+                        )));
+                    }
+
+                    let name = match &nodes[1] {
+                        Node::Word(token) => token,
+                        n => {
+                            return Ok(Reference::new(Object::Error(
+                                format!("Invalid token for define: {:?} should be a word", n)
+                                    .into(),
+                            )))
+                        }
+                    };
+
+                    let value = self
+                        .parse_expression(&nodes[2])
+                        .and_then(map_rust_error!("define value error"))?;
+
+                    self.set_value(name.value.clone(), value);
+
+                    return Ok(NULL.clone());
+                }
+                "if" => {
+                    if len != 4 && len != 3 {
+                        return Ok(Reference::new(Object::Error(
+                            format!("Invalid amount of arguments to 'if' got: {}", len).into(),
+                        )));
+                    }
+
+                    let condition = self
+                        .parse_expression(&nodes[1])
+                        .and_then(map_rust_error!("if condition error"))?;
+
+                    let truthy = is_truthy(condition);
+
+                    return if truthy {
+                        self.parse_expression(&nodes[2])
+                    } else if len == 4 {
+                        self.parse_expression(&nodes[3])
+                    } else {
+                        Ok(NULL.clone())
+                    }
+                    .and_then(map_rust_error!("if result error"));
+                }
+                "do" => {
+                    if len != 2 {
+                        return Ok(Reference::new(Object::Error(
+                            format!("Invalid amount of arguments to 'do' got: {}", len).into(),
+                        )));
+                    }
+
+                    return self.eval(&nodes[1]);
+                }
+                _ => {}
+            }
+        }
+
+        let first = self
+            .parse_expression(&nodes[0])
+            .and_then(map_rust_error!("in call to"))?;
+
+        let args = nodes
+            .iter()
+            .skip(1)
+            .map(|exp| {
+                self.parse_expression(exp)
+                    .and_then(map_rust_error!("function argument"))
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        match first.as_ref() {
+            Object::Builtin { function } => Ok(function(self, args)),
+            Object::Function {
+                env,
+                parameters,
+                body,
+            } => {
+                if args.len() != parameters.len() {
+                    return Ok(Reference::new(Object::Error(
+                        format!(
+                            "Invalid number of arguments passed into function got {} expected {}",
+                            args.len(),
+                            parameters.len()
+                        )
+                        .into(),
+                    )));
+                }
+
+                return self.run_function(env, body, parameters, &args);
+            }
+            Object::Null => Ok(first),
+            obj => Ok(Reference::new(Object::Error(
+                format!("Cannot call value of type {}", obj.type_of()).into(),
+            ))),
+        }
+    }
+
+    pub fn eval(&mut self, root: &Node) -> anyhow::Result<Reference> {
         match root {
             Node::Expression(expressions) => {
+                if !expressions.is_empty() && matches!(&expressions[0], Node::Word(_)) {
+                    return self.call_expression(expressions);
+                }
+
+                if expressions.len() == 1 {
+                    return self.parse_expression(&expressions[0]);
+                }
+
+                let mut last_result: Reference = NULL.clone();
+
                 for exp in expressions.iter() {
                     last_result = self.parse_expression(exp)?;
 
@@ -161,7 +282,8 @@ impl Program {
                         ));
                     }
                 }
-                Ok(last_result)
+
+                return Ok(last_result);
             }
             node => Ok(self.parse_expression(node)?),
         }
@@ -202,116 +324,7 @@ impl Program {
             Node::Invalid(_) => Ok(Reference::new(Object::Error(
                 "Evaluating Invalid Node".into(),
             ))),
-            Node::Expression(vec) => {
-                if vec.is_empty() {
-                    return Ok(NULL.clone());
-                }
-
-                let len = vec.len();
-
-                if let Node::Word(word) = &vec[0] {
-                    match word.value.as_ref() {
-                        "define" | "def" => {
-                            if len != 3 {
-                                return Ok(Reference::new(Object::Error(
-                                    format!(
-                                        "Invalid amount of arguments to define got:{} expected: 3",
-                                        len
-                                    )
-                                    .into(),
-                                )));
-                            }
-
-                            let name = match &vec[1] {
-                                Node::Word(token) => token,
-                                n => {
-                                    return Ok(Reference::new(Object::Error(
-                                        format!(
-                                            "Invalid token for define: {:?} should be a word",
-                                            n
-                                        )
-                                        .into(),
-                                    )))
-                                }
-                            };
-
-                            let value = self
-                                .parse_expression(&vec[2])
-                                .and_then(map_rust_error!("define value error"))?;
-
-                            self.set_value(name.value.clone(), value);
-
-                            return Ok(NULL.clone());
-                        }
-                        "if" => {
-                            if len != 4 && len != 3 {
-                                return Ok(Reference::new(Object::Error(
-                                    format!("Invalid amount of arguments to 'if' got: {}", len)
-                                        .into(),
-                                )));
-                            }
-
-                            let condition = self
-                                .parse_expression(&vec[1])
-                                .and_then(map_rust_error!("if condition error"))?;
-
-                            let truthy = is_truthy(condition);
-
-                            return if truthy {
-                                self.parse_expression(&vec[2])
-                            } else if len == 4 {
-                                self.parse_expression(&vec[3])
-                            } else {
-                                Ok(NULL.clone())
-                            }
-                            .and_then(map_rust_error!("if result error"));
-                        }
-                        "do" => {
-                            if len != 2 {
-                                return Ok(Reference::new(Object::Error(
-                                    format!("Invalid amount of arguments to 'do' got: {}", len)
-                                        .into(),
-                                )));
-                            }
-
-                            return self.eval(&vec[1]);
-                        }
-                        _ => {}
-                    }
-                }
-
-                let first = self
-                    .parse_expression(&vec[0])
-                    .and_then(map_rust_error!("in call to"))?;
-
-                let args = vec
-                    .iter()
-                    .skip(1)
-                    .map(|exp| {
-                        self.parse_expression(exp)
-                            .and_then(map_rust_error!("function argument"))
-                    })
-                    .collect::<Result<Vec<_>>>()?;
-
-                match first.as_ref() {
-                    Object::Builtin { function } => Ok(function(self, args)),
-                    Object::Function {
-                        env,
-                        parameters,
-                        body,
-                    } => {
-                        if args.len() != parameters.len() {
-                            return Ok(Reference::new(Object::Error(format!("Invalid number of arguments passed into function got {} expected {}",args.len(),parameters.len()).into())));
-                        }
-
-                        self.run_function(env, body, parameters, &args)
-                    }
-                    Object::Null => Ok(first),
-                    obj => Ok(Reference::new(Object::Error(
-                        format!("Cannot call value of type {}", obj.type_of()).into(),
-                    ))),
-                }
-            }
+            Node::Expression(vec) => self.call_expression(vec),
             Node::List(vec) => {
                 let items = vec
                     .iter()

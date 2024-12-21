@@ -1,0 +1,9 @@
+
+; Add two numbers
+(def fib
+  fn [v v2 n]
+  (if (== n 0) v (fib v2 (+ v v2) (- n 1))))
+
+(def expected 89)
+(def message "the 10th fibonacci number should be 89")
+(def output (fib 1 1 10))

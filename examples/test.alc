@@ -1,8 +1,6 @@
-(def f fn[n] (
-    (print "b " l)
-    ( if l (print "l is defined " l) (def l 1))
-    (print "a " l)
-))
+(def f fn [n] ((print "b " l)
+               (if l (print "l is defined " l) (def l 1))
+               (print "a " l)))
 
 (f 1)
 (f 1)

@@ -207,14 +207,17 @@ impl AST {
         let mut body = self.parse_expression().context("invalid function body:")?;
 
         match body {
-            Node::Expression(ref exps) => {
-                if exps.len() != 1 {
-                    // FIXME: Wrap the function body since its using Program::eval instead of Program::parse_expression.
-                    // Is this needed?
-                    body = Node::Expression([body].into())
-                }
+            // Node::Expression(ref exps) => {
+            //     if exps.len() != 1 {
+            //         // FIXME: Wrap the function body since its using Program::eval instead of Program::parse_expression.
+            //         // Is this needed?
+            //         body = Node::Expression([body].into())
+            //     }
+            // }
+            Node::Expression(_) => {}
+            _ => {
+                body = Node::Expression([body].into());
             }
-            _ => body = Node::Expression([body].into()),
         }
 
         Ok(Node::FunctionLiteral {

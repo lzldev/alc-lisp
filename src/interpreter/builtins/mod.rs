@@ -7,7 +7,7 @@ mod string;
 #[cfg(feature = "bin")]
 pub mod native;
 
-use errors::{new_args_len_error, new_type_error};
+use errors::{new_args_len_error, new_type_error, new_type_error_with_got};
 use list::add_list_builtins;
 use number::add_number_builtins;
 use string::add_string_builtins;
@@ -27,9 +27,11 @@ fn typecheck_args<F>(
 where
     F: Fn(&Reference) -> bool,
 {
-    if args.iter().any(condition) {
-        return Some(new_type_error(name, typename));
-    };
+    for arg in args.iter() {
+        if condition(arg) {
+            return Some(new_type_error_with_got(name, typename, arg.type_of()));
+        }
+    }
     None
 }
 

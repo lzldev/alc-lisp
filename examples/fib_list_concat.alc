@@ -1,12 +1,13 @@
-
-
-
 (def fib
   fn [n v v2]
-  (do
-    (if (== n 0)
-      [v]
-      (concat [v] (fib (- n 1) v2 (+ v v2))))))
+  ((def r (if (== n 0)
+            [v]
+            (do ((def ret (fib (- n 1) v2 (+ v v2)))
+                 (print "ret" ret)
+                 (concat [v] ret)
+                 ret))))
+   (print "r" r)
+   r))
 
 (def output (fib 10 1 1))
 

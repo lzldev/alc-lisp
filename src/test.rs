@@ -39,16 +39,16 @@ pub(crate) fn prepare_code(input: String) -> Result<Node> {
 )]
 fn example_tests(fixture: Fixture<&str>) {
     // The file content and the absolute path of the file are available as follows.
-    let path = fixture.path();
+    // let path = fixture.path();
     let code = fixture.content();
 
-    println!("{}:", path.purple());
-    println!("{}", code);
+    // println!("{}:", path.purple());
+    // println!("{}", code);
 
     let mut program = new_test_program();
     let ast = prepare_code((*code).to_owned()).unwrap();
 
-    let last = program.eval(&ast).expect("running code failed");
+    let _last = program.eval(&ast).expect("running code failed");
 
     let callstack = program.get_env();
     let envs = callstack.active_slice();
