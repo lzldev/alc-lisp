@@ -12,11 +12,13 @@ build-wasm:
 	
 bench-release:
 	cargo bench --profile=release 
+
 bench-release-mimalloc:
 	cargo bench --profile=release --features="mimalloc"
 
 bench-fast-mimalloc:
 	cargo bench --profile=fast --features="mimalloc"
+
 bench-fast:
 	cargo bench --profile=fast 
 	

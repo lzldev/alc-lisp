@@ -14,7 +14,6 @@ pub use constants::*;
 pub mod builtins;
 pub mod objects;
 
-// pub type CallStack = Vec<RefCell<Env>>;
 pub type Reference = Arc<Object>;
 pub type EnvReference = Arc<EnvReferenceInner>;
 pub type EnvReferenceInner = RwLock<Env>;

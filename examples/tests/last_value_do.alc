@@ -1,0 +1,11 @@
+; do expressions should return the last value
+
+(def expected 64)
+(def message "the function should return 1")
+(def output (do 
+              (
+               (def r 64) 
+               1 
+               2 
+               3 
+               r)))

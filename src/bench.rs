@@ -8,8 +8,7 @@ use paste::paste;
 
 macro_rules! alc_f_bench {
     ($name:ident, $input:expr) => {
-        paste! {
-            #[bench]
+        paste! { #[bench]
             fn [<bench_ $name>](b: &mut Bencher) {
                 let mut program = new_test_program();
                 let ast = prepare_code(include_str!($input).to_string()).unwrap();
@@ -17,13 +16,13 @@ macro_rules! alc_f_bench {
                 b.iter(|| program.eval(&ast).unwrap());
             }
 
-            // #[bench]
-            // fn [<bench_ $name _cloned>](b: &mut Bencher) {
-            //     let program = new_test_program();
-            //     let ast = prepare_code(include_str!($input).to_string()).unwrap();
+            #[bench]
+            fn [<bench_ $name _cloned>](b: &mut Bencher) {
+                let program = new_test_program();
+                let ast = prepare_code(include_str!($input).to_string()).unwrap();
 
-            //     b.iter(|| program.clone().eval(&ast).unwrap());
-            // }
+                b.iter(|| program.clone().eval(&ast).unwrap());
+            }
         }
     };
 }

@@ -1,6 +1,5 @@
 ; functions should return the last value
+
 (def expected 64)
 (def message "the function should return 1")
 (def output (fn [] ((def r 64) 1 2 3 r)))
-
-(print output)

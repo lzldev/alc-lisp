@@ -18,3 +18,15 @@ pub static FUNCTION: LazyLock<Reference> = LazyLock::new(|| {
         env: EnvReference::default(),
     })
 });
+
+pub static ALL_TYPES: LazyLock<[Reference; 7]> = LazyLock::new(|| {
+    [
+        NULL.clone(),
+        TRUE.clone(),
+        FALSE.clone(),
+        NUMBER.clone(),
+        STRING.clone(),
+        LIST.clone(),
+        FUNCTION.clone(),
+    ]
+});

@@ -84,6 +84,9 @@ pub const SLEEP: BuiltinFunction = |_, args| {
 
 static OPEN_FILE: Lazy<Mutex<FileRef>> = Lazy::new(|| Mutex::new(None));
 
+// TODO: Make this a format_args macro. then this function will just be a wrapper around format_args
+// TODO: with that we can have a : fprint (file print)
+// TODO: println and print and fprintln
 /// Prints the arguments to stdout
 fn print(_: &mut Program, args: Vec<Reference>) -> Reference {
     println!("{}", args.iter().map(|v| v.to_string()).collect::<String>());

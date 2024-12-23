@@ -18,6 +18,50 @@ use super::{
     Env, Program, Reference, LIST, STRING, TRUE,
 };
 
+macro_rules! type_check {
+    // for variadic functions
+    ($name:expr,$args:ident,$type:pat) => {
+        for arg in args.iter() {
+            if matches!(arg.as_ref(), $type) {
+                let type_name = alc_lisp::interpreter::constants::ALL_TYPES
+                    .iter()
+                    .find(|v| matches!(arg.as_ref(), $pat))
+                    .unwrap()
+                    .type_of();
+
+                return alc_lisp::interpreter::builtins::errors::new_type_error_with_got(
+                    name,
+                    typename,
+                    arg.type_of(),
+                );
+            }
+        }
+    };
+    // for fixed number of arguments
+    ($name:expr,$args:ident,[$(type:pat)*,+]) => {
+        $(
+            let Some(arg) = args.get(${index()}) else {
+             return alc_lisp::interpreter::builtins::errors::new_args_len_error(name, args, ${count($pat)});
+            };
+
+            if !matches!(arg.as_ref(), $type) {
+                let type_name = unsafe { alc_lisp::interpreter::constants::ALL_TYPES
+                    .iter()
+                    .find(|v| matches!(arg.as_ref(), $pat))
+                    .unwrap_unchecked()
+                    .type_of()
+                };
+
+                return alc_lisp::interpreter::builtins::errors::new_type_error_with_got(
+                    name,
+                    typename,
+                    arg.type_of(),
+                );
+            }
+        )*
+    };
+}
+
 fn typecheck_args<F>(
     name: &str,
     typename: &str,

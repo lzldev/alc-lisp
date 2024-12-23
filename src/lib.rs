@@ -1,3 +1,4 @@
+#![feature(macro_metavar_expr)]
 #![feature(allocator_api)]
 #![feature(test)]
 #![feature(lock_value_accessors)]
