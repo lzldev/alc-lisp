@@ -1,6 +1,6 @@
 extern crate test;
 
-use crate::test::{new_test_program, prepare_code, prepare_test_lexer};
+use crate::test::{new_test_program, prepare_code, prepare_test_ast, prepare_test_lexer};
 
 use test::Bencher;
 
@@ -56,5 +56,31 @@ fn lexer(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
         bench_lexer.parse().unwrap();
 
         println!("{:?}", bench_lexer.tokens());
+    })
+}
+
+#[dir_bench(
+    dir: "$CARGO_MANIFEST_DIR/examples/benchs/ast",
+    glob: "**/*.alc",
+)]
+fn ast(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
+    let _path = file.path();
+    let code = file.into_content();
+
+    let mut lexer = prepare_test_lexer(code.to_owned()).unwrap();
+    lexer.parse().unwrap();
+
+    let ast = prepare_test_ast(lexer.tokens()).unwrap();
+
+    b.iter(|| {
+        let mut new_ast = ast.clone();
+
+        let root = new_ast.parse().unwrap();
+
+        if new_ast.has_errors() {
+            panic!("error in AST: {:?}", new_ast.errors());
+        }
+
+        println!("{:?}", root);
     })
 }

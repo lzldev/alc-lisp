@@ -1,0 +1,4 @@
+
+(def regular_string "lorem ipsum dolor sit amet consectetur adipiscing elit")
+(def list_of_strings ["lorem" "ipsum" "dolor" "sit" "amet" "consectetur" "adipiscing" "elit"])
+(def really_big_string "lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit lorem ipsum dolor sit amet consectetur adipiscing elit")

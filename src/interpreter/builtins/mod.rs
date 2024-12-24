@@ -37,7 +37,7 @@ macro_rules! type_check {
             }
         }
     };
-    // for fixed number of arguments
+    // type check a fixed number of argumens;
     ($name:expr,$args:ident,[$(type:pat)*,+]) => {
         $(
             let Some(arg) = args.get(${index()}) else {
