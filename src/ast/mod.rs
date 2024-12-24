@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context};
 
 use crate::lexer::{self, Token, TokenPosition, TokenType};
 
+mod macros;
 mod node;
 
 pub use node::*;
@@ -14,6 +15,18 @@ pub struct AST {
 }
 
 pub type ASTPosition = Vec<usize>;
+
+fn test_something() {
+    let item = Node::Expression(
+        [Node::Word(Token {
+            value: "test".into(),
+            token_type: TokenType::Word,
+            start: TokenPosition { line: 0, col: 0 },
+            end: TokenPosition { line: 0, col: 4 },
+        })]
+        .into(),
+    );
+}
 
 impl AST {
     pub fn with_tokens(mut tokens: Vec<Token>) -> Self {
