@@ -247,7 +247,7 @@ impl Program {
                     )));
                 }
 
-                return self.run_function(env, body, parameters, &args);
+                self.run_function(env, body, parameters, &args)
             }
             Object::Null => Ok(first),
             obj => Ok(Reference::new(Object::Error(
@@ -282,7 +282,7 @@ impl Program {
                     }
                 }
 
-                return Ok(last_result);
+                Ok(last_result)
             }
             node => Ok(self.parse_expression(node)?),
         }

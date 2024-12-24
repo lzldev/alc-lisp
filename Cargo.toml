@@ -60,6 +60,7 @@ strip = "debuginfo"
 [dev-dependencies]
 dir-test = "0.4.1"
 paste = "1.0.15"
+dir-bench = "0.1.0"
 
 # ? ? ? ?? ? ? ?? 
 # [profile.fast.build-override]

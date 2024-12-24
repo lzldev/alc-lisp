@@ -1,8 +1,10 @@
 extern crate test;
 
-use crate::test::{new_test_program, prepare_code};
+use crate::test::{new_test_program, prepare_code, prepare_test_lexer};
 
 use test::Bencher;
+
+use dir_bench::dir_bench;
 
 use paste::paste;
 
@@ -38,3 +40,21 @@ alc_f_bench!(concat_test, "../examples/concat_test.alc");
 alc_f_bench!(split_test, "../examples/split_test.alc");
 alc_f_bench!(reduce_test, "../examples/reduce_test.alc");
 alc_f_bench!(reduce_sum, "../examples/reduce_sum_test.alc");
+
+#[dir_bench(
+    dir: "$CARGO_MANIFEST_DIR/examples/benchs/lexer",
+    glob: "**/*.alc",
+)]
+fn lexer(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
+    let _path = file.path();
+    let code = file.into_content();
+
+    let lexer = prepare_test_lexer(code.to_owned()).unwrap();
+
+    b.iter(|| {
+        let mut bench_lexer = lexer.clone();
+        bench_lexer.parse().unwrap();
+
+        println!("{:?}", bench_lexer.tokens());
+    })
+}
