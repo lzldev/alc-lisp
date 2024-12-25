@@ -40,7 +40,7 @@ pub fn new_type_error_with_got_and_pos(
 ) -> Reference {
     Reference::new(Object::Error(
         format!(
-            "Invalid argument type for function '{}' at position {}: expected {} got {}",
+            "Invalid argument type for function '{}' at position {} expected {} got {}",
             name, pos, typename, gottype
         )
         .into(),

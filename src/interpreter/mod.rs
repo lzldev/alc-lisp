@@ -24,12 +24,12 @@ static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<Arc<str>, Reference>>> =
 
 macro_rules! map_rust_error {
     ($message:expr) => {
-        |value: Reference| -> anyhow::Result<Reference> {
+        |value: crate::interpreter::Reference| -> anyhow::Result<crate::interpreter::Reference> {
             if crate::interpreter::is_error(&value) {
                 return Err(anyhow::anyhow!(concat!($message, ": {:?}"), value));
-            } else {
-                Ok(value)
             }
+
+            Ok(value)
         }
     };
 }
@@ -378,7 +378,7 @@ fn bool_from_native(value: bool) -> Reference {
 }
 
 #[inline(always)]
-fn is_error(value: &Reference) -> bool {
+pub fn is_error(value: &Reference) -> bool {
     matches!(value.as_ref(), Object::Error(_))
 }
 

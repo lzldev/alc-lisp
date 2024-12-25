@@ -8,7 +8,7 @@ use crate::interpreter::{
 
 use super::{
     errors::{new_args_len_error, new_type_error_with_pos},
-    typecheck_args,
+    type_check, typecheck_args,
 };
 
 pub fn add_string_builtins(env: &mut Env) {
@@ -26,14 +26,7 @@ pub fn add_string_builtins(env: &mut Env) {
 
 /// Concatenates the arguments into a string
 pub const STR: BuiltinFunction = |_, args| {
-    if let Some(err) = typecheck_args(
-        "str",
-        STRING.type_of(),
-        |obj| !matches!(obj.as_ref(), Object::String(_)),
-        &args,
-    ) {
-        return err;
-    }
+    type_check!("str", args, Object::String(_));
 
     let result = args
         .iter()

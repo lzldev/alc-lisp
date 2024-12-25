@@ -4,7 +4,7 @@ use anyhow::Context;
 use clap::{arg, Parser};
 use colored::Colorize;
 
-use crate::{native::NATIVE_ENV, utils::timer::Timer};
+use crate::{interpreter::map_rust_error, native::NATIVE_ENV, utils::timer::Timer};
 
 use super::{
     ast::{Node, AST},
@@ -103,7 +103,7 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
             let result = program.eval(&root).context("program::eval");
             globals = Some(program.get_env().active_slice()[0].read().clone());
 
-            result?
+            result.and_then(map_rust_error!("eval error"))?
         };
 
         println!("{}", result);

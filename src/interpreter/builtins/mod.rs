@@ -76,8 +76,8 @@ macro_rules! type_check {
 
     // for variadic functions
     ($name:expr,$args:ident,$type:pat) => {
-        for arg in args.iter() {
-            if matches!(arg.as_ref(), $type) {
+        for (i,arg) in $args.iter().enumerate() {
+            if !matches!(arg.as_ref(), $type) {
                 let type_name = crate::interpreter::constants::ALL_TYPES
                     .iter()
                     .filter(|v| matches!(v.as_ref(), $type))
@@ -85,9 +85,10 @@ macro_rules! type_check {
                     .collect::<Arc<[_]>>()
                     .join(" or ");
 
-                return crate::interpreter::builtins::errors::new_type_error_with_got(
-                    name,
-                    typename,
+                return crate::interpreter::builtins::errors::new_type_error_with_got_and_pos(
+                    $name,
+                    i,
+                    &type_name,
                     arg.type_of(),
                 );
             }
