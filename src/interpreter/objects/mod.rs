@@ -50,7 +50,7 @@ impl Object {
     pub fn type_of(&self) -> &'static str {
         match self {
             Object::Null => "null",
-            Object::Integer(_) => "int",
+            Object::Integer(_) => "number",
             Object::String(_) => "string",
             Object::Bool(_) => "bool",
             Object::List(_) => "list",

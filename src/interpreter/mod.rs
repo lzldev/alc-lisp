@@ -270,13 +270,19 @@ impl Program {
                 let mut last_result: Reference = NULL.clone();
 
                 for exp in expressions.iter() {
-                    last_result = self.parse_expression(exp)?;
+                    last_result = self.parse_expression(exp).with_context(|| {
+                        format!(
+                            "error in expression at {}:{}",
+                            exp.last_char().line,
+                            exp.last_char().col,
+                        )
+                    })?;
 
                     if is_error(&last_result) {
                         return Err(anyhow!(
                             "error in expression at {}:{} : {:?}",
                             exp.last_char().line,
-                            exp.last_char().line,
+                            exp.last_char().col,
                             last_result
                         ));
                     }

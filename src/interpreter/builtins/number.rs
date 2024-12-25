@@ -1,5 +1,9 @@
 //! Builtin functions for arithmetic operations
-use crate::interpreter::{objects::Object, Env, Program, Reference, NUMBER, STRING};
+use crate::interpreter::{
+    builtins::type_check,
+    objects::{BuiltinFunction, Object},
+    Env, Program, Reference, NUMBER, STRING,
+};
 
 use super::{
     errors::{new_args_len_error, new_type_error_with_pos},
@@ -8,32 +12,23 @@ use super::{
 
 /// Add arithmetic builtins to the environment
 pub fn add_number_builtins(env: &mut Env) {
-    env.insert(
-        "+".into(),
-        Reference::new(Object::Builtin { function: add }),
-    );
+    let functions: [(&str, BuiltinFunction); _] = [
+        ("+", add),
+        ("-", subtract),
+        ("*", multiply),
+        ("/", divide),
+        ("%", MOD),
+        ("parse_int", parse_int),
+        ("abs", ABS),
+    ];
 
-    env.insert(
-        "-".into(),
-        Reference::new(Object::Builtin { function: subtract }),
-    );
-
-    env.insert(
-        "*".into(),
-        Reference::new(Object::Builtin { function: multiply }),
-    );
-
-    env.insert(
-        "/".into(),
-        Reference::new(Object::Builtin { function: divide }),
-    );
-
-    env.insert(
-        "parse_int".into(),
-        Reference::new(Object::Builtin {
-            function: parse_int,
-        }),
-    );
+    functions
+        .into_iter()
+        .map(|(name, function)| (name, Reference::new(Object::Builtin { function })))
+        .for_each(|(name, function)| {
+            env.insert(name.into(), function.clone());
+            env.insert(("std/".to_owned() + name).into(), function);
+        });
 }
 
 /// Adds numbers
@@ -158,3 +153,26 @@ pub fn parse_int(_: &mut Program, args: Vec<Reference>) -> Reference {
         Reference::new(Object::Error("Could not parse int".into()))
     }
 }
+
+pub const MOD: BuiltinFunction = |_, args| {
+    type_check!("mod", args, [Object::Integer(_), Object::Integer(_)]);
+
+    let Object::Integer(l) = args[0].as_ref() else {
+        panic!("This should never happen");
+    };
+    let Object::Integer(r) = args[1].as_ref() else {
+        panic!("This should never happen");
+    };
+
+    Reference::new(Object::Integer(l % r))
+};
+
+pub const ABS: BuiltinFunction = |_, args| {
+    type_check!("mod", args, [Object::Integer(_)]);
+
+    let Object::Integer(l) = args[0].as_ref() else {
+        panic!("This should never happen");
+    };
+
+    Reference::new(Object::Integer(l.abs()))
+};

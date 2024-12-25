@@ -12,18 +12,16 @@ use super::{
 };
 
 pub fn add_string_builtins(env: &mut Env) {
-    env.insert(
-        "str".into(),
-        Reference::new(Object::Builtin { function: str }),
-    );
-    env.insert(
-        "lines".into(),
-        Reference::new(Object::Builtin { function: lines }),
-    );
-    env.insert(
-        "split".into(),
-        Reference::new(Object::Builtin { function: SPLIT }),
-    );
+    let functions: [(&str, BuiltinFunction); _] =
+        [("str", str), ("lines", lines), ("split", SPLIT)];
+
+    functions
+        .into_iter()
+        .map(|(name, function)| (name, Reference::new(Object::Builtin { function })))
+        .for_each(|(name, function)| {
+            env.insert(name.into(), function.clone());
+            env.insert(("std/".to_owned() + name).into(), function);
+        });
 }
 
 /// Concatenates the arguments into a string

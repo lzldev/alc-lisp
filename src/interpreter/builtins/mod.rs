@@ -15,33 +15,38 @@ use string::add_string_builtins;
 use super::{
     bool_from_native,
     objects::{BuiltinFunction, Object},
-    Env, Program, Reference, LIST, STRING, TRUE,
+    Env, Program, Reference, LIST, NULL, STRING, TRUE,
 };
 
 #[allow(unused_macros)]
 macro_rules! type_check {
     ($name:expr,$args:ident,[$($ty:pat),+]) => {
-        let count = ${count($ty)};
-        $(
-            let Some(arg) = $args.get(${index()}) else {
-             return crate::interpreter::builtins::errors::new_args_len_error($name, &$args, count);
-            };
+        {
+            let count = ${count($ty)};
 
-            if !matches!(arg.as_ref(), $ty) {
-                let type_name = crate::interpreter::constants::ALL_TYPES
-                        .iter()
-                        .filter(|v| matches!(v.as_ref(), $ty))
-                        .map(|v| v.type_of())
-                        .collect::<Arc<[_]>>()
-                        .join(" or ");
-
-                return crate::interpreter::builtins::errors::new_type_error_with_got(
-                    $name,
-                    &type_name,
-                    arg.type_of(),
-                );
+            if $args.len() > count {
+                 return crate::interpreter::builtins::errors::new_args_len_error($name, &$args, count);
             }
-        )*
+
+            $(
+                let arg = unsafe { $args.get(${index()}).unwrap_unchecked()};
+
+                if !matches!(arg.as_ref(), $ty) {
+                    let type_name = crate::interpreter::constants::ALL_TYPES
+                            .iter()
+                            .filter(|v| matches!(v.as_ref(), $ty))
+                            .map(|v| v.type_of())
+                            .collect::<std::sync::Arc<[_]>>()
+                            .join(" or ");
+
+                    return crate::interpreter::builtins::errors::new_type_error_with_got(
+                        $name,
+                        &type_name,
+                        arg.type_of(),
+                    );
+                }
+            )*
+        }
     };
 
     // for variadic functions
@@ -90,36 +95,22 @@ pub fn add_generic_builtins(env: &mut Env) {
     add_list_builtins(env);
     add_string_builtins(env);
 
-    env.insert(
-        "len".into(),
-        Reference::new(Object::Builtin { function: LEN }),
-    );
+    let functions: [(&str, BuiltinFunction); _] = [
+        ("type", TYPE_OF),
+        ("len", LEN),
+        ("==", EQUALS),
+        ("!=", NOT_EQUALS),
+        ("<", LESSER_THAN),
+        (">", GREATHER_THAN),
+    ];
 
-    env.insert(
-        "==".into(),
-        Reference::new(Object::Builtin { function: EQUALS }),
-    );
-
-    env.insert(
-        "!=".into(),
-        Reference::new(Object::Builtin {
-            function: NOT_EQUALS,
-        }),
-    );
-
-    env.insert(
-        "<".into(),
-        Reference::new(Object::Builtin {
-            function: LESSER_THAN,
-        }),
-    );
-
-    env.insert(
-        ">".into(),
-        Reference::new(Object::Builtin {
-            function: GREATHER_THAN,
-        }),
-    );
+    functions
+        .into_iter()
+        .map(|(name, function)| (name, Reference::new(Object::Builtin { function })))
+        .for_each(|(name, function)| {
+            env.insert(name.into(), function.clone());
+            env.insert(("std/".to_owned() + name).into(), function);
+        });
 }
 
 /// Returns the length of a list or string
@@ -245,4 +236,11 @@ const GREATHER_THAN: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -
     }
 
     bool_from_native(true)
+};
+
+const TYPE_OF: BuiltinFunction = |_, args| {
+    args.first().map_or_else(
+        || NULL.clone(),
+        |v| Reference::new(Object::String(v.type_of().into())),
+    )
 };

@@ -7,6 +7,7 @@ use crate::{
     test::{new_test_program, prepare_code, prepare_test_ast, prepare_test_lexer},
 };
 
+use colored::Colorize;
 use test::Bencher;
 
 use dir_bench::dir_bench;
@@ -91,6 +92,13 @@ fn ast(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
     })
 }
 
+#[bench]
+fn new_test_program_overhead(b: &mut Bencher) {
+    b.iter(|| {
+        let _program = new_test_program();
+    })
+}
+
 #[dir_bench(
     dir: "$CARGO_MANIFEST_DIR/examples/benchs",
     glob: "*.alc",
@@ -99,11 +107,10 @@ fn eval_cloned(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
     let _path = file.path();
     let code = file.into_content();
 
-    let program = new_test_program();
     let ast = prepare_code(code.to_owned()).unwrap();
 
     b.iter(|| {
-        let result = program.clone().eval(&ast).unwrap();
+        let result = new_test_program().eval(&ast).unwrap();
 
         if matches!(result.as_ref(), Object::Error(_)) {
             panic!("error during eval: {:?}", result);
@@ -136,14 +143,19 @@ fn eval(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
     glob: "*.alc",
 )]
 fn advent_of_code(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
-    let _path = file.path();
+    let path = file.path();
     let code = file.into_content();
 
-    let mut program = new_test_program();
-    let ast = prepare_code(code.to_owned()).unwrap();
+    println!("{}", path.purple());
+    println!("{}", code);
+
+    let ast = prepare_code(code.to_owned()).expect("to have a valid ast");
 
     b.iter(|| {
-        let result = program.eval(&ast).unwrap();
+        let result = new_test_program()
+            .clone()
+            .eval(&ast)
+            .expect("error running the program");
 
         if matches!(result.as_ref(), Object::Error(_)) {
             panic!("error during eval: {:?}", result);

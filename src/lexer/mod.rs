@@ -24,7 +24,10 @@ impl Lexer {
     }
 
     fn is_word_symbol(c: char) -> bool {
-        matches!(c, '+' | '-' | '/' | '*' | '_' | '=' | '?' | '!' | '<' | '>')
+        matches!(
+            c,
+            '+' | '-' | '/' | '*' | '_' | '=' | '?' | '!' | '<' | '>' | '%'
+        )
     }
 
     pub fn parse(&mut self) -> anyhow::Result<()> {
@@ -43,7 +46,7 @@ impl Lexer {
                     col = 0;
                     line += 1
                 }
-                ' ' | '\x09'..='\x0d' => {}
+                ' ' | '\x09'..='\x0d' | ',' => {}
                 '(' | ')' | '[' | ']' | '\'' => self.tokens.push(Token {
                     value: value.to_string().into(),
                     token_type: TokenType::from_char(value)?,

@@ -19,11 +19,10 @@ pub static FUNCTION: LazyLock<Reference> = LazyLock::new(|| {
     })
 });
 
-pub static ALL_TYPES: LazyLock<[Reference; 7]> = LazyLock::new(|| {
+pub static ALL_TYPES: LazyLock<[Reference; 6]> = LazyLock::new(|| {
     [
         NULL.clone(),
         TRUE.clone(),
-        FALSE.clone(),
         NUMBER.clone(),
         STRING.clone(),
         LIST.clone(),

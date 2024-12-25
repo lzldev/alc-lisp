@@ -13,50 +13,25 @@ use super::{
 };
 
 pub fn add_list_builtins(env: &mut Env) {
-    env.insert(
-        "nth".into(),
-        Reference::new(Object::Builtin { function: nth }),
-    );
+    let functions: [(&str, BuiltinFunction); _] = [
+        ("nth", nth),
+        ("head", head),
+        ("tail", tail),
+        ("slice", slice),
+        ("sort", sort),
+        ("flat", FLAT),
+        ("reduce", REDUCE),
+        ("map", MAP),
+        ("concat", CONCAT),
+    ];
 
-    env.insert(
-        "head".into(),
-        Reference::new(Object::Builtin { function: head }),
-    );
-
-    env.insert(
-        "tail".into(),
-        Reference::new(Object::Builtin { function: tail }),
-    );
-
-    env.insert(
-        "slice".into(),
-        Reference::new(Object::Builtin { function: slice }),
-    );
-
-    env.insert(
-        "sort".into(),
-        Reference::new(Object::Builtin { function: sort }),
-    );
-
-    env.insert(
-        "map".into(),
-        Reference::new(Object::Builtin { function: MAP }),
-    );
-
-    env.insert(
-        "flat".into(),
-        Reference::new(Object::Builtin { function: FLAT }),
-    );
-
-    env.insert(
-        "concat".into(),
-        Reference::new(Object::Builtin { function: CONCAT }),
-    );
-
-    env.insert(
-        "reduce".into(),
-        Reference::new(Object::Builtin { function: REDUCE }),
-    );
+    functions
+        .into_iter()
+        .map(|(name, function)| (name, Reference::new(Object::Builtin { function })))
+        .for_each(|(name, function)| {
+            env.insert(name.into(), function.clone());
+            env.insert(("std/".to_owned() + name).into(), function);
+        });
 }
 
 /// Maps a function over a list and returns it's results as a new list

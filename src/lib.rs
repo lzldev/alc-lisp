@@ -1,7 +1,7 @@
+#![feature(generic_arg_infer)]
 #![feature(macro_metavar_expr)]
 #![feature(allocator_api)]
 #![feature(test)]
-#![feature(lock_value_accessors)]
 
 pub mod ast;
 pub mod interpreter;

@@ -38,9 +38,11 @@ impl AST {
         !self.errors.is_empty()
     }
 
-    pub fn print_errors(&self, root: &Node) {
+    pub fn print_errors(&self, _root: &Node) {
         for (idx, position) in self.errors.iter().enumerate() {
-            let node = root.node_at(position).unwrap();
+            // TODO: Fixme this is broken for some reason
+            // let node = root.node_at(position).unwrap();
+            let node = 1;
             eprintln!("AST ERROR [{idx}]:{position:?}\n{node:#?}");
         }
     }

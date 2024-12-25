@@ -3,10 +3,10 @@ use crate::interpreter::{objects::Object, Reference};
 pub fn new_args_len_error(name: &str, args: &[Reference], expected: usize) -> Reference {
     Reference::new(Object::Error(
         format!(
-            "Invalid argument length for function '{}': got: {} expected: {}",
+            "Invalid amount of argument to function '{}': expected: {} got: {}",
             name,
+            expected,
             args.len(),
-            expected
         )
         .into(),
     ))

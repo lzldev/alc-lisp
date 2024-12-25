@@ -33,6 +33,11 @@ pub struct ReplArgs {
     debug_ast: bool,
 }
 
+enum ReplResponse {
+    Continue,
+    Stop,
+}
+
 pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
     println!("ALC_LISP [{}] REPL - INTERPRETER", VERSION);
 
@@ -41,15 +46,27 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
     let stdin = stdin();
     let mut stdout = stdout();
 
-    let mut run_repl = || -> anyhow::Result<()> {
+    let mut run_repl = || -> anyhow::Result<ReplResponse> {
         print!(">> ");
         stdout.flush()?;
 
         let mut line = String::new();
         let read = stdin.read_line(&mut line)?;
 
-        if read == 0 || line == ".q\n" {
-            return Ok(());
+        let trimmed = line.trim_ascii();
+
+        if read == 0 || trimmed.is_empty() {
+            return Ok(ReplResponse::Continue);
+        }
+
+        if trimmed == ".q" {
+            println!("ENDING {}", "REPL".bold());
+            return Ok(ReplResponse::Stop);
+        } else if trimmed == ".clear" {
+            print!("{}[2J", 27 as char);
+            stdout.flush()?;
+
+            return Ok(ReplResponse::Continue);
         }
 
         let mut lexer = Lexer::from_string(line);
@@ -91,12 +108,16 @@ pub fn start_repl(repl_args: &ReplArgs) -> anyhow::Result<()> {
 
         println!("{}", result);
 
-        Ok(())
+        Ok(ReplResponse::Continue)
     };
 
     loop {
-        if let Err(err) = run_repl() {
-            println!("{} {:?}", "error:".red(), err)
+        match run_repl() {
+            Ok(ReplResponse::Continue) => continue,
+            Ok(ReplResponse::Stop) => return Ok(()),
+            Err(err) => {
+                println!("{} {:?}", "error:".red(), err)
+            }
         }
     }
 }

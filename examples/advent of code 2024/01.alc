@@ -1,15 +1,46 @@
 (open "./examples/advent of code 2024/input/01.txt")
 
+(print (file))
+(print "type" (type_of split))
+
 (def input
   (flat
    (map
     (lines (read_file))
     fn [v] ((def values (split v "   "))
-            (map values parse_int)))))
+            (map values fn [v] (parse_int v))))))
 
-(def (reduce input fn [acc v] ((def idx (nth 0 acc))
-                               (def left (nth 0 (nth 1 acc)))
-                               (def right (nth 1 (nth 1 acc))))
-             [0, [[] []]]))
+(def split (do ((def red
+                  (reduce input
+                          fn [acc v] ((def idx (nth 0 acc))
+                                      (def left (nth 0 (nth 1 acc)))
+                                      (def right (nth 1 (nth 1 acc)))
+                                      (if (== (% idx 2) 0)
+                                        [(+ idx 1)
+                                         [(concat [v] left) right]]
+                                        [(+ idx 1)
+                                         [left (concat [v] right)]]))
+                          [0 [[] []]]))
+                [(nth 0 (nth 1 red)) (nth 1 (nth 1 red))])))
 
-(print "input: " input)
+(def left (sort (nth 0 split)))
+(def right (sort (nth 1 split)))
+
+(def l (len left))
+
+(print "left: " left)
+(print "right: " right)
+
+(def _loop fn [n left right] (if (== n l)
+                               []
+                               (concat [(abs (- (head left) (head right)))] (_loop (+ n 1) (tail left) (tail right)))))
+
+(def joined (_loop 0 left right))
+(print "joined: " joined)
+
+(def sum (reduce joined fn [acc v] (abs (+ acc v)) 0))
+(print "sum: " sum)
+
+;(def expected 1873376)
+;(def message "the sum total of the distances should be 1873376")
+;(def output sum)
