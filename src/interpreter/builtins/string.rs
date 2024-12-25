@@ -24,7 +24,38 @@ pub fn add_string_builtins(env: &mut Env) {
         });
 }
 
-/// Concatenates the arguments into a string
+macro_rules! doc_types2 {
+    ([$(#[$m:meta]),*],[$($p:pat),*],$fn:item) => {
+        $(#[$m])*
+        #[doc = "### Arguments"]
+        #[doc = concat!("[",$(stringify!($p)),*,"]")]
+        $fn
+    };
+}
+
+doc_types2! {
+[
+///Concatenates the arguments into a string
+],
+[Object::String(_) | Object::Function{..}],
+pub const STR2: BuiltinFunction = |_, args| {
+    type_check!("str", args, Object::String(_));
+
+    let result = args
+        .iter()
+        .map(|v| {
+            let Object::String(inner) = v.as_ref() else {
+                panic!("This should never happen");
+            };
+
+            inner.as_ref()
+        })
+        .collect::<String>();
+
+    Reference::new(Object::String(result.into()))
+};
+}
+
 pub const STR: BuiltinFunction = |_, args| {
     type_check!("str", args, Object::String(_));
 
