@@ -7,7 +7,7 @@ mod string;
 #[cfg(feature = "bin")]
 pub mod native;
 
-use errors::{new_args_len_error, new_type_error, new_type_error_with_got};
+use errors::{new_args_len_error, new_type_error_with_got};
 use list::add_list_builtins;
 use number::add_number_builtins;
 use string::add_string_builtins;
@@ -15,7 +15,7 @@ use string::add_string_builtins;
 use super::{
     bool_from_native,
     objects::{BuiltinFunction, Object},
-    Env, Program, Reference, LIST, NULL, STRING, TRUE,
+    Env, Program, Reference, NULL, TRUE,
 };
 
 #[allow(unused_macros)]
@@ -141,17 +141,12 @@ pub fn add_generic_builtins(env: &mut Env) {
 
 /// Returns the length of a list or string
 const LEN: BuiltinFunction = |_: &mut Program, args: Vec<Reference>| -> Reference {
-    if args.len() != 1 {
-        return new_args_len_error("len", &args, 1);
-    }
+    type_check!("len", args, [Object::String(_) | Object::List(_)]);
 
     match args[0].as_ref() {
         Object::String(s) => Reference::new(Object::Integer(s.len() as isize)),
         Object::List(l) => Reference::new(Object::Integer(l.len() as isize)),
-        _ => new_type_error(
-            "len",
-            &format!("{} or {}", STRING.type_of(), LIST.type_of()),
-        ),
+        _ => unreachable!(),
     }
 };
 

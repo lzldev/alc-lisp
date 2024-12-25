@@ -87,7 +87,7 @@ impl Display for Object {
                 write!(f, "FUNCTION[{:p}]", self)
             }
             Object::Error(msg) => {
-                write!(f, "Error:{}", msg)
+                write!(f, "ERROR[{}]", msg)
             }
         }
     }

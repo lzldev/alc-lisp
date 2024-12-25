@@ -230,7 +230,15 @@ impl Program {
             .collect::<Result<Vec<_>>>()?;
 
         match first.as_ref() {
-            Object::Builtin { function } => Ok(function(self, args)),
+            Object::Builtin { function } => {
+                let r = function(self, args);
+
+                if is_error(&r) {
+                    return Err(anyhow!("error in builtin function: {}", r));
+                }
+
+                Ok(r)
+            }
             Object::Function {
                 env,
                 parameters,
@@ -260,11 +268,23 @@ impl Program {
         match root {
             Node::Expression(expressions) => {
                 if !expressions.is_empty() && matches!(&expressions[0], Node::Word(_)) {
-                    return self.call_expression(expressions);
+                    return self.call_expression(expressions).with_context(|| {
+                        format!(
+                            "error in call at {}:{}",
+                            root.first_char().line,
+                            root.first_char().col,
+                        )
+                    });
                 }
 
                 if expressions.len() == 1 {
-                    return self.parse_expression(&expressions[0]);
+                    return self.parse_expression(&expressions[0]).with_context(|| {
+                        format!(
+                            "error in expression at {}:{}",
+                            expressions[0].first_char().line,
+                            expressions[0].first_char().col,
+                        )
+                    });
                 }
 
                 let mut last_result: Reference = NULL.clone();
@@ -273,8 +293,8 @@ impl Program {
                     last_result = self.parse_expression(exp).with_context(|| {
                         format!(
                             "error in expression at {}:{}",
-                            exp.last_char().line,
-                            exp.last_char().col,
+                            exp.first_char().line,
+                            exp.first_char().col,
                         )
                     })?;
 

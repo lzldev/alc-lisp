@@ -69,6 +69,21 @@ impl Node {
         Ok(node)
     }
 
+    pub fn first_char(&self) -> &TokenPosition {
+        match self {
+            Node::Invalid(token)
+            | Node::StringLiteral(token)
+            | Node::Word(token)
+            | Node::NumberLiteral(token)
+            | Node::BooleanLiteral(token) => &token.start,
+            Node::Expression(vec) | Node::List(vec) => vec
+                .first()
+                .map(|node| node.first_char())
+                .unwrap_or_else(|| &TokenPosition { line: 64, col: 64 }),
+            Node::FunctionLiteral { body, .. } => body.first_char(),
+        }
+    }
+
     pub fn last_char(&self) -> &TokenPosition {
         match self {
             Node::Invalid(token)
