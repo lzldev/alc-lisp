@@ -12,12 +12,10 @@ use test::Bencher;
 
 use dir_bench::dir_bench;
 
-use paste::paste;
-
 #[allow(unused_macros)]
 macro_rules! alc_f_bench {
     ($name:ident, $input:expr) => {
-        paste! { #[bench]
+        paste::paste! { #[bench]
             fn [<bench_ $name>](b: &mut Bencher) {
                 let mut program = new_test_program();
                 let ast = prepare_code(include_str!($input).to_string()).unwrap();

@@ -19,13 +19,37 @@ use super::{
 };
 
 #[allow(unused_macros)]
+macro_rules! unwrap_args {
+    ($args:ident,[$($ty:pat),+]) => {
+        $(
+            let $ty = $args[${index()}].as_ref() else {
+                unreachable!()
+            };
+        )*
+    };
+}
+pub(crate) use unwrap_args;
+
+#[allow(unused_macros)]
+macro_rules! unsafe_unwrap_args {
+    ($args:ident,[$($ty:pat),+]) => {
+        $(
+            let $ty = $args[${index()}].as_ref() else {
+                unsafe {std::hint::unreachable_unchecked()}
+            };
+        )*
+    };
+}
+pub(crate) use unsafe_unwrap_args;
+
+#[allow(unused_macros)]
 macro_rules! type_check {
     ($name:expr,$args:ident,[$($ty:pat),+]) => {
         {
             let count = ${count($ty)};
 
             if $args.len() > count {
-                 return crate::interpreter::builtins::errors::new_args_len_error($name, &$args, count);
+                return crate::interpreter::builtins::errors::new_args_len_error($name, &$args, count);
             }
 
             $(
@@ -33,11 +57,11 @@ macro_rules! type_check {
 
                 if !matches!(arg.as_ref(), $ty) {
                     let type_name = crate::interpreter::constants::ALL_TYPES
-                            .iter()
-                            .filter(|v| matches!(v.as_ref(), $ty))
-                            .map(|v| v.type_of())
-                            .collect::<std::sync::Arc<[_]>>()
-                            .join(" or ");
+                    .iter()
+                    .filter(|v| matches!(v.as_ref(), $ty))
+                    .map(|v| v.type_of())
+                    .collect::<std::sync::Arc<[_]>>()
+                    .join(" or ");
 
                     return crate::interpreter::builtins::errors::new_type_error_with_got(
                         $name,

@@ -2,13 +2,10 @@
 use crate::interpreter::{
     builtins::type_check,
     objects::{BuiltinFunction, Object},
-    Env, Program, Reference, NUMBER, STRING,
+    Env, Program, Reference, NUMBER,
 };
 
-use super::{
-    errors::{new_args_len_error, new_type_error_with_pos},
-    typecheck_args,
-};
+use super::{errors::new_args_len_error, typecheck_args, unwrap_args};
 
 /// Add arithmetic builtins to the environment
 pub fn add_number_builtins(env: &mut Env) {
@@ -143,9 +140,8 @@ pub fn parse_int(_: &mut Program, args: Vec<Reference>) -> Reference {
         return new_args_len_error("sort", &args, 1);
     }
 
-    let Object::String(input) = args[0].as_ref() else {
-        return new_type_error_with_pos("parse_int", STRING.type_of(), 0);
-    };
+    type_check!("parse_int", args, [Object::String(_)]);
+    unwrap_args!(args, [Object::String(input)]);
 
     if let Ok(value) = input.parse::<isize>() {
         Reference::new(Object::Integer(value))
@@ -156,23 +152,14 @@ pub fn parse_int(_: &mut Program, args: Vec<Reference>) -> Reference {
 
 pub const MOD: BuiltinFunction = |_, args| {
     type_check!("mod", args, [Object::Integer(_), Object::Integer(_)]);
-
-    let Object::Integer(l) = args[0].as_ref() else {
-        panic!("This should never happen");
-    };
-    let Object::Integer(r) = args[1].as_ref() else {
-        panic!("This should never happen");
-    };
+    unwrap_args!(args, [Object::Integer(l), Object::Integer(r)]);
 
     Reference::new(Object::Integer(l % r))
 };
 
 pub const ABS: BuiltinFunction = |_, args| {
     type_check!("mod", args, [Object::Integer(_)]);
-
-    let Object::Integer(l) = args[0].as_ref() else {
-        panic!("This should never happen");
-    };
+    unwrap_args!(args, [Object::Integer(l)]);
 
     Reference::new(Object::Integer(l.abs()))
 };
