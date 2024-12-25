@@ -63,7 +63,7 @@ pub const LINES: BuiltinFunction = |_, args| {
     };
 
     let lines = inner
-        .split("\n")
+        .lines()
         .map(|v| Reference::new(Object::String(v.into())))
         .collect::<Arc<_>>();
 
