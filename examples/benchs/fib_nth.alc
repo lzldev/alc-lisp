@@ -1,0 +1,8 @@
+; Benchmarks getting the 50th fibonacci number with a recursive function
+
+(def fib
+  fn [v v2 n]
+  (if (== n 0) v (fib v2 (+ v v2) (- n 1))))
+
+
+(fib 1 1 50)

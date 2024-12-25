@@ -42,38 +42,7 @@ pub(crate) fn prepare_code(input: String) -> Result<Node> {
 }
 
 #[dir_test(
-    dir: "$CARGO_MANIFEST_DIR/examples/tests",
-    glob: "**/*.alc",
-)]
-fn example_benchs(fixture: Fixture<&str>) {
-    // The file content and the absolute path of the file are available as follows.
-    let path = fixture.path();
-    let code = fixture.content();
-
-    println!("{}:", path.purple());
-    println!("{}", code);
-
-    let mut program = new_test_program();
-    let ast = prepare_code((*code).to_owned()).unwrap();
-
-    let _last = program.eval(&ast).expect("running code failed");
-
-    let callstack = program.get_env();
-    let envs = callstack.active_slice();
-    let global = envs[0].read().clone();
-
-    let expected = global.get("expected").expect("expected value not found");
-    let message = global.get("message").expect("message value not found");
-    let Object::String(message) = message.as_ref() else {
-        panic!("message value is not a string");
-    };
-    let output = global.get("output").expect("output value not found");
-
-    assert_eq!(expected, output, "{message}");
-}
-
-#[dir_test(
-    dir: "$CARGO_MANIFEST_DIR/examples/benchs/lexer",
+    dir: "$CARGO_MANIFEST_DIR/examples/tests/",
     glob: "**/*.alc",
 )]
 fn example_tests(fixture: Fixture<&str>) {

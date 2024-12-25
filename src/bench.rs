@@ -1,6 +1,11 @@
 extern crate test;
 
-use crate::test::{new_test_program, prepare_code, prepare_test_ast, prepare_test_lexer};
+use core::panic;
+
+use crate::{
+    interpreter::objects::Object,
+    test::{new_test_program, prepare_code, prepare_test_ast, prepare_test_lexer},
+};
 
 use test::Bencher;
 
@@ -8,6 +13,7 @@ use dir_bench::dir_bench;
 
 use paste::paste;
 
+#[allow(unused_macros)]
 macro_rules! alc_f_bench {
     ($name:ident, $input:expr) => {
         paste! { #[bench]
@@ -29,21 +35,21 @@ macro_rules! alc_f_bench {
     };
 }
 
-alc_f_bench!(hello_world, "../examples/hello_world.alc");
-alc_f_bench!(hello_world_concat, "../examples/hello_string_concat.alc");
-alc_f_bench!(test_test, "../examples/test.alc");
-alc_f_bench!(fib_nth, "../examples/fib.alc");
-alc_f_bench!(fib_list_flat, "../examples/fib_list_flat.alc");
-alc_f_bench!(fib_list_concat, "../examples/fib_list_concat.alc");
-alc_f_bench!(map_test, "../examples/map_test.alc");
-alc_f_bench!(concat_test, "../examples/concat_test.alc");
-alc_f_bench!(split_test, "../examples/split_test.alc");
-alc_f_bench!(reduce_test, "../examples/reduce_test.alc");
-alc_f_bench!(reduce_sum, "../examples/reduce_sum_test.alc");
+// alc_f_bench!(hello_world, "../examples/hello_world.alc");
+// alc_f_bench!(hello_world_concat, "../examples/hello_string_concat.alc");
+// alc_f_bench!(test_test, "../examples/test.alc");
+// alc_f_bench!(fib_nth, "../examples/fib.alc");
+// alc_f_bench!(fib_list_flat, "../examples/fib_list_flat.alc");
+// alc_f_bench!(fib_list_concat, "../examples/fib_list_concat.alc");
+// alc_f_bench!(map_test, "../examples/map_test.alc");
+// alc_f_bench!(concat_test, "../examples/concat_test.alc");
+// alc_f_bench!(split_test, "../examples/split_test.alc");
+// alc_f_bench!(reduce_test, "../examples/reduce_test.alc");
+// alc_f_bench!(reduce_sum, "../examples/reduce_sum_test.alc");
 
 #[dir_bench(
     dir: "$CARGO_MANIFEST_DIR/examples/benchs/lexer",
-    glob: "**/*.alc",
+    glob: "*.alc",
 )]
 fn lexer(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
     let _path = file.path();
@@ -61,7 +67,7 @@ fn lexer(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
 
 #[dir_bench(
     dir: "$CARGO_MANIFEST_DIR/examples/benchs/ast",
-    glob: "**/*.alc",
+    glob: "*.alc",
 )]
 fn ast(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
     let _path = file.path();
@@ -83,4 +89,44 @@ fn ast(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
 
         println!("{:?}", root);
     })
+}
+
+#[dir_bench(
+    dir: "$CARGO_MANIFEST_DIR/examples/benchs",
+    glob: "*.alc",
+)]
+fn eval_cloned(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
+    let _path = file.path();
+    let code = file.into_content();
+
+    let program = new_test_program();
+    let ast = prepare_code(code.to_owned()).unwrap();
+
+    b.iter(|| {
+        let result = program.clone().eval(&ast).unwrap();
+
+        if matches!(result.as_ref(), Object::Error(_)) {
+            panic!("error during eval: {:?}", result);
+        }
+    });
+}
+
+#[dir_bench(
+    dir: "$CARGO_MANIFEST_DIR/examples/benchs",
+    glob: "*.alc",
+)]
+fn eval(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
+    let _path = file.path();
+    let code = file.into_content();
+
+    let mut program = new_test_program();
+    let ast = prepare_code(code.to_owned()).unwrap();
+
+    b.iter(|| {
+        let result = program.eval(&ast).unwrap();
+
+        if matches!(result.as_ref(), Object::Error(_)) {
+            panic!("error during eval: {:?}", result);
+        }
+    });
 }

@@ -1,0 +1,13 @@
+; Benchmarks getting a list of 50 numbers of the fibonnaci sequence with a recursive function
+; using the `concat` builtin and some extra variable definitions
+
+(def fib
+  fn [n v v2]
+  ((def r (if (== n 0)
+            [v]
+            (do ((def ret (fib (- n 1) v2 (+ v v2)))
+                 (concat [v] ret)
+                 ret))))
+   r))
+
+(def output (fib 50 1 1))

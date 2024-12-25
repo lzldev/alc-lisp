@@ -1,0 +1,12 @@
+; Benchmarks getting a list of 50 numbers of the fibonnaci sequence with a recursive function
+; using the `flat` builtin
+
+(def fib
+  fn [n v v2]
+  (if (== n 0)
+    v
+    [v (fib (- n 1) v2 (+ v v2))]))
+
+(def output (flat (fib 50 1 1)))
+
+output

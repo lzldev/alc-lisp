@@ -18,6 +18,7 @@ use super::{
     Env, Program, Reference, LIST, STRING, TRUE,
 };
 
+#[allow(unused_macros)]
 macro_rules! type_check {
     // for variadic functions
     ($name:expr,$args:ident,$type:pat) => {

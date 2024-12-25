@@ -1,3 +1,4 @@
+#[allow(unused_macros)]
 macro_rules! ast {
     () => {};
     {fn [$($args:ident),*] {$($body:tt),*}} => {
@@ -71,8 +72,6 @@ macro_rules! ast {
         })
     };
 }
-
-pub(crate) use ast;
 
 #[cfg(test)]
 mod tests {
