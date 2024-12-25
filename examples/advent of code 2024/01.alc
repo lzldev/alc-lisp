@@ -7,4 +7,9 @@
     fn [v] ((def values (split v "   "))
             (map values parse_int)))))
 
+(def (reduce input fn [acc v] ((def idx (nth 0 acc))
+                               (def left (nth 0 (nth 1 acc)))
+                               (def right (nth 1 (nth 1 acc))))
+             [0, [[] []]]))
+
 (print "input: " input)

@@ -130,3 +130,23 @@ fn eval(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
         }
     });
 }
+
+#[dir_bench(
+    dir: "$CARGO_MANIFEST_DIR/examples/advent of code 2024/",
+    glob: "*.alc",
+)]
+fn advent_of_code(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
+    let _path = file.path();
+    let code = file.into_content();
+
+    let mut program = new_test_program();
+    let ast = prepare_code(code.to_owned()).unwrap();
+
+    b.iter(|| {
+        let result = program.eval(&ast).unwrap();
+
+        if matches!(result.as_ref(), Object::Error(_)) {
+            panic!("error during eval: {:?}", result);
+        }
+    });
+}
