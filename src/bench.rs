@@ -153,7 +153,6 @@ fn advent_of_code(b: &mut Bencher, file: dir_bench::Fixture<&str>) {
 
     b.iter(|| {
         let result = new_test_program()
-            .clone()
             .eval(&ast)
             .expect("error running the program");
 
