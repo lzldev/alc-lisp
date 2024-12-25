@@ -20,15 +20,40 @@ use super::{
 
 #[allow(unused_macros)]
 macro_rules! type_check {
+    ($name:expr,$args:ident,[$($ty:pat),+]) => {
+        let count = ${count($ty)};
+        $(
+            let Some(arg) = $args.get(${index()}) else {
+             return crate::interpreter::builtins::errors::new_args_len_error($name, &$args, count);
+            };
+
+            if !matches!(arg.as_ref(), $ty) {
+                let type_name = crate::interpreter::constants::ALL_TYPES
+                        .iter()
+                        .filter(|v| matches!(v.as_ref(), $ty))
+                        .map(|v| v.type_of())
+                        .collect::<Arc<[_]>>()
+                        .join(" or ");
+
+                return crate::interpreter::builtins::errors::new_type_error_with_got(
+                    $name,
+                    &type_name,
+                    arg.type_of(),
+                );
+            }
+        )*
+    };
+
     // for variadic functions
     ($name:expr,$args:ident,$type:pat) => {
         for arg in args.iter() {
             if matches!(arg.as_ref(), $type) {
                 let type_name = crate::interpreter::constants::ALL_TYPES
                     .iter()
-                    .find(|v| matches!(arg.as_ref(), $pat))
-                    .unwrap()
-                    .type_of();
+                    .filter(|v| matches!(v.as_ref(), $type))
+                    .map(|v| v.type_of())
+                    .collect::<Arc<[_]>>()
+                    .join(" or ");
 
                 return crate::interpreter::builtins::errors::new_type_error_with_got(
                     name,
@@ -38,30 +63,9 @@ macro_rules! type_check {
             }
         }
     };
-    // type check a fixed number of argumens;
-    ($name:expr,$args:ident,[$(type:pat)*,+]) => {
-        $(
-            let Some(arg) = args.get(${index()}) else {
-             return crate::interpreter::builtins::errors::new_args_len_error(name, args, ${count($pat)});
-            };
-
-            if !matches!(arg.as_ref(), $type) {
-                let type_name = unsafe { crate::interpreter::constants::ALL_TYPES
-                    .iter()
-                    .find(|v| matches!(arg.as_ref(), $pat))
-                    .unwrap_unchecked()
-                    .type_of()
-                };
-
-                return crate::interpreter::builtins::errors::new_type_error_with_got(
-                    name,
-                    typename,
-                    arg.type_of(),
-                );
-            }
-        )*
-    };
 }
+
+pub(crate) use type_check;
 
 fn typecheck_args<F>(
     name: &str,
