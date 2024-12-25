@@ -32,6 +32,21 @@ pub fn new_type_error_with_got(name: &str, typename: &str, gottype: &str) -> Ref
     ))
 }
 
+pub fn new_type_error_with_got_and_pos(
+    name: &str,
+    pos: usize,
+    typename: &str,
+    gottype: &str,
+) -> Reference {
+    Reference::new(Object::Error(
+        format!(
+            "Invalid argument type for function '{}' at position {}: expected {} got {}",
+            name, pos, typename, gottype
+        )
+        .into(),
+    ))
+}
+
 pub fn new_type_error_with_pos(name: &str, typename: &str, pos: usize) -> Reference {
     Reference::new(Object::Error(
         format!(

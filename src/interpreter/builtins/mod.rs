@@ -63,8 +63,9 @@ macro_rules! type_check {
                     .collect::<std::sync::Arc<[_]>>()
                     .join(" or ");
 
-                    return crate::interpreter::builtins::errors::new_type_error_with_got(
+                    return crate::interpreter::builtins::errors::new_type_error_with_got_and_pos(
                         $name,
+                        ${index()},
                         &type_name,
                         arg.type_of(),
                     );

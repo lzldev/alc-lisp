@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::interpreter::{
     is_error, map_rust_error,
     objects::{BuiltinFunction, Object},
-    Env, Program, Reference, FUNCTION, LIST, NULL, NUMBER,
+    Env, Reference, FUNCTION, LIST, NULL, NUMBER,
 };
 
 use super::{
@@ -14,11 +14,11 @@ use super::{
 
 pub fn add_list_builtins(env: &mut Env) {
     let functions: [(&str, BuiltinFunction); _] = [
-        ("nth", nth),
-        ("head", head),
-        ("tail", tail),
-        ("slice", slice),
-        ("sort", sort),
+        ("nth", NTH),
+        ("head", HEAD),
+        ("tail", TAIL),
+        ("slice", SLICE),
+        ("sort", SORT),
         ("flat", FLAT),
         ("reduce", REDUCE),
         ("map", MAP),
@@ -80,7 +80,7 @@ pub const MAP: BuiltinFunction = |program, args| {
 };
 
 /// Returns the n-th element of a list
-pub fn nth(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const NTH: BuiltinFunction = |_, args| {
     let len = args.len();
     if len != 2 {
         return new_args_len_error("nth", &args, 2);
@@ -94,10 +94,10 @@ pub fn nth(_: &mut Program, args: Vec<Reference>) -> Reference {
     };
 
     l.get(*n as usize).cloned().unwrap_or(NULL.clone())
-}
+};
 
 /// Returns the first element of a list
-pub fn head(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const HEAD: BuiltinFunction = |_, args| {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("head", &args, 1);
@@ -114,10 +114,10 @@ pub fn head(_: &mut Program, args: Vec<Reference>) -> Reference {
     let first = l.iter().next().cloned();
 
     first.unwrap_or_else(|| NULL.clone())
-}
+};
 
 /// Returns the tail of a list
-pub fn tail(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const TAIL: BuiltinFunction = |_, args| {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("tail", &args, 1);
@@ -130,10 +130,10 @@ pub fn tail(_: &mut Program, args: Vec<Reference>) -> Reference {
     let vec = l.iter().skip(1).cloned().collect();
 
     Reference::new(Object::List(vec))
-}
+};
 
 /// Returns a slice of a list. If the third argument is not provided, the slice will go to the end of the list.
-pub fn slice(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const SLICE: BuiltinFunction = |_, args| {
     let len = args.len();
     if len != 2 && len != 3 {
         return new_args_len_error("slice", &args, 2);
@@ -160,9 +160,9 @@ pub fn slice(_: &mut Program, args: Vec<Reference>) -> Reference {
         .collect();
 
     Reference::new(Object::List(vec))
-}
+};
 
-pub fn sort(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const SORT: BuiltinFunction = |_, args| {
     let len = args.len();
 
     if len != 1 {
@@ -177,7 +177,7 @@ pub fn sort(_: &mut Program, args: Vec<Reference>) -> Reference {
     vec.sort();
 
     Reference::new(Object::List(vec.into()))
-}
+};
 
 /// Flattens a list
 pub const FLAT: BuiltinFunction = |program, args| {

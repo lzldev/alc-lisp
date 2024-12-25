@@ -2,7 +2,7 @@
 use crate::interpreter::{
     builtins::type_check,
     objects::{BuiltinFunction, Object},
-    Env, Program, Reference, NUMBER,
+    Env, Reference, NUMBER,
 };
 
 use super::{errors::new_args_len_error, typecheck_args, unwrap_args};
@@ -10,12 +10,12 @@ use super::{errors::new_args_len_error, typecheck_args, unwrap_args};
 /// Add arithmetic builtins to the environment
 pub fn add_number_builtins(env: &mut Env) {
     let functions: [(&str, BuiltinFunction); _] = [
-        ("+", add),
-        ("-", subtract),
-        ("*", multiply),
-        ("/", divide),
+        ("+", ADD),
+        ("-", SUBTRACT),
+        ("*", MULTIPLY),
+        ("/", DIVIDE),
         ("%", MOD),
-        ("parse_int", parse_int),
+        ("parse_int", PARSE_INT),
         ("abs", ABS),
     ];
 
@@ -29,7 +29,7 @@ pub fn add_number_builtins(env: &mut Env) {
 }
 
 /// Adds numbers
-pub fn add(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const ADD: BuiltinFunction = |_, args| {
     if let Some(err) = typecheck_args(
         "+",
         NUMBER.type_of(),
@@ -50,10 +50,10 @@ pub fn add(_: &mut Program, args: Vec<Reference>) -> Reference {
     }
 
     Reference::new(Object::Integer(sum))
-}
+};
 
 /// Subtracts numbers
-pub fn subtract(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const SUBTRACT: BuiltinFunction = |_, args| {
     if let Some(err) = typecheck_args(
         "-",
         NUMBER.type_of(),
@@ -76,10 +76,10 @@ pub fn subtract(_: &mut Program, args: Vec<Reference>) -> Reference {
     }
 
     Reference::new(Object::Integer(total))
-}
+};
 
 /// Multiplies numbers
-pub fn multiply(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const MULTIPLY: BuiltinFunction = |_, args| {
     if let Some(err) = typecheck_args(
         "*",
         NUMBER.type_of(),
@@ -102,10 +102,10 @@ pub fn multiply(_: &mut Program, args: Vec<Reference>) -> Reference {
     }
 
     Reference::new(Object::Integer(total))
-}
+};
 
 /// Divides numbers
-pub fn divide(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const DIVIDE: BuiltinFunction = |_, args| {
     if let Some(err) = typecheck_args(
         "/",
         NUMBER.type_of(),
@@ -132,9 +132,9 @@ pub fn divide(_: &mut Program, args: Vec<Reference>) -> Reference {
     }
 
     Reference::new(Object::Integer(total))
-}
+};
 
-pub fn parse_int(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const PARSE_INT: BuiltinFunction = |_, args| {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("sort", &args, 1);
@@ -148,7 +148,7 @@ pub fn parse_int(_: &mut Program, args: Vec<Reference>) -> Reference {
     } else {
         Reference::new(Object::Error("Could not parse int".into()))
     }
-}
+};
 
 pub const MOD: BuiltinFunction = |_, args| {
     type_check!("mod", args, [Object::Integer(_), Object::Integer(_)]);

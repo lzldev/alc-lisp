@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::interpreter::{
     objects::{BuiltinFunction, Object},
-    Env, Program, Reference, STRING,
+    Env, Reference, STRING,
 };
 
 use super::{
@@ -13,7 +13,7 @@ use super::{
 
 pub fn add_string_builtins(env: &mut Env) {
     let functions: [(&str, BuiltinFunction); _] =
-        [("str", str), ("lines", lines), ("split", SPLIT)];
+        [("str", STR), ("lines", LINES), ("split", SPLIT)];
 
     functions
         .into_iter()
@@ -25,7 +25,7 @@ pub fn add_string_builtins(env: &mut Env) {
 }
 
 /// Concatenates the arguments into a string
-pub fn str(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const STR: BuiltinFunction = |_, args| {
     if let Some(err) = typecheck_args(
         "str",
         STRING.type_of(),
@@ -47,10 +47,10 @@ pub fn str(_: &mut Program, args: Vec<Reference>) -> Reference {
         .collect::<String>();
 
     Reference::new(Object::String(result.into()))
-}
+};
 
 /// Splits a string into a list of lines
-fn lines(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const LINES: BuiltinFunction = |_, args| {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("lines", &args, 1);
@@ -75,7 +75,7 @@ fn lines(_: &mut Program, args: Vec<Reference>) -> Reference {
         .collect::<Arc<_>>();
 
     Reference::new(Object::List(lines))
-}
+};
 
 /// Splits a string into a list based on the delimiter
 pub const SPLIT: BuiltinFunction = |_, args| {

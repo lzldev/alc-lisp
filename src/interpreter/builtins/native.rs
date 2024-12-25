@@ -13,7 +13,7 @@ use parking_lot::Mutex;
 
 use crate::interpreter::{
     objects::{BuiltinFunction, Object},
-    Env, Program, Reference, NULL, NUMBER, STRING,
+    Env, Reference, NULL, NUMBER, STRING,
 };
 
 use super::{
@@ -23,52 +23,25 @@ use super::{
 
 /// Adds the native builtins to a environment
 pub fn add_native_builtins(env: &mut Env) {
-    env.insert(
-        "print".into(),
-        Reference::new(Object::Builtin { function: print }),
-    );
+    let functions: [(&str, BuiltinFunction); _] = [
+        ("print", PRINT),
+        ("debug", DEBUG),
+        ("pdebug", PDEBUG),
+        ("pwd", PWD),
+        ("open", OPEN),
+        ("close", CLOSE),
+        ("file", FILE),
+        ("read_file", READ_FILE),
+        ("sleep", SLEEP),
+    ];
 
-    env.insert(
-        "debug".into(),
-        Reference::new(Object::Builtin { function: debug }),
-    );
-
-    env.insert(
-        "pdebug".into(),
-        Reference::new(Object::Builtin { function: pdebug }),
-    );
-
-    env.insert(
-        "pwd".into(),
-        Reference::new(Object::Builtin { function: pwd }),
-    );
-
-    env.insert(
-        "open".into(),
-        Reference::new(Object::Builtin { function: open }),
-    );
-
-    env.insert(
-        "close".into(),
-        Reference::new(Object::Builtin { function: close }),
-    );
-
-    env.insert(
-        "read_file".into(),
-        Reference::new(Object::Builtin {
-            function: read_file,
-        }),
-    );
-
-    env.insert(
-        "file".into(),
-        Reference::new(Object::Builtin { function: file }),
-    );
-
-    env.insert(
-        "sleep".into(),
-        Reference::new(Object::Builtin { function: SLEEP }),
-    );
+    functions
+        .into_iter()
+        .map(|(name, function)| (name, Reference::new(Object::Builtin { function })))
+        .for_each(|(name, function)| {
+            env.insert(name.into(), function.clone());
+            env.insert(("std/".to_owned() + name).into(), function);
+        });
 }
 
 type FileRef = Option<File>;
@@ -88,25 +61,25 @@ static OPEN_FILE: Lazy<Mutex<FileRef>> = Lazy::new(|| Mutex::new(None));
 // TODO: with that we can have a : fprint (file print)
 // TODO: println and print and fprintln
 /// Prints the arguments to stdout
-fn print(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const PRINT: BuiltinFunction = |_, args| {
     println!("{}", args.iter().map(|v| v.to_string()).collect::<String>());
     NULL.clone()
-}
+};
 
 /// Prints the arguments to stdout in a debug format.
-pub fn debug(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const DEBUG: BuiltinFunction = |_, args| {
     println!("{:?}", args);
     NULL.clone()
-}
+};
 
 /// Prints the arguments to stdout in a pretty debug format.
-pub fn pdebug(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const PDEBUG: BuiltinFunction = |_, args| {
     println!("{:#?}", args);
     NULL.clone()
-}
+};
 
 /// Reads the current global file into a string
-pub fn read_file(_: &mut Program, _: Vec<Reference>) -> Reference {
+pub const READ_FILE: BuiltinFunction = |_, _| {
     let mut lock = OPEN_FILE.lock();
 
     if lock.is_none() {
@@ -126,10 +99,10 @@ pub fn read_file(_: &mut Program, _: Vec<Reference>) -> Reference {
     let _ = lock.insert(file);
 
     Reference::new(Object::String(string.into()))
-}
+};
 
 /// Returns the current working directory
-pub fn pwd(_: &mut Program, _: Vec<Reference>) -> Reference {
+pub const PWD: BuiltinFunction = |_, _| {
     Reference::new(Object::String(
         current_dir()
             .expect("to get current dir")
@@ -137,10 +110,10 @@ pub fn pwd(_: &mut Program, _: Vec<Reference>) -> Reference {
             .expect("to convert pathbuf to str")
             .into(),
     ))
-}
+};
 
 /// Returns the current global file descriptor as a string
-pub fn file(_: &mut Program, _: Vec<Reference>) -> Reference {
+pub const FILE: BuiltinFunction = |_, _| {
     let lock = OPEN_FILE.lock();
 
     if let Some(file) = lock.as_ref() {
@@ -148,10 +121,10 @@ pub fn file(_: &mut Program, _: Vec<Reference>) -> Reference {
     } else {
         NULL.clone()
     }
-}
+};
 
 /// Opens a file into the global file descriptor
-pub fn open(_: &mut Program, args: Vec<Reference>) -> Reference {
+pub const OPEN: BuiltinFunction = |_, args| {
     let len = args.len();
     if len != 1 {
         return new_args_len_error("open", &args, 1);
@@ -182,11 +155,11 @@ pub fn open(_: &mut Program, args: Vec<Reference>) -> Reference {
     };
 
     NULL.clone()
-}
+};
 
 ///Closes the global file descriptor
-pub fn close(_: &mut Program, _: Vec<Reference>) -> Reference {
+pub const CLOSE: BuiltinFunction = |_, _| {
     *OPEN_FILE.lock() = None;
 
     NULL.clone()
-}
+};
