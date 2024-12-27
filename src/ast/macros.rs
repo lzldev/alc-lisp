@@ -37,11 +37,11 @@ macro_rules! ast {
         })
     };
     {number $value:expr} => {
-        crate::ast::Node::NumberLiteral(crate::lexer::Token {
-            value: stringify!($value).into(),
-            token_type: crate::lexer::TokenType::NumberLiteral,
-            ..Default::default()
-        })
+        crate::ast::Node::NumberLiteral{ value:$value,token:crate::lexer::Token {
+        value: stringify!($value).into(),
+        token_type: crate::lexer::TokenType::NumberLiteral,
+        ..Default::default()
+        } }
     };
     {word $value:ident} => {
         crate::ast::Node::Word(crate::lexer::Token {
@@ -102,16 +102,22 @@ mod tests {
                         token_type: TokenType::Word,
                         ..Default::default()
                     }),
-                    Node::NumberLiteral(Token {
-                        value: "1".into(),
-                        token_type: TokenType::NumberLiteral,
-                        ..Default::default()
-                    }),
-                    Node::NumberLiteral(Token {
-                        value: "2".into(),
-                        token_type: TokenType::NumberLiteral,
-                        ..Default::default()
-                    }),
+                    Node::NumberLiteral {
+                        value: 1,
+                        token: Token {
+                            value: "1".into(),
+                            token_type: TokenType::NumberLiteral,
+                            ..Default::default()
+                        },
+                    },
+                    Node::NumberLiteral {
+                        value: 2,
+                        token: Token {
+                            value: "2".into(),
+                            token_type: TokenType::NumberLiteral,
+                            ..Default::default()
+                        },
+                    },
                 ]
                 .into(),
             )),
@@ -139,16 +145,22 @@ mod tests {
                             token_type: TokenType::Word,
                             ..Default::default()
                         }),
-                        Node::NumberLiteral(Token {
-                            value: "1".into(),
-                            token_type: TokenType::NumberLiteral,
-                            ..Default::default()
-                        }),
-                        Node::NumberLiteral(Token {
-                            value: "1".into(),
-                            token_type: TokenType::NumberLiteral,
-                            ..Default::default()
-                        }),
+                        Node::NumberLiteral {
+                            value: 1,
+                            token: Token {
+                                value: "1".into(),
+                                token_type: TokenType::NumberLiteral,
+                                ..Default::default()
+                            },
+                        },
+                        Node::NumberLiteral {
+                            value: 1,
+                            token: Token {
+                                value: "1".into(),
+                                token_type: TokenType::NumberLiteral,
+                                ..Default::default()
+                            },
+                        },
                     ]
                     .into(),
                 ),

@@ -172,7 +172,10 @@ impl AST {
                 ))
             }
             lexer::TokenType::StringLiteral => Node::StringLiteral(token),
-            lexer::TokenType::NumberLiteral => Node::NumberLiteral(token),
+            lexer::TokenType::NumberLiteral => Node::NumberLiteral {
+                value: token.value.parse::<isize>()?,
+                token,
+            },
             lexer::TokenType::Word => match token.value.as_ref() {
                 "fn" => self.parse_function(token)?,
                 "true" | "false" => Node::BooleanLiteral(token),

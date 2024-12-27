@@ -329,7 +329,7 @@ impl Program {
                     token.value[1..(len - 1)].into(),
                 )))
             }
-            Node::NumberLiteral(token) => {
+            Node::NumberLiteral { token, .. } => {
                 let mut table = NUMBER_LOOKUP_TABLE.lock();
 
                 if let Some(value) = table.get(&token.value) {

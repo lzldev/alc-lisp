@@ -19,7 +19,10 @@ pub enum Node {
     Expression(Arc<[Node]>), //TODO: Those lists should have a Token for the starting and ending
     List(Arc<[Node]>),
     StringLiteral(Token),
-    NumberLiteral(Token),
+    NumberLiteral {
+        value: isize,
+        token: Token,
+    },
     BooleanLiteral(Token),
     FunctionLiteral {
         token: Token,
@@ -36,7 +39,7 @@ impl Node {
             Node::Expression(_) => "expression",
             Node::List(_) => "list",
             Node::StringLiteral(_) => "string",
-            Node::NumberLiteral(_) => "number",
+            Node::NumberLiteral { token: _, .. } => "number",
             Node::BooleanLiteral(_) => "boolean",
             Node::FunctionLiteral { .. } => "function",
         }
@@ -74,7 +77,7 @@ impl Node {
             Node::Invalid(token)
             | Node::StringLiteral(token)
             | Node::Word(token)
-            | Node::NumberLiteral(token)
+            | Node::NumberLiteral { token, .. }
             | Node::BooleanLiteral(token) => &token.start,
             Node::Expression(vec) | Node::List(vec) => vec
                 .first()
@@ -89,7 +92,7 @@ impl Node {
             Node::Invalid(token)
             | Node::StringLiteral(token)
             | Node::Word(token)
-            | Node::NumberLiteral(token)
+            | Node::NumberLiteral { token, .. }
             | Node::BooleanLiteral(token) => &token.end,
             Node::Expression(vec) | Node::List(vec) => vec
                 .last()
@@ -108,7 +111,9 @@ impl PartialEq for Node {
             (Self::Expression(l0), Self::Expression(r0)) => l0 == r0,
             (Self::List(l0), Self::List(r0)) => l0 == r0,
             (Self::StringLiteral(l0), Self::StringLiteral(r0)) => l0 == r0,
-            (Self::NumberLiteral(l0), Self::NumberLiteral(r0)) => l0 == r0,
+            (Self::NumberLiteral { value: l0, .. }, Self::NumberLiteral { value: r0, .. }) => {
+                l0 == r0
+            }
             (Self::BooleanLiteral(l0), Self::BooleanLiteral(r0)) => l0 == r0,
             (
                 Self::FunctionLiteral {
