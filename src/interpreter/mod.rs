@@ -19,7 +19,7 @@ pub type EnvReference = Arc<EnvReferenceInner>;
 pub type EnvReferenceInner = RwLock<Env>;
 pub type Env = HashMap<Arc<str>, Reference>;
 
-static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<Arc<str>, Reference>>> =
+static NUMBER_LOOKUP_TABLE: Lazy<Mutex<HashMap<isize, Reference>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 macro_rules! map_rust_error {
@@ -329,21 +329,17 @@ impl Program {
                     token.value[1..(len - 1)].into(),
                 )))
             }
-            Node::NumberLiteral { token, .. } => {
+            Node::NumberLiteral { value, .. } => {
                 let mut table = NUMBER_LOOKUP_TABLE.lock();
 
-                if let Some(value) = table.get(&token.value) {
+                if let Some(value) = table.get(value) {
                     Ok(value.clone())
                 } else {
-                    let value = token
-                        .value
-                        .parse::<isize>()
-                        .map(|v| Reference::new(Object::Integer(v)))
-                        .context("error parsing numberliteral:")?;
+                    let obj = Reference::new(Object::Integer(*value));
 
-                    table.insert(token.value.clone(), value.clone());
+                    table.insert(*value, obj.clone());
 
-                    Ok(value)
+                    Ok(obj)
                 }
             }
             Node::Invalid(_) => Ok(Reference::new(Object::Error(

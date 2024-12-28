@@ -1,11 +1,13 @@
-use std::{
-    fmt::Display,
-    sync::{Arc, LazyLock},
-};
+use std::{fmt::Display, sync::Arc};
 
 use crate::ast::Node;
 
-use super::{EnvReference, Program, Reference, NULL};
+use super::{EnvReference, Program, Reference};
+
+#[cfg(feature = "serde")]
+use super::NULL;
+#[cfg(feature = "serde")]
+use std::sync::LazyLock;
 
 #[cfg(feature = "wasm")]
 mod wasm;
@@ -38,11 +40,12 @@ pub enum Object {
 
 pub type BuiltinFunction = fn(&mut Program, Vec<Reference>) -> Reference;
 
+#[cfg(feature = "serde")]
 pub static DEFAULT_BUILTIN: LazyLock<BuiltinFunction> =
     LazyLock::new(|| |_: &mut Program, _: Vec<Reference>| -> Reference { NULL.clone() });
 
 #[cfg(feature = "serde")]
-fn get_default_builtin() -> fn(&mut Program, Vec<Reference>) -> Reference {
+fn get_default_builtin() -> BuiltinFunction {
     *DEFAULT_BUILTIN
 }
 
