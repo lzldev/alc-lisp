@@ -15,7 +15,7 @@ impl From<Object> for wasm_bindgen::JsValue {
         match value {
             Object::Null => wasm_bindgen::JsValue::NULL,
             Object::Integer(value) => wasm_bindgen::JsValue::from(value as i32),
-            Object::String(st) => JsString::from(st.to_string()).into(),
+            Object::String(st) => JsString::from(st.as_ref()).into(),
             Object::Bool(value) => {
                 if value {
                     wasm_bindgen::JsValue::TRUE

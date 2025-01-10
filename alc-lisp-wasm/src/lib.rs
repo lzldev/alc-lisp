@@ -10,6 +10,7 @@ use builtins::add_wasm_builtins;
 use gloo_utils::format::JsValueSerdeExt;
 use log::info;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsValue;
 use web_sys::{Performance, Window};
 
 mod builtins;
@@ -107,8 +108,8 @@ pub fn parse_and_run(code: String, callback: js_sys::Function) {
         .expect("gloo_utils::format::JsValueSerdeExt::from_serde");
     let js_ast =
         JsValue::from_serde(&root).expect("gloo_utils::format::JsValueSerdeExt::from_serde");
-    let js_result =
-        JsValue::from_serde(&result).expect("gloo_utils::format::JsValueSerdeExt::from_serde");
+
+    let js_result = JsValue::from(result.as_ref().clone());
 
     callback
         .call3(

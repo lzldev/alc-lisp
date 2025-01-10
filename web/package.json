@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build",
+    "type:check": "astro check",
+    "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "link": "pnpm link ../alc-lisp-wasm/pkg"

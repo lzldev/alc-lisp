@@ -1,0 +1,23 @@
+;; Hello World Program in alc-lisp
+
+(print "Hello World")
+
+(def fib fn[n1 n2 n] (
+    (if (== n 0) n1 (fib n2 (+ n1 n2) (- n 1)))
+))
+
+(print "Fibonacci Examples:")
+(def fib10 (fib 1 1 10))
+
+(print "10th: " fib10)
+
+(def fib_concat fn[n1 n2 n] (
+    (if (== n 0) [n1] (concat [n1] (fib_concat n2 (+ n1 n2) (- n 1))))
+))
+
+(def fib_list (fib_concat 1 1 10))
+
+(print "List: " fib_list)
+
+;; last expression is returned from interpreter
+fib_list

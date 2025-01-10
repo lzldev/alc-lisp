@@ -42,14 +42,6 @@ pub fn add_wasm_builtins(env: &mut Env) {
         "print".into(),
         Reference::new(Object::Builtin {
             function: |_, args| {
-                info!(
-                    "{}",
-                    args.iter().fold(String::new(), |mut output, b| {
-                        let _ = write!(output, "{}", b);
-                        output
-                    })
-                );
-
                 let callbacks = CALLBACKS.lock();
 
                 if callbacks.is_empty() {
