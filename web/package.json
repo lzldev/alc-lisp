@@ -11,7 +11,7 @@
     "link": "pnpm link ../alc-lisp-wasm/pkg"
   },
   "dependencies": {
-    "@alc-lisp/wasm": "^0.1.0",
+    "@alc-lisp/wasm": "^0.1.1",
     "@astrojs/check": "^0.9.4",
     "@astrojs/react": "^3.6.3",
     "@astrojs/tailwind": "^5.1.2",

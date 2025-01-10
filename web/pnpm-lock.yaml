@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@alc-lisp/wasm':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
       '@astrojs/check':
         specifier: ^0.9.4
         version: 0.9.4(prettier-plugin-astro@0.14.1)(prettier@3.4.2)(typescript@5.7.2)
@@ -69,8 +69,8 @@ importers:
 
 packages:
 
-  '@alc-lisp/wasm@0.1.0':
-    resolution: {integrity: sha512-98AR+lcYJzWbLsT8QQDApsGkcD/J5iSjUl4lMrsNWGY2j2f7WAsCDDb7rAE/g0ssUQrrPr8EHOsPWnDMSBkc7w==}
+  '@alc-lisp/wasm@0.1.1':
+    resolution: {integrity: sha512-prxG1yrhgCERHYMMzthjct/ucazfe2HaHSh/PhbC2DXwgoULsgchDBUpmJuu6+yRUrYOFukbWcmfXX7gFTcSWA==}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -2412,7 +2412,7 @@ packages:
 
 snapshots:
 
-  '@alc-lisp/wasm@0.1.0': {}
+  '@alc-lisp/wasm@0.1.1': {}
 
   '@alloc/quick-lru@5.2.0': {}
 
