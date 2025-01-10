@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use crate::interpreter::{
-    is_error, map_rust_error,
+    is_error, is_truthy, map_rust_error,
     objects::{BuiltinFunction, Object},
     Env, Reference, FUNCTION, LIST, NULL, NUMBER,
 };
@@ -22,6 +22,7 @@ pub fn add_list_builtins(env: &mut Env) {
         ("flat", FLAT),
         ("reduce", REDUCE),
         ("map", MAP),
+        ("filter", FILTER),
         ("concat", CONCAT),
     ];
 
@@ -76,6 +77,41 @@ pub const MAP: BuiltinFunction = |program, args| {
             }
         }
         _ => new_type_error_with_pos("map", FUNCTION.type_of(), 1),
+    }
+};
+
+///
+pub const FILTER: BuiltinFunction = |program, args| {
+    let len = args.len();
+    if len != 2 {
+        return new_args_len_error("filter", &args, 2);
+    }
+
+    let Object::List(l) = args[0].as_ref() else {
+        return new_type_error_with_pos("filter", LIST.type_of(), 0);
+    };
+
+    match args[1].as_ref() {
+        Object::Function {
+            parameters,
+            body,
+            env,
+            ..
+        } => {
+            let result = l
+                .iter()
+                .map(|item| program.run_function(env, body, parameters, &[item.clone()]))
+                .zip(l.iter())
+                .filter(|(result, _)| result.as_ref().is_ok_and(is_truthy))
+                .map(|(_, value)| Ok(value.clone()))
+                .collect::<anyhow::Result<Arc<_>>>();
+
+            match result {
+                Ok(result) => Reference::new(Object::List(result)),
+                Err(err) => Reference::new(Object::Error(err.to_string().into())),
+            }
+        }
+        _ => new_type_error_with_pos("filter", FUNCTION.type_of(), 1),
     }
 };
 

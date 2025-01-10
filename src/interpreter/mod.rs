@@ -192,7 +192,7 @@ impl Program {
                         .parse_expression(&nodes[1])
                         .and_then(map_rust_error!("if condition error"))?;
 
-                    let truthy = is_truthy(condition);
+                    let truthy = is_truthy(&condition);
 
                     return if truthy {
                         self.parse_expression(&nodes[2])
@@ -398,7 +398,7 @@ pub fn is_error(value: &Reference) -> bool {
     matches!(value.as_ref(), Object::Error(_))
 }
 
-fn is_truthy(value: Reference) -> bool {
+fn is_truthy(value: &Reference) -> bool {
     match value.as_ref() {
         Object::Integer(v) => {
             if v != &0 {
