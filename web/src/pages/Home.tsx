@@ -36,7 +36,6 @@ export function Home() {
                   parse_and_run(
                     code,
                     (result: any, tokens: Token[], ast: Node) => {
-                      console.log(result, "[tokens]", tokens, "[AST]", ast);
                       setTokens(tokens);
                       setAST(ast);
                     },
@@ -53,7 +52,6 @@ export function Home() {
                   const start = performance.now();
                   run(code);
                   const end = performance.now();
-                  console.log("[js] total:", (end - start).toFixed(4), "ms");
                 }}
               >
                 Run

@@ -6,12 +6,11 @@ export function App({ children, ...props }: PropsWithChildren) {
 
   useEffect(() => {
     (async () => {
-      console.log("Loading...");
       await init();
       setIsLoading(false);
-      console.log("loaded");
     })();
   }, []);
+
   if (isLoading) {
     return <>Loading...</>;
   }
