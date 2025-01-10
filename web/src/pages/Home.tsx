@@ -8,7 +8,7 @@ import {
   type Node,
   type Object,
   type Token,
-} from "alc-lisp-wasm";
+} from "@alc-lisp/wasm";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "../components/Header";

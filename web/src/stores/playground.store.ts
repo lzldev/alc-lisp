@@ -1,4 +1,4 @@
-import type { Node, Token } from "alc-lisp-wasm";
+import type { Node, Token } from "@alc-lisp/wasm";
 import { create } from "zustand";
 
 export type PlaygroundStore = {

@@ -8,7 +8,7 @@ build-fast-glibc:
 	cargo build --profile=fast
 
 build-wasm:
-	wasm-pack build ./alc-lisp-wasm --out-dir ./alc-lisp-wasm/pkg  --target web -v
+	wasm-pack build ./alc-lisp-wasm --scope="alc-lisp" --target web -v
 	
 bench-release:
 	cargo bench --profile=release 

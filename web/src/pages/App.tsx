@@ -1,4 +1,4 @@
-import init from "alc-lisp-wasm";
+import init from "@alc-lisp/wasm";
 import { useEffect, useState, type PropsWithChildren } from "react";
 
 export function App({ children, ...props }: PropsWithChildren) {

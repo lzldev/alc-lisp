@@ -1,7 +1,8 @@
 [package]
-name = "alc-lisp-wasm"
+name = "wasm"
 description = "WASM Version of the alc-lisp interpreter"
 repository = "https://github.com/lzldev/alc-lisp"
+authors = ["Lucas Costa <francisco.lucas0507@gmail.com>"]
 license = "Apache-2.0"
 version = "0.1.0"
 edition = "2021"

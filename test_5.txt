@@ -1,8 +1,0 @@
-
-(define summer (fn [n] (
-    (fn [x] (+ n x))
-)))
-
-(define s (summer 2))
-
-(s 1)
