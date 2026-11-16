@@ -42,8 +42,6 @@ pub struct Program {
     env: CallStack,
 }
 
-const STACK_SIZE: usize = 4096;
-
 #[derive(Debug, Clone)]
 pub struct CallStack {
     stack: SmallVec<[EnvReference; 64]>,
@@ -57,9 +55,12 @@ impl CallStack {
         }
     }
 
+    #[inline]
     pub fn push_env(&mut self, env: EnvReference) {
         self.stack.push(env);
     }
+
+    #[inline]
     pub fn pop_env(&mut self) {
         assert!(
             self.stack.len() > 1,
@@ -67,17 +68,24 @@ impl CallStack {
         );
         self.stack.pop();
     }
+
+    #[inline]
     pub fn current_env(&self) -> &EnvReference {
         &self.stack[self.stack.len() - 1]
     }
+
+    #[inline]
     pub fn current_env_mut(&mut self) -> &mut EnvReference {
         let idx = self.stack.len() - 1;
         &mut self.stack[idx]
     }
 
+    #[inline]
     pub fn active_slice(&self) -> &[EnvReference] {
         &self.stack[..]
     }
+
+    #[inline]
     pub fn active_slice_mut(&mut self) -> &mut [EnvReference] {
         &mut self.stack[..]
     }
