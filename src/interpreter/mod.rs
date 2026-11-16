@@ -5,6 +5,7 @@ use foldhash::{HashMap, HashMapExt};
 use objects::Object;
 use once_cell::sync::Lazy;
 use parking_lot::{Mutex, RwLock};
+use smallvec::{smallvec, SmallVec};
 
 use crate::ast::Node;
 
@@ -45,39 +46,40 @@ const STACK_SIZE: usize = 4096;
 
 #[derive(Debug, Clone)]
 pub struct CallStack {
-    stack: [EnvReference; STACK_SIZE],
-    sp: usize,
+    stack: SmallVec<[EnvReference; 64]>,
+    // stack: [EnvReference; STACK_SIZE],
 }
 
 impl CallStack {
     pub fn new(initial: EnvReference) -> Self {
-        let mut stack =
-            std::array::from_fn(|_| EnvReference::new(EnvReferenceInner::new(Env::default())));
-
-        stack[0] = initial;
-
-        Self { stack, sp: 0 }
+        Self {
+            stack: smallvec![initial],
+        }
     }
 
     pub fn push_env(&mut self, env: EnvReference) {
-        self.sp += 1;
-        self.stack[self.sp] = env;
+        self.stack.push(env);
     }
     pub fn pop_env(&mut self) {
-        self.sp -= 1;
+        assert!(
+            self.stack.len() > 1,
+            "trying to pop a stack with only 1 env"
+        );
+        self.stack.pop();
     }
     pub fn current_env(&self) -> &EnvReference {
-        &self.stack[self.sp]
+        &self.stack[self.stack.len() - 1]
     }
     pub fn current_env_mut(&mut self) -> &mut EnvReference {
-        &mut self.stack[self.sp]
+        let idx = self.stack.len() - 1;
+        &mut self.stack[idx]
     }
 
     pub fn active_slice(&self) -> &[EnvReference] {
-        &self.stack[0..=self.sp]
+        &self.stack[..]
     }
     pub fn active_slice_mut(&mut self) -> &mut [EnvReference] {
-        &mut self.stack[0..=self.sp]
+        &mut self.stack[..]
     }
 }
 
