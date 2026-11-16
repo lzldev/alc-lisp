@@ -1,6 +1,4 @@
-#![feature(generic_arg_infer)]
 #![feature(macro_metavar_expr)]
-#![feature(allocator_api)]
 #![feature(test)]
 
 pub mod ast;

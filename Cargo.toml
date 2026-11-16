@@ -1,28 +1,19 @@
 [package]
 name = "alc-lisp"
-description = "LISP interpreter"
-authors = ["Lucas Costa <francisco.lucas0507@gmail.com>"]
-repository = "https://github.com/lzldev/alc-lisp"
-license = "Apache-2.0"
 version = "0.1.0"
 edition = "2021"
+description = "LISP interpreter"
+repository = "https://github.com/lzldev/alc-lisp"
+license = "Apache-2.0"
 default-run = "alc-lisp"
 
-[workspace]
-members = ["alc-lisp-wasm"]
-
-[workspace.dependencies]
-once_cell = "1.20.2"
-serde = "1.0.216"
-js-sys = "0.3.76"
-web-sys = "0.3.76"
-wasm-bindgen = "0.2.99"
-ts-rs = "10.1.0"
-parking_lot = { version = "0.12.3", features = [
-    "serde",
-    "nightly",
-    "hardware-lock-elision",
-] }
+[features]
+default = ["bin"]
+bin = ["dep:clap", "dep:colored"]
+mimalloc = ["dep:mimalloc"]
+serde = ["dep:serde"]
+ts-rs = ["dep:ts-rs", "serde"]
+wasm = ["dep:js-sys", "dep:wasm-bindgen", "ts-rs"]
 
 [dependencies]
 anyhow = "1.0.94"
@@ -30,46 +21,60 @@ anyhow = "1.0.94"
 clap = { version = "4.5.23", features = ["derive"], optional = true }
 colored = { version = "2.2.0", optional = true }
 
+foldhash = { version = "0.1.3" }
+js-sys = { workspace = true, optional = true }
+mimalloc = {
+  version = "0.1.43",
+  features = [
+    "extended",
+    "local_dynamic_tls",
+    "override",
+  ],
+  optional = true
+}
+once_cell = { workspace = true }
+parking_lot = { workspace = true }
 serde = { workspace = true, features = ["derive", "rc"], optional = true }
 ts-rs = { workspace = true, optional = true }
 wasm-bindgen = { workspace = true, optional = true }
-js-sys = { workspace = true, optional = true }
-once_cell = { workspace = true }
-foldhash = "0.1.3"
-parking_lot = { workspace = true }
-mimalloc = { version = "0.1.43", features = [
-    "extended",
-    "override",
-    "local_dynamic_tls",
-], optional = true }
-
-[features]
-default = ["bin"]
-bin = ["dep:clap", "dep:colored"]
-serde = ["dep:serde"]
-ts-rs = ["dep:ts-rs", "serde"]
-wasm = ["dep:wasm-bindgen", "dep:js-sys", "ts-rs"]
-mimalloc = ["dep:mimalloc"]
-
-
-[profile.fast]
-inherits = "release"
-codegen-units = 1
-lto = "fat"
-opt-level = 3
-panic = "abort"
-overflow-checks = false
-strip = "debuginfo"
 
 [dev-dependencies]
-paste = "1.0.15"
-dir-test = "0.4.1"
 dir-bench = "0.1.0"
+dir-test = "0.4.1"
+paste = "1.0.15"
 
-# ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 
+# ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
 # [profile.fast.build-override]
 # inherits = "release"
 # codegen-units = 1
 # opt-level = 2
 # overflow-checks = false
 # strip = "debuginfo"
+
+[workspace]
+members = ["alc-lisp-wasm"]
+
+[workspace.dependencies]
+js-sys = "0.3.76"
+once_cell = "1.20.2"
+parking_lot = {
+  version = "0.12.3",
+  features = [
+    "hardware-lock-elision",
+    "nightly",
+    "serde",
+  ]
+}
+serde = "1.0.216"
+ts-rs = "10.1.0"
+wasm-bindgen = "0.2.99"
+web-sys = "0.3.76"
+
+[profile.fast]
+inherits = "release"
+opt-level = 3
+strip = "debuginfo"
+overflow-checks = false
+lto = "fat"
+panic = "abort"
+codegen-units = 1

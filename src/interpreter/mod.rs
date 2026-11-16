@@ -41,7 +41,7 @@ pub struct Program {
     env: CallStack,
 }
 
-const STACK_SIZE: usize = 1024;
+const STACK_SIZE: usize = 4096;
 
 #[derive(Debug, Clone)]
 pub struct CallStack {
